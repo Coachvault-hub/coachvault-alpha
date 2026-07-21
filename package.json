@@ -1,7 +1,15 @@
 {
-  "name": "coachvault-alpha",
-  "version": "0.1.0",
+  "name": "coachvault-v02",
+  "version": "0.2.0",
   "private": true,
-  "scripts": {"dev":"next dev","build":"next build","start":"next start"},
-  "dependencies": {"next":"14.2.5","react":"18.3.1","react-dom":"18.3.1","lucide-react":"0.468.0"}
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "14.2.31",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
 }
