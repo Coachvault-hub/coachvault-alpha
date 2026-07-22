@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
+const ENGINE_VERSION = '1.0.0';
+
 function extractVideoId(value = '') {
   try {
     const url = new URL(value.trim());
@@ -75,7 +77,22 @@ const taxonomy = [
   'Faceoffs', 'Goalie Play', 'Man-Up', 'Man-Down', 'Conditioning', 'Team Culture'
 ];
 
-const systemPrompt = `You are the CoachVault Engine, a specialist lacrosse coaching analyst.
+const systemPrompt = `You are CoachVault Engine 1.0, a specialist lacrosse coaching analyst.
+Your job is not to summarize content. Your job is to convert coaching knowledge into a reliable, editable knowledge asset.
+
+ANALYSIS STAGES:
+1. Identify the resource type and whether it contains one or multiple assets.
+2. Identify the player or team problem the resource is designed to solve.
+3. Determine the primary teaching purpose.
+4. Separate core coaching concepts from incidental actions.
+5. Extract setup, execution, teaching cues, mistakes, progressions, regressions, and constraints.
+6. Mark what is source-stated, inferred, or unknown.
+7. Recommend how the asset should live inside the Vault.
+
+QUALITY RULE:
+A useful result should help another coach teach the material without watching or reading the original source, while never inventing unsupported details.
+
+
 Transform raw coaching content into a structured, editable coaching asset.
 
 CORE JUDGMENT:
@@ -114,15 +131,20 @@ ${content.slice(0, 90000)}
 
 Return exactly this JSON shape:
 {
+  "engineVersion": "1.0.0",
   "title": "concise editable title",
   "resourceType": "Drill | Practice Plan | Coaching Concept | Team Talk | Video Analysis | Document | Other",
   "summary": "2-4 sentence coach-facing summary",
+  "coachingProblem": "the player or team problem this resource is designed to solve, or Not specified",
   "primaryPurpose": "one sentence describing what this content is fundamentally trying to teach",
   "purposeTags": [
-    {"name":"Ground Balls","weight":94,"reason":"specific evidence explaining why this is a purpose rather than an incidental action"}
+    {"name":"Ground Balls","weight":94,"role":"Core | Major | Supporting","reason":"specific evidence explaining why this is a purpose rather than an incidental action"}
   ],
   "omittedTags": [
     {"name":"Passing","estimatedWeight":28,"reason":"passes occur but are not taught or evaluated"}
+  ],
+  "coachingConcepts": [
+    {"name":"Run through the ball","category":"Technique | Decision | Team Concept | Behavior | Mindset","importance":"Core | Major | Supporting","evidence":"what in the source supports this concept"}
   ],
   "context": {
     "ageGroups": ["U12"],
@@ -131,20 +153,40 @@ Return exactly this JSON shape:
     "playerCount": "string or Not specified",
     "equipment": ["balls"],
     "fieldArea": "string or Not specified",
-    "format": "Individual | Partner | Small-Sided | Team | Station | Progression | Mixed | Not specified"
+    "format": "Individual | Partner | Small-Sided | Team | Station | Progression | Mixed | Not specified",
+    "contactLevel": "None | Light | Controlled | Full | Not specified"
   },
-  "coachingPoints": ["specific cue supported by the source"],
-  "commonMistakes": ["mistake stated or strongly implied by the instruction"],
+  "teachingModel": {
+    "coachingPoints": ["specific cue supported by the source"],
+    "commonMistakes": ["mistake stated or strongly implied"],
+    "successIndicators": ["observable sign that the drill is working"],
+    "progressions": ["how to make it more demanding"],
+    "regressions": ["how to simplify it"],
+    "safetyNotes": ["source-supported safety concern"]
+  },
   "drills": [
     {
       "name":"drill or segment name",
       "purpose":"what this drill specifically teaches",
+      "coachingProblem":"the issue it addresses",
       "setup":"concise setup or Not specified",
       "steps":["step 1"],
       "coachingPoints":["cue"],
-      "purposeTags":[{"name":"1v1 Offense","weight":92,"reason":"central matchup objective"}]
+      "commonMistakes":["mistake"],
+      "progressions":["progression"],
+      "purposeTags":[{"name":"1v1 Offense","weight":92,"role":"Core","reason":"central matchup objective"}]
     }
   ],
+  "knowledgeLinks": {
+    "prerequisites": ["skills or concepts players should already understand"],
+    "relatedConcepts": ["closely connected coaching ideas"],
+    "nextResourcesToFind": ["what would logically complement this asset"]
+  },
+  "sourceDiscipline": {
+    "statedFacts": ["important facts directly stated in the source"],
+    "inferences": ["reasonable interpretations that should be coach-reviewed"],
+    "unknowns": ["missing information that must not be invented"]
+  },
   "engineReport": {
     "itemsFound":"brief count summary",
     "strongestInsight":"the most valuable coaching interpretation",
@@ -156,6 +198,9 @@ Return exactly this JSON shape:
   },
   "confidence": {
     "overall": 0,
+    "purpose": 0,
+    "setup": 0,
+    "teachingModel": 0,
     "notes":"what limited confidence"
   }
 }`;
@@ -241,7 +286,8 @@ export async function POST(request) {
     const analysis = parseJson(outputText);
 
     return NextResponse.json({
-      analysis,
+      analysis: { ...analysis, engineVersion: analysis.engineVersion || ENGINE_VERSION },
+      engineVersion: ENGINE_VERSION,
       sourceMeta,
       source: {
         title,

@@ -1,4 +1,4 @@
-# CoachVault v0.5.1 — Engine Lab
+# CoachVault v1.0 — Engine Lab
 
 This build tests the core CoachVault workflow:
 
@@ -49,3 +49,7 @@ Without `SUPADATA_API_KEY`, paste a transcript under the YouTube URL. The CoachV
 - File upload parsing is not connected yet.
 - The taxonomy and weight rules are an initial coaching model that should be refined through real examples and coach corrections.
 - Public, unrestricted videos work best. Private, age-restricted, member-only, and heavily geoblocked videos may fail.
+
+
+## Engine 1.0
+See `ENGINE-1.0-SPEC.md` for the new analysis model, knowledge objects, weighting rules, and testing standard.
