@@ -1,14 +1,18 @@
-# CoachVault v0.3
+# CoachVault v0.4
 
-A tested Next.js prototype focused on a polished dashboard and a richer coaching Vault.
+CoachVault is a coaching knowledge platform: a private Coach Brain plus team spaces where coaches publish selected development content to players.
 
-## Included
-- Premium responsive dashboard
-- Search, filters, tags, favorites, collections, and sorting
-- Resource detail view with sections and coaching notes
-- Quick-create workflow saved to localStorage
-- AI practice builder prototype
-- Season planner and team views
+## What is new
+- Reframed product architecture around My Vault and Team Spaces
+- Publish-to-team workflow
+- Create teams and generate prototype player invite codes
+- Upload Center with drag-and-drop review queue
+- Local text extraction for TXT, Markdown, CSV, and JSON files
+- Cataloging preview with detected resource type, concepts, age group, and confidence
+- Clear roadmap language for deeper PDF, Word, image, slide, and video extraction
 
-## Deploy
-Upload the `app` folder, `package.json`, `.gitignore`, and this README to GitHub. Do not upload a lock file generated in another environment.
+## Important prototype limits
+- Data is stored in browser localStorage
+- Files are not uploaded to a server
+- Non-text formats receive metadata-based analysis only
+- Real accounts, invitations, file storage, OCR, transcription, database persistence, and AI extraction require backend services in later releases
