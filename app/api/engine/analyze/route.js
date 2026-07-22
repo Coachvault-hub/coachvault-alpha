@@ -23,33 +23,43 @@ async function getYoutubeMetadata(url) {
   return response.json();
 }
 
-function decodeXml(value = '') {
-  return value
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
-}
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function getYoutubeTranscript(videoId) {
-  const languages = ['en', 'en-US', 'en-GB'];
-  for (const lang of languages) {
-    const response = await fetch(`https://www.youtube.com/api/timedtext?v=${videoId}&lang=${encodeURIComponent(lang)}`, {
-      headers: { 'User-Agent': 'Mozilla/5.0 CoachVault/0.5' },
-      cache: 'no-store'
-    });
-    if (!response.ok) continue;
-    const xml = await response.text();
-    if (!xml.includes('<text')) continue;
-    const transcript = [...xml.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/g)]
-      .map((match) => decodeXml(match[1].replace(/<[^>]+>/g, ' ')))
-      .join(' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    if (transcript) return transcript;
+async function getSupadataTranscript(url) {
+  if (!process.env.SUPADATA_API_KEY) return null;
+
+  const endpoint = `https://api.supadata.ai/v1/transcript?url=${encodeURIComponent(url)}&lang=en&text=true&mode=auto`;
+  const response = await fetch(endpoint, {
+    headers: { 'x-api-key': process.env.SUPADATA_API_KEY },
+    cache: 'no-store'
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (response.status === 202 && data.jobId) {
+    const started = Date.now();
+    while (Date.now() - started < 48000) {
+      await sleep(1500);
+      const jobResponse = await fetch(`https://api.supadata.ai/v1/transcript/${data.jobId}`, {
+        headers: { 'x-api-key': process.env.SUPADATA_API_KEY },
+        cache: 'no-store'
+      });
+      const job = await jobResponse.json().catch(() => ({}));
+      if (job.status === 'completed' && job.content) {
+        return { text: Array.isArray(job.content) ? job.content.map((part) => part.text || '').join(' ') : job.content, provider: 'Supadata AI transcript' };
+      }
+      if (job.status === 'failed') throw new Error(job.error || 'Video transcription failed.');
+    }
+    throw new Error('Video transcription is still processing. Try again in a moment or paste the transcript.');
   }
-  throw new Error('Transcript unavailable');
+
+  if (!response.ok || !data.content) {
+    throw new Error(data.message || data.error || 'The transcript provider could not process this video.');
+  }
+
+  return {
+    text: Array.isArray(data.content) ? data.content.map((part) => part.text || '').join(' ') : data.content,
+    provider: 'Supadata transcript'
+  };
 }
 
 function parseJson(text) {
@@ -57,65 +67,89 @@ function parseJson(text) {
   return JSON.parse(cleaned);
 }
 
+const taxonomy = [
+  'Ground Balls', 'Passing', 'Catching', 'Shooting', 'Finishing', 'Dodging',
+  '1v1 Offense', 'On-Ball Defense', 'Off-Ball Defense', 'Approach', 'Footwork',
+  'Stick Protection', 'Transition', 'Clearing', 'Riding', 'Sliding', 'Recovery',
+  'Communication', 'Decision-Making', 'Spacing', 'Ball Movement', 'Cutting',
+  'Faceoffs', 'Goalie Play', 'Man-Up', 'Man-Down', 'Conditioning', 'Team Culture'
+];
+
 const systemPrompt = `You are the CoachVault Engine, a specialist lacrosse coaching analyst.
-Your job is to transform raw coaching content into a structured, editable coaching asset.
+Transform raw coaching content into a structured, editable coaching asset.
 
-TAGGING PRINCIPLE:
-Tags describe the PRIMARY PURPOSE of the content, not every action or object that happens to appear.
-Do not tag Ground Balls merely because players pick up a ball. Use Ground Balls only when ground-ball technique, decision-making, competition, recovery, or transition from a ground ball is a central teaching objective.
-Do not tag Passing merely because passes occur. Use Passing only when passing mechanics, timing, accuracy, communication, tempo, or decision-making are central objectives.
-Do not tag 1v1 merely because one offensive player meets one defender. Use 1v1 only when dodging, on-ball defense, leverage, approach, footwork, or winning an individual matchup is a central objective.
-Apply the same standard to all tags.
+CORE JUDGMENT:
+Determine WHY a coach would save this resource. Tag purpose, not every action that appears.
+A drill does not earn Ground Balls merely because a player scoops a ball. It earns Ground Balls when ground-ball technique, approach, competition, possession, recovery, or the decision after possession is a central teaching objective.
+A drill does not earn Passing merely because passes occur. It earns Passing when mechanics, timing, accuracy, communication, tempo, or passing decisions are central objectives.
+A drill does not earn 1v1 merely because an attacker encounters a defender. It earns 1v1 when winning the individual matchup, dodging, leverage, approach, footwork, or on-ball defense is central.
 
-TAG WEIGHTS:
-- 90-100 Core purpose: the content is explicitly designed to teach this.
-- 70-89 Major purpose: a major coaching objective but not the only one.
-- 45-69 Supporting purpose: meaningfully trained or emphasized.
-- Below 45 should usually be omitted.
-Return no more than 8 purpose tags. Prefer fewer, stronger tags.
+PURPOSE TAG WEIGHTS:
+90-100 = core purpose; removing it would fundamentally change the drill.
+70-89 = major purpose; clearly coached and evaluated.
+45-69 = supporting purpose; meaningfully trained but not central.
+Below 45 = incidental; omit it from purposeTags.
+Use no more than 6 purpose tags per asset and no more than 4 per drill. Prefer fewer, stronger tags.
+Every retained tag must include a brief evidence-based reason.
 
-Separate PURPOSE TAGS from CONTEXT metadata such as age group, equipment, format, and field area.
-When the source contains multiple distinct drills or sections, identify them separately.
-Never invent details that are not supported. Mark uncertain values clearly.
+CONTROLLED TAXONOMY:
+Prefer these labels: ${taxonomy.join(', ')}.
+Only create a new label when none of these accurately describes the purpose.
+
+SEPARATION:
+Purpose tags describe coaching intent. Context describes age, equipment, player count, field area, format, and difficulty. Do not use context as purpose tags.
+
+SOURCE DISCIPLINE:
+Separate source-stated facts from reasonable inference. Never invent missing details. Use null, an empty list, or "Not specified" when unsupported.
+When a source contains multiple distinct drills or sections, break them out separately.
 Return only valid JSON.`;
 
-function buildPrompt({ title, sourceUrl, transcript, pastedText }) {
-  const sourceText = (transcript || pastedText || '').slice(0, 70000);
+function buildPrompt({ title, sourceUrl, content }) {
   return `Analyze this coaching source for CoachVault.
 
 SOURCE TITLE: ${title || 'Untitled source'}
 SOURCE URL: ${sourceUrl || 'None'}
 SOURCE CONTENT:
-${sourceText}
+${content.slice(0, 90000)}
 
-Return this exact JSON shape:
+Return exactly this JSON shape:
 {
   "title": "concise editable title",
   "resourceType": "Drill | Practice Plan | Coaching Concept | Team Talk | Video Analysis | Document | Other",
   "summary": "2-4 sentence coach-facing summary",
   "primaryPurpose": "one sentence describing what this content is fundamentally trying to teach",
   "purposeTags": [
-    {"name":"Passing","weight":88,"reason":"brief evidence-based reason"}
+    {"name":"Ground Balls","weight":94,"reason":"specific evidence explaining why this is a purpose rather than an incidental action"}
+  ],
+  "omittedTags": [
+    {"name":"Passing","estimatedWeight":28,"reason":"passes occur but are not taught or evaluated"}
   ],
   "context": {
-    "ageGroups": ["U10"],
+    "ageGroups": ["U12"],
     "difficulty": "Beginner | Intermediate | Advanced | Mixed | Not specified",
     "estimatedDurationMinutes": null,
     "playerCount": "string or Not specified",
     "equipment": ["balls"],
-    "fieldArea": "string or Not specified"
+    "fieldArea": "string or Not specified",
+    "format": "Individual | Partner | Small-Sided | Team | Station | Progression | Mixed | Not specified"
   },
-  "coachingPoints": ["specific cue"],
+  "coachingPoints": ["specific cue supported by the source"],
+  "commonMistakes": ["mistake stated or strongly implied by the instruction"],
   "drills": [
     {
       "name":"drill or segment name",
       "purpose":"what this drill specifically teaches",
-      "setup":"concise setup",
+      "setup":"concise setup or Not specified",
       "steps":["step 1"],
       "coachingPoints":["cue"],
-      "purposeTags":[{"name":"1v1","weight":92,"reason":"central matchup objective"}]
+      "purposeTags":[{"name":"1v1 Offense","weight":92,"reason":"central matchup objective"}]
     }
   ],
+  "engineReport": {
+    "itemsFound":"brief count summary",
+    "strongestInsight":"the most valuable coaching interpretation",
+    "reviewWarnings":["anything the coach should verify"]
+  },
   "suggestedVaultAsset": {
     "saveAs":"Drill | Practice Plan | Coaching Concept | Video Analysis | Document",
     "recommendedNextStep":"what the coach should do next"
@@ -132,14 +166,14 @@ export async function POST(request) {
     const body = await request.json();
     const mode = body.mode || 'link';
     let title = body.title || '';
-    let sourceUrl = body.url || '';
-    let transcript = body.transcript || '';
+    const sourceUrl = body.url || '';
+    let content = body.transcript || body.text || '';
     let sourceMeta = {};
 
     if (mode === 'link') {
       const videoId = extractVideoId(sourceUrl);
       if (!videoId) {
-        return NextResponse.json({ error: 'v0.5 currently supports YouTube links for live Engine testing.' }, { status: 400 });
+        return NextResponse.json({ error: 'This Engine test currently accepts a public YouTube video URL.' }, { status: 400 });
       }
 
       const metadata = await getYoutubeMetadata(sourceUrl).catch(() => null);
@@ -148,15 +182,25 @@ export async function POST(request) {
         platform: 'YouTube',
         author: metadata?.author_name || 'Unknown creator',
         thumbnail: metadata?.thumbnail_url || '',
-        videoId
+        videoId,
+        transcriptProvider: content.trim() ? 'Coach-provided transcript' : ''
       };
 
-      if (!transcript.trim()) {
+      if (!content.trim()) {
         try {
-          transcript = await getYoutubeTranscript(videoId);
+          const transcriptResult = await getSupadataTranscript(sourceUrl);
+          if (!transcriptResult) {
+            return NextResponse.json({
+              error: 'Automatic YouTube transcription is not configured yet. Add SUPADATA_API_KEY in Vercel, or paste the transcript for the same Engine analysis.',
+              sourceMeta,
+              transcriptUnavailable: true
+            }, { status: 422 });
+          }
+          content = transcriptResult.text;
+          sourceMeta.transcriptProvider = transcriptResult.provider;
         } catch (error) {
           return NextResponse.json({
-            error: 'CoachVault could not retrieve this video transcript. Paste the transcript in the optional transcript box and run the Engine again.',
+            error: `${error.message} You can still paste the transcript and run the Engine immediately.`,
             sourceMeta,
             transcriptUnavailable: true
           }, { status: 422 });
@@ -164,7 +208,6 @@ export async function POST(request) {
       }
     }
 
-    const content = transcript || body.text || '';
     if (!content.trim()) {
       return NextResponse.json({ error: 'No readable content was provided for analysis.' }, { status: 400 });
     }
@@ -184,8 +227,8 @@ export async function POST(request) {
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
         instructions: systemPrompt,
-        input: buildPrompt({ title, sourceUrl, transcript: content, pastedText: body.text }),
-        temperature: 0.2
+        input: buildPrompt({ title, sourceUrl, content }),
+        temperature: 0.15
       })
     });
 

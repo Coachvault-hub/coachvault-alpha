@@ -135,7 +135,7 @@ export default function Home() {
           ))}
         </nav>
         <div className="sidePrinciple"><small>ENGINE PRINCIPLE</small><b>Tag the purpose, not every action.</b><p>A drill earns a Ground Balls tag because ground-ball development is central—not merely because a ball touches the ground.</p></div>
-        <div className="version">CoachVault v0.5</div>
+        <div className="version">CoachVault v0.5.1</div>
       </aside>
 
       <section className="workspace">
@@ -156,7 +156,7 @@ export default function Home() {
                 <div className="inputTabs">
                   <button className={mode === 'file' ? 'active' : ''} onClick={() => setMode('file')}><b>01</b><span>Upload File<small>PDF, DOCX, PPTX, images</small></span></button>
                   <button className={mode === 'text' ? 'active' : ''} onClick={() => setMode('text')}><b>02</b><span>Paste Text<small>Notes, plans, emails, AI output</small></span></button>
-                  <button className={mode === 'link' ? 'active' : ''} onClick={() => setMode('link')}><b>03</b><span>Web / Social Link<small>YouTube test is live in v0.5</small></span></button>
+                  <button className={mode === 'link' ? 'active' : ''} onClick={() => setMode('link')}><b>03</b><span>Web / Social Link<small>YouTube transcription + analysis</small></span></button>
                 </div>
 
                 <div className="inputBody">
@@ -165,9 +165,9 @@ export default function Home() {
                   {mode === 'link' && <>
                     <label>YouTube URL</label>
                     <input className="urlInput" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
-                    <details className="transcriptFallback"><summary>Optional: paste transcript if YouTube blocks retrieval</summary><textarea value={transcript} onChange={(e) => setTranscript(e.target.value)} placeholder="Paste the video transcript here..." /></details>
-                    <div className="enginePromise"><div><b>What the Engine will test</b><p>Primary purpose, weighted tags, coaching points, drill breakdowns, age and equipment context, and a recommended Vault asset.</p></div><span>REAL AI</span></div>
-                    <button className="runButton" disabled={!url.trim()} onClick={analyze}>Analyze YouTube Video →</button>
+                    <details className="transcriptFallback"><summary>Optional fallback: paste the transcript</summary><textarea value={transcript} onChange={(e) => setTranscript(e.target.value)} placeholder="Paste the video transcript here..." /></details>
+                    <div className="enginePromise"><div><b>What the Engine will produce</b><p>Primary purpose, weighted and omitted tags, coaching cues, drill breakdowns, context, confidence, and an Engine Report.</p></div><span>REAL AI</span></div>
+                    <button className="runButton" disabled={!url.trim()} onClick={analyze}>Run Video Through Engine →</button>
                   </>}
                   {error && <div className="errorBox"><b>Engine stopped</b><p>{error}</p></div>}
                 </div>
@@ -203,7 +203,7 @@ function Processing({ stage }) {
 function Review({ result, sourceMeta, updateField, updateContext, updateTag, removeTag, addTag, saveToVault, discard }) {
   return <section className="reviewShell">
     <header className="reviewHeader"><div><span className="eyebrow dark">REVIEW & CONFIRM</span><h2>The Engine produced this.</h2><p>Make quick corrections now. Once saved, the full asset can be edited inside your Vault.</p></div><div className="confidence"><small>OVERALL CONFIDENCE</small><b>{result.confidence?.overall || 0}%</b><span>{result.confidence?.notes || 'No limitations noted.'}</span></div></header>
-    {sourceMeta?.thumbnail && <div className="sourceStrip"><img src={sourceMeta.thumbnail} alt="YouTube thumbnail" /><div><small>SOURCE</small><b>{sourceMeta.platform} · {sourceMeta.author}</b></div></div>}
+    {sourceMeta?.thumbnail && <div className="sourceStrip"><img src={sourceMeta.thumbnail} alt="YouTube thumbnail" /><div><small>SOURCE</small><b>{sourceMeta.platform} · {sourceMeta.author}</b><small>{sourceMeta.transcriptProvider || ''}</small></div></div>}
     <div className="reviewGrid">
       <div className="reviewMain">
         <Field label="Title"><input value={result.title || ''} onChange={(e) => updateField('title', e.target.value)} /></Field>
@@ -212,6 +212,9 @@ function Review({ result, sourceMeta, updateField, updateContext, updateTag, rem
         <Field label="Primary purpose"><textarea className="purposeField" value={result.primaryPurpose || ''} onChange={(e) => updateField('primaryPurpose', e.target.value)} /></Field>
 
         <section className="tagSection"><div className="sectionTitle"><div><small>PURPOSE TAGS</small><h3>Weighted by why this content exists</h3></div><button onClick={addTag}>+ Add tag</button></div>{(result.purposeTags || []).map((tag, index) => <div className="tagEditor" key={`${tag.name}-${index}`}><div><input value={tag.name} onChange={(e) => updateTag(index, 'name', e.target.value)} /><textarea value={tag.reason} onChange={(e) => updateTag(index, 'reason', e.target.value)} /></div><div className="weight"><b>{tag.weight}</b><input type="range" min="45" max="100" value={tag.weight} onChange={(e) => updateTag(index, 'weight', e.target.value)} /><small>{tag.weight >= 90 ? 'Core purpose' : tag.weight >= 70 ? 'Major purpose' : 'Supporting purpose'}</small></div><button className="remove" onClick={() => removeTag(index)}>×</button></div>)}</section>
+
+        {(result.omittedTags || []).length > 0 && <section className="drillSection"><div className="sectionTitle"><div><small>INTENTIONALLY OMITTED</small><h3>Actions detected, but not treated as purpose</h3></div></div>{result.omittedTags.map((tag, index) => <article className="drillCard" key={`${tag.name}-${index}`}><span>{tag.estimatedWeight}</span><div><h4>{tag.name}</h4><p>{tag.reason}</p></div></article>)}</section>}
+        {result.engineReport && <section className="drillSection"><div className="sectionTitle"><div><small>ENGINE REPORT</small><h3>{result.engineReport.itemsFound}</h3></div></div><article className="drillCard"><span>AI</span><div><h4>Strongest insight</h4><p>{result.engineReport.strongestInsight}</p>{(result.engineReport.reviewWarnings || []).map((warning, index) => <p key={index}><b>Verify:</b> {warning}</p>)}</div></article></section>}
 
         <section className="drillSection"><div className="sectionTitle"><div><small>CONTENT BREAKDOWN</small><h3>{result.drills?.length || 0} drill or segment{result.drills?.length === 1 ? '' : 's'} found</h3></div></div>{(result.drills || []).map((drill, index) => <article className="drillCard" key={`${drill.name}-${index}`}><span>{String(index + 1).padStart(2, '0')}</span><div><h4>{drill.name}</h4><p><b>Purpose:</b> {drill.purpose}</p><p><b>Setup:</b> {drill.setup}</p><div className="miniTags">{(drill.purposeTags || []).map((tag) => <em key={tag.name}>{tag.name} {tag.weight}</em>)}</div></div></article>)}</section>
       </div>

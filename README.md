@@ -1,45 +1,51 @@
-# CoachVault v0.5 — Engine Test
+# CoachVault v0.5.1 — Engine Lab
 
-This release reorganizes CoachVault around two core spaces:
+This build tests the core CoachVault workflow:
 
-- **Engine:** raw material enters, AI analyzes it, and the coach reviews the result.
-- **Vault:** approved coaching assets live, remain searchable, and can receive larger edits.
+**Engine → Coach Review → Vault**
 
-## Live v0.5 test
+## What changed
 
-The Engine can:
+- Automatic public YouTube transcript retrieval through Supadata (optional integration)
+- AI fallback transcription when a native transcript is unavailable, handled by Supadata
+- Purpose-first lacrosse taxonomy
+- Weighted purpose tags
+- Explicitly omitted incidental tags
+- Multi-drill/segment breakdown
+- Engine Report with strongest insight and review warnings
+- Editable Coach Review before anything is saved to the Vault
 
-1. Accept a YouTube URL.
-2. Retrieve the title, creator, thumbnail, and transcript when YouTube makes captions available.
-3. Send the transcript to the OpenAI API.
-4. Produce a structured coach-review asset.
-5. Score purpose tags from 45–100.
-6. Save the reviewed asset to the browser-based Vault.
+## Vercel environment variables
 
-It also analyzes pasted text.
+Required:
 
-## Vercel setup
+```text
+OPENAI_API_KEY=...
+```
 
-Add this environment variable under **Project Settings → Environment Variables**:
+Recommended for automatic YouTube testing:
 
-- `OPENAI_API_KEY` — required
-- `OPENAI_MODEL` — optional; defaults to `gpt-4.1-mini`
+```text
+SUPADATA_API_KEY=...
+```
 
-Redeploy after adding the variable.
+Optional:
 
-## Important limitation
+```text
+OPENAI_MODEL=gpt-4.1-mini
+```
 
-YouTube sometimes blocks transcript retrieval or a video may not have captions. The interface includes an optional transcript field so the same video can still be tested by pasting its transcript.
+After adding or changing environment variables in Vercel, redeploy the project.
 
-## Tagging model
+## YouTube behavior
 
-Purpose tags are intentionally different from context metadata.
+With `SUPADATA_API_KEY`, CoachVault sends a public YouTube URL to Supadata using transcript mode `auto`. That attempts to use an existing transcript and falls back to AI transcription when necessary. Longer videos may return an asynchronous job; this prototype polls for up to about 48 seconds.
 
-A tag should be applied because the concept is a teaching objective, not merely because it occurs. For example, a drill is not tagged `Ground Balls` simply because players scoop a ball. The tag is appropriate when ground-ball technique, competition, recovery, or transition from the ground ball is central to the drill.
+Without `SUPADATA_API_KEY`, paste a transcript under the YouTube URL. The CoachVault analysis pipeline is identical after transcript acquisition.
 
-Weights:
+## Important prototype limitations
 
-- 90–100: core purpose
-- 70–89: major purpose
-- 45–69: supporting purpose
-- below 45: omitted
+- The Vault is stored in browser local storage.
+- File upload parsing is not connected yet.
+- The taxonomy and weight rules are an initial coaching model that should be refined through real examples and coach corrections.
+- Public, unrestricted videos work best. Private, age-restricted, member-only, and heavily geoblocked videos may fail.
