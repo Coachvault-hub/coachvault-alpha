@@ -1,161 +1,246 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-const starterResources = [
-  {id:1,type:'Practice Plan',title:'1-4-1 Ball Movement Progression',description:'A 90-minute progression for passing rhythm, off-ball movement, and faster decisions.',team:'Private',tags:['Offense','Ball movement','U12'],favorite:true,status:'Private',updated:'Today'},
-  {id:2,type:'Drill',title:'Ground Ball Advantage Drill',description:'Competitive small-sided work for approach angles, communication, and the first pass.',team:'2032 Boys',tags:['Ground balls','Compete','Transition'],favorite:true,status:'Published',updated:'Yesterday'},
-  {id:3,type:'Team Talk',title:'Building a We > Me Culture',description:'A short message about effort, body language, and being a teammate others can trust.',team:'Private',tags:['Culture','Leadership'],favorite:false,status:'Private',updated:'Jul 20'},
-  {id:4,type:'Drill',title:'Three-Man Quick-Stick Passing',description:'Tempo passing drill for hands, feet, communication, and decisions before pressure arrives.',team:'All Teams',tags:['Passing','Warm-up','Tempo'],favorite:true,status:'Published',updated:'Jul 18'},
-  {id:5,type:'Document',title:'Fall Development Map',description:'Eight-week sequence covering stick skills, transition, clearing, and team concepts.',team:'Private',tags:['Season plan','Development'],favorite:false,status:'Private',updated:'Jul 16'}
+const initialVault = [
+  {
+    id: 1,
+    title: 'Ground Ball Advantage Drill',
+    resourceType: 'Drill',
+    summary: 'Competitive small-sided work for approach angles, communication, and the first pass after possession.',
+    primaryPurpose: 'Teach players to win contested ground balls and immediately transition into useful possession.',
+    purposeTags: [
+      { name: 'Ground Balls', weight: 96, reason: 'Winning and exiting the ground-ball contest is the core objective.' },
+      { name: 'Transition', weight: 76, reason: 'The drill emphasizes the first decision after possession.' }
+    ],
+    context: { ageGroups: ['U12'], difficulty: 'Intermediate', estimatedDurationMinutes: 12, playerCount: '6-12', equipment: ['balls', 'cones'], fieldArea: 'Small grid' },
+    coachingPoints: ['Run through the ball.', 'Protect the stick before looking up.', 'Make the first pass quickly.'],
+    drills: [],
+    sourceMeta: { platform: 'CoachVault' },
+    updated: 'Yesterday'
+  }
 ];
 
-const starterTeams = [
-  {id:1,name:'2032 Boys',sport:'Lacrosse',players:19,inviteCode:'CV-2032',color:'blue'},
-  {id:2,name:'2035/36 Boys',sport:'Lacrosse',players:17,inviteCode:'CV-3536',color:'green'}
-];
+const stages = ['Reading source', 'Extracting coaching purpose', 'Scoring purpose tags', 'Breaking out drills', 'Building coach review'];
 
-const nav = ['Home','My Vault','Upload Center','Team Spaces'];
+export default function Home() {
+  const [active, setActive] = useState('Engine');
+  const [mode, setMode] = useState('link');
+  const [url, setUrl] = useState('');
+  const [text, setText] = useState('');
+  const [transcript, setTranscript] = useState('');
+  const [result, setResult] = useState(null);
+  const [sourceMeta, setSourceMeta] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [stage, setStage] = useState(0);
+  const [vault, setVault] = useState(initialVault);
+  const [selected, setSelected] = useState(null);
+  const [search, setSearch] = useState('');
 
-function inferCatalog(file, text='') {
-  const name = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g,' ');
-  const lower = `${name} ${text.slice(0,4000)}`.toLowerCase();
-  let type = 'Document';
-  if (/practice|warmup|minute|station/.test(lower)) type = 'Practice Plan';
-  else if (/drill|repetition|reps|setup/.test(lower)) type = 'Drill';
-  else if (/speech|message|culture|leadership/.test(lower)) type = 'Team Talk';
-  else if (/evaluation|rubric|score/.test(lower)) type = 'Evaluation';
-  else if (/video/.test(file.type) || /youtube|vimeo/.test(lower)) type = 'Video';
-
-  const concepts = [
-    ['Ground balls',/ground ball/],['Passing',/passing|quick stick/],['Clearing',/clear|outlet/],
-    ['Defense',/defense|slide|approach/],['Offense',/offense|1-4-1|2-3-1/],['Culture',/culture|leadership|accountability/],
-    ['Shooting',/shoot|finishing/],['Transition',/transition|fast break/],['Conditioning',/conditioning|sprint/]
-  ].filter(([,re])=>re.test(lower)).map(([label])=>label);
-
-  const ages = lower.match(/u\s?\d{1,2}|\d{4}|\d+(?:st|nd|rd|th) grade/i);
-  return {
-    title:name.replace(/\b\w/g,c=>c.toUpperCase()), type,
-    description:`Imported ${file.type || 'file'} ready for coach review and cataloging.`,
-    tags: concepts.length ? concepts : ['Imported'],
-    ageGroup: ages ? ages[0].toUpperCase() : 'Not detected',
-    confidence: text ? 88 : 72,
-    sourceName:file.name,
-    size:file.size,
-    textExtracted:Boolean(text)
-  };
-}
-
-export default function Home(){
-  const [active,setActive]=useState('Home');
-  const [resources,setResources]=useState(starterResources);
-  const [teams,setTeams]=useState(starterTeams);
-  const [search,setSearch]=useState('');
-  const [typeFilter,setTypeFilter]=useState('All');
-  const [selected,setSelected]=useState(null);
-  const [publishTarget,setPublishTarget]=useState('2032 Boys');
-  const [uploads,setUploads]=useState([]);
-  const [processing,setProcessing]=useState(false);
-  const [showCreateTeam,setShowCreateTeam]=useState(false);
-  const [showInvite,setShowInvite]=useState(null);
-  const inputRef=useRef(null);
-
-  useEffect(()=>{
+  useEffect(() => {
     try {
-      const saved=localStorage.getItem('coachvault-v04');
-      if(saved){const data=JSON.parse(saved); if(data.resources)setResources(data.resources); if(data.teams)setTeams(data.teams);}
-    } catch(_){}
-  },[]);
-  useEffect(()=>{localStorage.setItem('coachvault-v04',JSON.stringify({resources,teams}));},[resources,teams]);
+      const stored = localStorage.getItem('coachvault-v05');
+      if (stored) setVault(JSON.parse(stored));
+    } catch (_) {}
+  }, []);
 
-  const visible=useMemo(()=>resources.filter(r=>{
-    const hay=`${r.title} ${r.description} ${r.type} ${r.tags.join(' ')}`.toLowerCase();
-    return (typeFilter==='All'||r.type===typeFilter)&&hay.includes(search.toLowerCase());
-  }),[resources,search,typeFilter]);
+  useEffect(() => {
+    localStorage.setItem('coachvault-v05', JSON.stringify(vault));
+  }, [vault]);
 
-  async function handleFiles(fileList){
-    const files=[...fileList]; if(!files.length)return;
-    setProcessing(true);
-    const results=[];
-    for(const file of files){
-      let text='';
-      if(/text|json|csv|markdown/.test(file.type)||/\.(txt|md|csv|json)$/i.test(file.name)){
-        try{text=await file.text();}catch(_){}
-      }
-      results.push({...inferCatalog(file,text),id:`upload-${Date.now()}-${Math.random()}`});
+  useEffect(() => {
+    if (!loading) return;
+    const timer = setInterval(() => setStage((current) => Math.min(current + 1, stages.length - 1)), 900);
+    return () => clearInterval(timer);
+  }, [loading]);
+
+  const filteredVault = useMemo(() => {
+    const needle = search.toLowerCase();
+    return vault.filter((item) => `${item.title} ${item.resourceType} ${item.summary} ${(item.purposeTags || []).map((tag) => tag.name).join(' ')}`.toLowerCase().includes(needle));
+  }, [vault, search]);
+
+  async function analyze() {
+    setError('');
+    setResult(null);
+    setSourceMeta(null);
+    setLoading(true);
+    setStage(0);
+    try {
+      const response = await fetch('/api/engine/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, url, text, transcript })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'The Engine could not complete the analysis.');
+      setResult(data.analysis);
+      setSourceMeta(data.sourceMeta || null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    setUploads(curr=>[...results,...curr]); setProcessing(false);
   }
 
-  function addUploadToVault(item){
-    const resource={id:Date.now(),type:item.type,title:item.title,description:item.description,team:'Private',tags:[...item.tags,item.ageGroup].filter(x=>x&&x!=='Not detected'),favorite:false,status:'Private',updated:'Just now',sourceName:item.sourceName};
-    setResources(curr=>[resource,...curr]);
-    setUploads(curr=>curr.filter(x=>x.id!==item.id));
+  function updateField(field, value) {
+    setResult((current) => ({ ...current, [field]: value }));
   }
 
-  function publishResource(resource,target){
-    setResources(curr=>curr.map(r=>r.id===resource.id?{...r,status:'Published',team:target,updated:'Just now'}:r));
-    setSelected(null);
+  function updateContext(field, value) {
+    setResult((current) => ({ ...current, context: { ...current.context, [field]: value } }));
   }
 
-  function addTeam(form){
-    const data=new FormData(form);
-    const name=String(data.get('name')||'New Team');
-    setTeams(curr=>[...curr,{id:Date.now(),name,sport:String(data.get('sport')||'Lacrosse'),players:0,inviteCode:`CV-${Math.random().toString(36).slice(2,7).toUpperCase()}`,color:'purple'}]);
-    setShowCreateTeam(false);
+  function updateTag(index, field, value) {
+    setResult((current) => ({
+      ...current,
+      purposeTags: current.purposeTags.map((tag, i) => i === index ? { ...tag, [field]: field === 'weight' ? Number(value) : value } : tag)
+    }));
   }
 
-  return <main className="shell">
-    <aside className="sidebar">
-      <div className="brand"><div>CV</div><span><b>CoachVault</b><small>Know it. Teach it.</small></span></div>
-      <nav>{nav.map(item=><button key={item} className={active===item?'active':''} onClick={()=>setActive(item)}><span>{item==='Home'?'⌂':item==='My Vault'?'▣':item==='Upload Center'?'⇧':'◎'}</span>{item}</button>)}</nav>
-      <div className="sideNote"><b>Coach Brain</b><p>Your private coaching knowledge stays private until you choose to publish it.</p></div>
-      <div className="profile"><div>JB</div><span><b>Jordan</b><small>Head Coach</small></span></div>
-    </aside>
+  function removeTag(index) {
+    setResult((current) => ({ ...current, purposeTags: current.purposeTags.filter((_, i) => i !== index) }));
+  }
 
-    <section className="workspace">
-      <header className="topbar"><div><small>COACHVAULT 0.4</small><h1>{active}</h1></div><div className="topActions"><button className="ghost" onClick={()=>setActive('Upload Center')}>Upload</button><button className="primary" onClick={()=>setActive('My Vault')}>Open Vault</button></div></header>
+  function addTag() {
+    setResult((current) => ({ ...current, purposeTags: [...(current.purposeTags || []), { name: 'New Tag', weight: 60, reason: 'Coach-added purpose tag.' }] }));
+  }
 
-      {active==='Home'&&<>
-        <section className="hero"><div><span className="eyebrow">THE COACHING KNOWLEDGE PLATFORM</span><h2>Everything you know.<br/>Everything you choose to teach.</h2><p>Build your private Coach Brain, then publish the right drills, videos, and development work directly to your teams.</p><div className="heroButtons"><button className="primary" onClick={()=>setActive('Upload Center')}>Upload coaching material</button><button className="ghost light" onClick={()=>setActive('Team Spaces')}>View team spaces</button></div></div><div className="flow"><article><b>1</b><span><strong>Create or import</strong><small>Practice plans, drills, videos, documents</small></span></article><i>↓</i><article><b>2</b><span><strong>Catalog in My Vault</strong><small>Searchable, tagged, private knowledge</small></span></article><i>↓</i><article><b>3</b><span><strong>Publish to a team</strong><small>Give players exactly what to work on</small></span></article></div></section>
-        <section className="stats"><article><small>VAULT RESOURCES</small><b>{resources.length}</b><span>{resources.filter(r=>r.status==='Private').length} private</span></article><article><small>PUBLISHED ITEMS</small><b>{resources.filter(r=>r.status==='Published').length}</b><span>Across {teams.length} teams</span></article><article><small>PLAYER REACH</small><b>{teams.reduce((a,t)=>a+t.players,0)}</b><span>Invited players</span></article><article><small>UPLOAD QUEUE</small><b>{uploads.length}</b><span>Awaiting review</span></article></section>
-        <section className="sectionHead"><div><small>RECENT KNOWLEDGE</small><h2>Continue building your Coach Brain</h2></div><button onClick={()=>setActive('My Vault')}>View all →</button></section>
-        <div className="cards">{resources.slice(0,3).map(r=><ResourceCard key={r.id} resource={r} onOpen={()=>setSelected(r)}/>)}</div>
-      </>}
+  function saveToVault() {
+    const asset = {
+      ...result,
+      id: Date.now(),
+      sourceMeta: sourceMeta || { platform: mode === 'link' ? 'Web' : mode === 'text' ? 'Pasted text' : 'File' },
+      sourceUrl: url,
+      updated: 'Just now'
+    };
+    setVault((current) => [asset, ...current]);
+    setResult(null);
+    setUrl('');
+    setText('');
+    setTranscript('');
+    setActive('Vault');
+    setSelected(asset);
+  }
 
-      {active==='My Vault'&&<>
-        <section className="pageIntro"><span className="eyebrow dark">PRIVATE WORKSPACE</span><h2>My Vault</h2><p>Your coaching library is private by default. Publish only what you choose to a team space.</p></section>
-        <div className="toolbar"><input placeholder="Search by title, concept, age group, or tag…" value={search} onChange={e=>setSearch(e.target.value)}/><select value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}>{['All','Practice Plan','Drill','Team Talk','Evaluation','Document','Video'].map(x=><option key={x}>{x}</option>)}</select><button className="primary" onClick={()=>setActive('Upload Center')}>+ Import</button></div>
-        <div className="cards vaultCards">{visible.map(r=><ResourceCard key={r.id} resource={r} onOpen={()=>setSelected(r)}/>)}</div>
-      </>}
+  return (
+    <main className="appShell">
+      <aside className="sidebar">
+        <div className="brand"><span>CV</span><div><b>CoachVault</b><small>The Engine builds it. The Vault remembers it.</small></div></div>
+        <nav>
+          {['Engine', 'Vault', 'Team Spaces', 'Settings'].map((item) => (
+            <button key={item} className={active === item ? 'active' : ''} onClick={() => setActive(item)}>
+              <span>{item === 'Engine' ? '⚙' : item === 'Vault' ? '▣' : item === 'Team Spaces' ? '◎' : '◌'}</span>{item}
+            </button>
+          ))}
+        </nav>
+        <div className="sidePrinciple"><small>ENGINE PRINCIPLE</small><b>Tag the purpose, not every action.</b><p>A drill earns a Ground Balls tag because ground-ball development is central—not merely because a ball touches the ground.</p></div>
+        <div className="version">CoachVault v0.5</div>
+      </aside>
 
-      {active==='Upload Center'&&<>
-        <section className="pageIntro uploadIntro"><span className="eyebrow dark">IMPORT + CATALOG</span><h2>Upload Center</h2><p>Bring in coaching material, preview what CoachVault detects, then approve how it enters your Vault. This release establishes the cataloging workflow; deeper PDF, Word, image, and video extraction follows next.</p></section>
-        <section className="uploadLayout">
-          <div className="dropZone" onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();handleFiles(e.dataTransfer.files)}} onClick={()=>inputRef.current?.click()}>
-            <input ref={inputRef} type="file" multiple hidden onChange={e=>handleFiles(e.target.files)}/><div className="uploadIcon">⇧</div><h3>{processing?'Analyzing files…':'Drop files here'}</h3><p>PDF, Word, PowerPoint, images, video, text, CSV, and more</p><button className="primary" type="button">Choose files</button><small>Text-based files are read locally in this prototype. Other formats receive a metadata preview without uploading to a server.</small>
-          </div>
-          <aside className="extractionPlan"><span className="eyebrow dark">CATALOGING PIPELINE</span><h3>What CoachVault should extract</h3>{['Resource type','Title and summary','Concepts and coaching tags','Age or skill level','Duration and equipment','Drill steps and coaching points','Related teams and development goals'].map((x,i)=><div key={x}><b>{i+1}</b><span>{x}</span></div>)}</aside>
-        </section>
-        <section className="sectionHead"><div><small>REVIEW QUEUE</small><h2>{uploads.length?`${uploads.length} item${uploads.length>1?'s':''} ready for review`:'Nothing waiting yet'}</h2></div></section>
-        <div className="uploadQueue">{uploads.map(item=><article key={item.id} className="uploadItem"><div className="fileMark">{item.type.slice(0,2).toUpperCase()}</div><div className="uploadMain"><div className="uploadTitle"><span><small>{item.sourceName}</small><h3>{item.title}</h3></span><em>{item.confidence}% confidence</em></div><div className="catalogGrid"><label>Detected type<strong>{item.type}</strong></label><label>Age group<strong>{item.ageGroup}</strong></label><label>Text extraction<strong>{item.textExtracted?'Complete':'Metadata only'}</strong></label><label>File size<strong>{Math.max(1,Math.round(item.size/1024))} KB</strong></label></div><div className="tagRow">{item.tags.map(t=><span key={t}>{t}</span>)}</div><div className="uploadActions"><button className="ghost" onClick={()=>setUploads(curr=>curr.filter(x=>x.id!==item.id))}>Remove</button><button className="primary" onClick={()=>addUploadToVault(item)}>Approve & add to Vault</button></div></div></article>)}</div>
-      </>}
+      <section className="workspace">
+        <header className="topbar">
+          <div><small>COACHING KNOWLEDGE SYSTEM</small><h1>{active}</h1></div>
+          <button className="vaultButton" onClick={() => setActive('Vault')}>Open My Vault <span>{vault.length}</span></button>
+        </header>
 
-      {active==='Team Spaces'&&<>
-        <section className="pageIntro"><span className="eyebrow dark">PLAYER DELIVERY</span><h2>Team Spaces</h2><p>Create a team, invite players, and publish selected resources from your private Vault. No registration, payments, or league administration.</p></section>
-        <div className="teamHeader"><div><b>{teams.length}</b><span>Active team spaces</span></div><button className="primary" onClick={()=>setShowCreateTeam(true)}>+ Create team</button></div>
-        <div className="teamGrid">{teams.map(team=><article className="teamCard" key={team.id}><div className={`teamBadge ${team.color}`}>{team.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><div><small>{team.sport}</small><h3>{team.name}</h3><p>{team.players} players invited</p></div><div className="teamActions"><button className="ghost" onClick={()=>setShowInvite(team)}>Invite players</button><button className="primary" onClick={()=>{setPublishTarget(team.name);setActive('My Vault')}}>Publish resource</button></div><section><span><b>{resources.filter(r=>r.team===team.name).length}</b><small>Resources</small></span><span><b>{resources.filter(r=>r.team===team.name&&r.type==='Drill').length}</b><small>Drills</small></span><span><b>0</b><small>Assignments</small></span></section></article>)}</div>
-      </>}
-    </section>
+        {active === 'Engine' && (
+          <>
+            <section className="engineHero">
+              <div><span className="eyebrow">COACHVAULT ENGINE</span><h2>Give it raw coaching material.<br />Get back something useful.</h2><p>The Engine analyzes purpose, separates drills, scores meaningful tags, and prepares an editable coaching asset before anything enters your Vault.</p></div>
+              <div className="engineFlow"><span>INPUT</span><b>→</b><span>AI ENGINE</span><b>→</b><span>COACH REVIEW</span><b>→</b><span>VAULT</span></div>
+            </section>
 
-    {selected&&<div className="modalBack" onMouseDown={()=>setSelected(null)}><div className="modal" onMouseDown={e=>e.stopPropagation()}><button className="close" onClick={()=>setSelected(null)}>×</button><span className="eyebrow dark">{selected.type}</span><h2>{selected.title}</h2><p>{selected.description}</p><div className="detailMeta"><span><small>STATUS</small><b>{selected.status}</b></span><span><small>SHARED WITH</small><b>{selected.team}</b></span><span><small>UPDATED</small><b>{selected.updated}</b></span></div><div className="tagRow">{selected.tags.map(t=><span key={t}>{t}</span>)}</div><hr/><h3>Publish to a team</h3><p className="muted">Publishing creates a player-facing copy while keeping the original in your private Vault.</p><select className="fullSelect" value={publishTarget} onChange={e=>setPublishTarget(e.target.value)}>{teams.map(t=><option key={t.id}>{t.name}</option>)}<option>All Teams</option></select><button className="primary wide" onClick={()=>publishResource(selected,publishTarget)}>Publish resource</button></div></div>}
+            {!result && !loading && (
+              <section className="enginePanel">
+                <div className="inputTabs">
+                  <button className={mode === 'file' ? 'active' : ''} onClick={() => setMode('file')}><b>01</b><span>Upload File<small>PDF, DOCX, PPTX, images</small></span></button>
+                  <button className={mode === 'text' ? 'active' : ''} onClick={() => setMode('text')}><b>02</b><span>Paste Text<small>Notes, plans, emails, AI output</small></span></button>
+                  <button className={mode === 'link' ? 'active' : ''} onClick={() => setMode('link')}><b>03</b><span>Web / Social Link<small>YouTube test is live in v0.5</small></span></button>
+                </div>
 
-    {showCreateTeam&&<div className="modalBack"><div className="modal small"><button className="close" onClick={()=>setShowCreateTeam(false)}>×</button><span className="eyebrow dark">NEW TEAM SPACE</span><h2>Create a team</h2><form onSubmit={e=>{e.preventDefault();addTeam(e.currentTarget)}}><label>Team name<input name="name" required placeholder="Example: 2034 Girls"/></label><label>Sport<input name="sport" defaultValue="Lacrosse"/></label><button className="primary wide">Create team space</button></form></div></div>}
+                <div className="inputBody">
+                  {mode === 'file' && <div className="comingSoon"><div>⇧</div><h3>File extraction is next</h3><p>The v0.5 live test focuses on YouTube and pasted text. PDF and Word parsing will plug into the same review pipeline.</p></div>}
+                  {mode === 'text' && <><label>Paste coaching material</label><textarea className="largeText" value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste a drill, practice plan, coaching article, notes, or transcript..." /><button className="runButton" disabled={!text.trim()} onClick={analyze}>Run CoachVault Engine →</button></>}
+                  {mode === 'link' && <>
+                    <label>YouTube URL</label>
+                    <input className="urlInput" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
+                    <details className="transcriptFallback"><summary>Optional: paste transcript if YouTube blocks retrieval</summary><textarea value={transcript} onChange={(e) => setTranscript(e.target.value)} placeholder="Paste the video transcript here..." /></details>
+                    <div className="enginePromise"><div><b>What the Engine will test</b><p>Primary purpose, weighted tags, coaching points, drill breakdowns, age and equipment context, and a recommended Vault asset.</p></div><span>REAL AI</span></div>
+                    <button className="runButton" disabled={!url.trim()} onClick={analyze}>Analyze YouTube Video →</button>
+                  </>}
+                  {error && <div className="errorBox"><b>Engine stopped</b><p>{error}</p></div>}
+                </div>
+              </section>
+            )}
 
-    {showInvite&&<div className="modalBack"><div className="modal small"><button className="close" onClick={()=>setShowInvite(null)}>×</button><span className="eyebrow dark">INVITE PLAYERS</span><h2>{showInvite.name}</h2><p>Share this invitation code with players or parents:</p><div className="inviteCode">{showInvite.inviteCode}</div><p className="muted">Player accounts and real email invitations will be connected when authentication and the database are added.</p><button className="primary wide" onClick={()=>navigator.clipboard?.writeText(showInvite.inviteCode)}>Copy invite code</button></div></div>}
-  </main>
+            {loading && <Processing stage={stage} />}
+            {result && <Review result={result} sourceMeta={sourceMeta} updateField={updateField} updateContext={updateContext} updateTag={updateTag} removeTag={removeTag} addTag={addTag} saveToVault={saveToVault} discard={() => setResult(null)} />}
+          </>
+        )}
+
+        {active === 'Vault' && (
+          <>
+            <section className="pageIntro"><span>MY COACHING KNOWLEDGE</span><h2>The Vault</h2><p>Everything here has passed through the Engine and coach review. Search it, open it, make larger edits, and eventually publish it to a Team Space.</p></section>
+            <div className="vaultToolbar"><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search titles, purpose tags, summaries..." /><button onClick={() => setActive('Engine')}>+ Run Engine</button></div>
+            <div className="vaultGrid">{filteredVault.map((item) => <VaultCard key={item.id} item={item} onClick={() => setSelected(item)} />)}</div>
+          </>
+        )}
+
+        {active === 'Team Spaces' && <Empty title="Team Spaces" text="This is where coaches will publish selected Vault assets to players. Creation and analysis stay inside the Engine; private knowledge stays inside the Vault." />}
+        {active === 'Settings' && <Empty title="Engine Settings" text="Future settings will include preferred terminology, age-group mappings, tag vocabulary, coaching philosophy, and AI model configuration." />}
+      </section>
+
+      {selected && <VaultDetail item={selected} onClose={() => setSelected(null)} onSave={(updated) => { setVault((items) => items.map((item) => item.id === updated.id ? updated : item)); setSelected(updated); }} />}
+    </main>
+  );
 }
 
-function ResourceCard({resource,onOpen}){
-  return <article className="resourceCard" onClick={onOpen}><div className="resourceTop"><span className="typePill">{resource.type}</span><span className={`status ${resource.status==='Published'?'published':''}`}>{resource.status}</span></div><h3>{resource.title}</h3><p>{resource.description}</p><div className="tagRow">{resource.tags.slice(0,3).map(t=><span key={t}>{t}</span>)}</div><footer><small>{resource.updated}</small><b>{resource.status==='Published'?resource.team:'Open →'}</b></footer></article>
+function Processing({ stage }) {
+  return <section className="processing"><div className="spinner">CV</div><span className="eyebrow">COACHVAULT ENGINE RUNNING</span><h2>Turning raw material into coaching knowledge.</h2><div className="stageList">{stages.map((item, index) => <div key={item} className={index <= stage ? 'done' : ''}><span>{index < stage ? '✓' : index === stage ? '•••' : '○'}</span><b>{item}</b></div>)}</div><p>The Engine is looking for what the content is actually trying to teach—not simply counting lacrosse words.</p></section>;
 }
+
+function Review({ result, sourceMeta, updateField, updateContext, updateTag, removeTag, addTag, saveToVault, discard }) {
+  return <section className="reviewShell">
+    <header className="reviewHeader"><div><span className="eyebrow dark">REVIEW & CONFIRM</span><h2>The Engine produced this.</h2><p>Make quick corrections now. Once saved, the full asset can be edited inside your Vault.</p></div><div className="confidence"><small>OVERALL CONFIDENCE</small><b>{result.confidence?.overall || 0}%</b><span>{result.confidence?.notes || 'No limitations noted.'}</span></div></header>
+    {sourceMeta?.thumbnail && <div className="sourceStrip"><img src={sourceMeta.thumbnail} alt="YouTube thumbnail" /><div><small>SOURCE</small><b>{sourceMeta.platform} · {sourceMeta.author}</b></div></div>}
+    <div className="reviewGrid">
+      <div className="reviewMain">
+        <Field label="Title"><input value={result.title || ''} onChange={(e) => updateField('title', e.target.value)} /></Field>
+        <div className="twoCol"><Field label="Resource type"><select value={result.resourceType || 'Other'} onChange={(e) => updateField('resourceType', e.target.value)}>{['Drill','Practice Plan','Coaching Concept','Team Talk','Video Analysis','Document','Other'].map((v) => <option key={v}>{v}</option>)}</select></Field><Field label="Save as"><select value={result.suggestedVaultAsset?.saveAs || result.resourceType} onChange={(e) => updateField('suggestedVaultAsset', { ...result.suggestedVaultAsset, saveAs: e.target.value })}>{['Drill','Practice Plan','Coaching Concept','Video Analysis','Document'].map((v) => <option key={v}>{v}</option>)}</select></Field></div>
+        <Field label="Summary"><textarea value={result.summary || ''} onChange={(e) => updateField('summary', e.target.value)} /></Field>
+        <Field label="Primary purpose"><textarea className="purposeField" value={result.primaryPurpose || ''} onChange={(e) => updateField('primaryPurpose', e.target.value)} /></Field>
+
+        <section className="tagSection"><div className="sectionTitle"><div><small>PURPOSE TAGS</small><h3>Weighted by why this content exists</h3></div><button onClick={addTag}>+ Add tag</button></div>{(result.purposeTags || []).map((tag, index) => <div className="tagEditor" key={`${tag.name}-${index}`}><div><input value={tag.name} onChange={(e) => updateTag(index, 'name', e.target.value)} /><textarea value={tag.reason} onChange={(e) => updateTag(index, 'reason', e.target.value)} /></div><div className="weight"><b>{tag.weight}</b><input type="range" min="45" max="100" value={tag.weight} onChange={(e) => updateTag(index, 'weight', e.target.value)} /><small>{tag.weight >= 90 ? 'Core purpose' : tag.weight >= 70 ? 'Major purpose' : 'Supporting purpose'}</small></div><button className="remove" onClick={() => removeTag(index)}>×</button></div>)}</section>
+
+        <section className="drillSection"><div className="sectionTitle"><div><small>CONTENT BREAKDOWN</small><h3>{result.drills?.length || 0} drill or segment{result.drills?.length === 1 ? '' : 's'} found</h3></div></div>{(result.drills || []).map((drill, index) => <article className="drillCard" key={`${drill.name}-${index}`}><span>{String(index + 1).padStart(2, '0')}</span><div><h4>{drill.name}</h4><p><b>Purpose:</b> {drill.purpose}</p><p><b>Setup:</b> {drill.setup}</p><div className="miniTags">{(drill.purposeTags || []).map((tag) => <em key={tag.name}>{tag.name} {tag.weight}</em>)}</div></div></article>)}</section>
+      </div>
+
+      <aside className="reviewAside">
+        <h3>Context, not purpose</h3><p>These fields help coaches filter and use the asset without polluting the purpose tags.</p>
+        <Field label="Age groups"><input value={(result.context?.ageGroups || []).join(', ')} onChange={(e) => updateContext('ageGroups', e.target.value.split(',').map((v) => v.trim()).filter(Boolean))} /></Field>
+        <Field label="Difficulty"><select value={result.context?.difficulty || 'Not specified'} onChange={(e) => updateContext('difficulty', e.target.value)}>{['Beginner','Intermediate','Advanced','Mixed','Not specified'].map((v) => <option key={v}>{v}</option>)}</select></Field>
+        <Field label="Duration (minutes)"><input type="number" value={result.context?.estimatedDurationMinutes ?? ''} onChange={(e) => updateContext('estimatedDurationMinutes', e.target.value ? Number(e.target.value) : null)} /></Field>
+        <Field label="Player count"><input value={result.context?.playerCount || ''} onChange={(e) => updateContext('playerCount', e.target.value)} /></Field>
+        <Field label="Equipment"><textarea value={(result.context?.equipment || []).join(', ')} onChange={(e) => updateContext('equipment', e.target.value.split(',').map((v) => v.trim()).filter(Boolean))} /></Field>
+        <Field label="Field area"><input value={result.context?.fieldArea || ''} onChange={(e) => updateContext('fieldArea', e.target.value)} /></Field>
+        <div className="coachingPoints"><small>COACHING POINTS</small>{(result.coachingPoints || []).map((point, index) => <p key={index}>{point}</p>)}</div>
+      </aside>
+    </div>
+    <footer className="reviewActions"><button className="discard" onClick={discard}>Discard</button><button className="draft" onClick={() => alert('Draft queue will be connected next.')}>Save as Draft</button><button className="save" onClick={saveToVault}>Save to My Vault →</button></footer>
+  </section>;
+}
+
+function Field({ label, children }) { return <label className="field"><span>{label}</span>{children}</label>; }
+
+function VaultCard({ item, onClick }) {
+  const strongest = [...(item.purposeTags || [])].sort((a, b) => b.weight - a.weight).slice(0, 3);
+  return <article className="vaultCard" onClick={onClick}><header><span>{item.resourceType}</span><small>{item.updated}</small></header><h3>{item.title}</h3><p>{item.summary}</p><div className="vaultTags">{strongest.map((tag) => <span key={tag.name}><b>{tag.weight}</b>{tag.name}</span>)}</div><footer><small>PRIMARY PURPOSE</small><p>{item.primaryPurpose}</p></footer></article>;
+}
+
+function VaultDetail({ item, onClose, onSave }) {
+  const [draft, setDraft] = useState(item);
+  return <div className="modalBack"><article className="vaultDetail"><button className="close" onClick={onClose}>×</button><span className="eyebrow dark">FULL VAULT EDITOR</span><input className="detailTitle" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /><textarea className="detailSummary" value={draft.summary} onChange={(e) => setDraft({ ...draft, summary: e.target.value })} /><h3>Primary purpose</h3><textarea value={draft.primaryPurpose} onChange={(e) => setDraft({ ...draft, primaryPurpose: e.target.value })} /><h3>Purpose tags</h3><div className="detailTags">{(draft.purposeTags || []).map((tag) => <span key={tag.name}><b>{tag.weight}</b>{tag.name}<small>{tag.reason}</small></span>)}</div><h3>Coaching points</h3><textarea value={(draft.coachingPoints || []).join('\n')} onChange={(e) => setDraft({ ...draft, coachingPoints: e.target.value.split('\n') })} /><button className="save wide" onClick={() => onSave(draft)}>Save Larger Changes</button></article></div>;
+}
+
+function Empty({ title, text }) { return <section className="empty"><span>COACHVAULT v0.5</span><h2>{title}</h2><p>{text}</p></section>; }

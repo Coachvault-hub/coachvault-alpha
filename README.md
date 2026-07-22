@@ -1,18 +1,45 @@
-# CoachVault v0.4
+# CoachVault v0.5 — Engine Test
 
-CoachVault is a coaching knowledge platform: a private Coach Brain plus team spaces where coaches publish selected development content to players.
+This release reorganizes CoachVault around two core spaces:
 
-## What is new
-- Reframed product architecture around My Vault and Team Spaces
-- Publish-to-team workflow
-- Create teams and generate prototype player invite codes
-- Upload Center with drag-and-drop review queue
-- Local text extraction for TXT, Markdown, CSV, and JSON files
-- Cataloging preview with detected resource type, concepts, age group, and confidence
-- Clear roadmap language for deeper PDF, Word, image, slide, and video extraction
+- **Engine:** raw material enters, AI analyzes it, and the coach reviews the result.
+- **Vault:** approved coaching assets live, remain searchable, and can receive larger edits.
 
-## Important prototype limits
-- Data is stored in browser localStorage
-- Files are not uploaded to a server
-- Non-text formats receive metadata-based analysis only
-- Real accounts, invitations, file storage, OCR, transcription, database persistence, and AI extraction require backend services in later releases
+## Live v0.5 test
+
+The Engine can:
+
+1. Accept a YouTube URL.
+2. Retrieve the title, creator, thumbnail, and transcript when YouTube makes captions available.
+3. Send the transcript to the OpenAI API.
+4. Produce a structured coach-review asset.
+5. Score purpose tags from 45–100.
+6. Save the reviewed asset to the browser-based Vault.
+
+It also analyzes pasted text.
+
+## Vercel setup
+
+Add this environment variable under **Project Settings → Environment Variables**:
+
+- `OPENAI_API_KEY` — required
+- `OPENAI_MODEL` — optional; defaults to `gpt-4.1-mini`
+
+Redeploy after adding the variable.
+
+## Important limitation
+
+YouTube sometimes blocks transcript retrieval or a video may not have captions. The interface includes an optional transcript field so the same video can still be tested by pasting its transcript.
+
+## Tagging model
+
+Purpose tags are intentionally different from context metadata.
+
+A tag should be applied because the concept is a teaching objective, not merely because it occurs. For example, a drill is not tagged `Ground Balls` simply because players scoop a ball. The tag is appropriate when ground-ball technique, competition, recovery, or transition from the ground ball is central to the drill.
+
+Weights:
+
+- 90–100: core purpose
+- 70–89: major purpose
+- 45–69: supporting purpose
+- below 45: omitted

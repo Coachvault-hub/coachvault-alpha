@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-v04",
-  "version": "0.4.0",
+  "name": "coachvault-v05",
+  "version": "0.5.0",
   "private": true,
   "scripts": {"dev":"next dev","build":"next build","start":"next start"},
   "dependencies": {"next":"14.2.31","react":"18.3.1","react-dom":"18.3.1"}
