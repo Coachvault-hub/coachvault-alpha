@@ -1,13 +1,14 @@
-# CoachVault v0.2
+# CoachVault v0.3
 
-Deploy-ready Next.js prototype with:
-- Working navigation
-- Searchable/filterable Vault
-- Create Resource flow saved in browser localStorage
-- AI Builder prototype
-- Season Planner
-- Teams page
+A tested Next.js prototype focused on a polished dashboard and a richer coaching Vault.
 
-## Local development
-npm install
-npm run dev
+## Included
+- Premium responsive dashboard
+- Search, filters, tags, favorites, collections, and sorting
+- Resource detail view with sections and coaching notes
+- Quick-create workflow saved to localStorage
+- AI practice builder prototype
+- Season planner and team views
+
+## Deploy
+Upload the `app` folder, `package.json`, `.gitignore`, and this README to GitHub. Do not upload a lock file generated in another environment.

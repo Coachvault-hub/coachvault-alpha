@@ -2,7 +2,7 @@ import './globals.css';
 
 export const metadata = {
   title: 'CoachVault',
-  description: 'The coaching command center for better practices, teams, and seasons.'
+  description: 'Your coaching knowledge system.'
 };
 
 export default function RootLayout({ children }) {
