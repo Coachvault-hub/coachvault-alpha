@@ -1,0 +1,43 @@
+{
+  "version": "1.0",
+  "name": "CoachVault Intelligence Library",
+  "abbreviation": "CVIL",
+  "skills": [
+    {
+      "id": "skill_ground_balls",
+      "name": "Ground Balls",
+      "category": "Foundational Possession",
+      "file": "ground-balls.json"
+    },
+    {
+      "id": "skill_cradling",
+      "name": "Cradling",
+      "category": "Foundational Possession",
+      "file": "cradling.json"
+    },
+    {
+      "id": "skill_catching",
+      "name": "Catching",
+      "category": "Foundational Possession",
+      "file": "catching.json"
+    },
+    {
+      "id": "skill_passing",
+      "name": "Passing",
+      "category": "Foundational Possession",
+      "file": "passing.json"
+    },
+    {
+      "id": "skill_ball_protection",
+      "name": "Ball Protection",
+      "category": "Foundational Possession",
+      "file": "ball-protection.json"
+    },
+    {
+      "id": "skill_athletic_movement",
+      "name": "Athletic Movement",
+      "category": "Universal Athlete Skill",
+      "file": "athletic-movement.json"
+    }
+  ]
+}

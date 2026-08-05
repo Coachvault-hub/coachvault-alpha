@@ -1,0 +1,205 @@
+{
+  "id": "skill_cradling",
+  "name": "Cradling",
+  "category": "Foundational Possession",
+  "definition": "Maintain control of the ball while moving, changing direction, absorbing contact, and preparing for the next action.",
+  "purpose": "Keep the ball secure without limiting vision, movement, or decision making.",
+  "coachPrinciple": "Control the ball without letting the cradle control the player.",
+  "components": [
+    {
+      "id": "cradle_hand_position",
+      "name": "Hand Position",
+      "purpose": "Create control while allowing the stick to move freely.",
+      "objectives": [
+        {
+          "id": "cradle_hands",
+          "name": "Maintain functional hand spacing",
+          "observableBehaviors": [
+            "Top hand guides stick",
+            "Bottom hand supports control",
+            "Hands adjust with pressure"
+          ],
+          "coachingCues": [
+            "Soft top hand",
+            "Bottom hand guides"
+          ],
+          "commonMistakes": [
+            "Hands locked together",
+            "Death grip"
+          ],
+          "corrections": [
+            "Relax the grip",
+            "Separate the hands"
+          ],
+          "progressions": [
+            "Stationary cradle",
+            "Walking cradle",
+            "Running cradle"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cradle_wrist_action",
+      "name": "Wrist Action",
+      "purpose": "Use efficient wrist movement to keep the ball seated.",
+      "objectives": [
+        {
+          "id": "cradle_soft",
+          "name": "Use soft controlled wrist action",
+          "observableBehaviors": [
+            "Stick moves smoothly",
+            "Ball remains seated without excessive motion"
+          ],
+          "coachingCues": [
+            "Soft hands",
+            "Feel the ball"
+          ],
+          "commonMistakes": [
+            "Over-cradling",
+            "Rigid wrists"
+          ],
+          "corrections": [
+            "Reduce motion",
+            "Relax wrists"
+          ],
+          "progressions": [
+            "No-ball motion",
+            "Stationary ball",
+            "Movement"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cradle_stick_position",
+      "name": "Stick Position",
+      "purpose": "Keep the stick in a useful and protected location.",
+      "objectives": [
+        {
+          "id": "cradle_safe_space",
+          "name": "Carry in safe space",
+          "observableBehaviors": [
+            "Stick stays away from defender",
+            "Head remains near shoulder line"
+          ],
+          "coachingCues": [
+            "Keep it safe",
+            "Stick to space"
+          ],
+          "commonMistakes": [
+            "Stick exposed",
+            "Stick across body"
+          ],
+          "corrections": [
+            "Move stick away from pressure",
+            "Keep head near ear or shoulder"
+          ],
+          "progressions": [
+            "No pressure",
+            "Shadow pressure",
+            "Live pressure"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cradle_body_control",
+      "name": "Body Control",
+      "purpose": "Maintain balance and posture while carrying.",
+      "objectives": [
+        {
+          "id": "cradle_move_balance",
+          "name": "Move without losing balance or control",
+          "observableBehaviors": [
+            "Eyes remain up",
+            "Feet move naturally",
+            "Upper body stays stable"
+          ],
+          "coachingCues": [
+            "Run like an athlete",
+            "Eyes up"
+          ],
+          "commonMistakes": [
+            "Looking at stick",
+            "Running upright and stiff"
+          ],
+          "corrections": [
+            "Relax shoulders",
+            "Separate running motion from cradle"
+          ],
+          "progressions": [
+            "Straight line",
+            "Change of speed",
+            "Change of direction"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cradle_switch_hands",
+      "name": "Hand Switching",
+      "purpose": "Move the stick to the safest and most useful side.",
+      "objectives": [
+        {
+          "id": "cradle_switch_clean",
+          "name": "Switch hands without exposing the ball",
+          "observableBehaviors": [
+            "Stick crosses close to body",
+            "Player keeps moving",
+            "Control remains through switch"
+          ],
+          "coachingCues": [
+            "Quick and tight",
+            "Move it to safety"
+          ],
+          "commonMistakes": [
+            "Wide switch",
+            "Stopping feet"
+          ],
+          "corrections": [
+            "Bring stick close",
+            "Switch while moving"
+          ],
+          "progressions": [
+            "Stationary switch",
+            "Walking switch",
+            "Pressure cue"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cradle_vision",
+      "name": "Vision While Carrying",
+      "purpose": "Maintain awareness while controlling the ball.",
+      "objectives": [
+        {
+          "id": "cradle_eyes_up",
+          "name": "Keep eyes up while carrying",
+          "observableBehaviors": [
+            "Player scans field",
+            "Responds to cues without looking at stick"
+          ],
+          "coachingCues": [
+            "See the field",
+            "Trust your hands"
+          ],
+          "commonMistakes": [
+            "Watching the ball",
+            "Missing pressure"
+          ],
+          "corrections": [
+            "Use visual cues",
+            "Reduce cradle complexity"
+          ],
+          "progressions": [
+            "Coach signals",
+            "Partner callouts",
+            "Live decisions"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,320 @@
+{
+  "id": "skill_ground_balls",
+  "name": "Ground Balls",
+  "category": "Foundational Possession",
+  "definition": "Gain possession of a loose ball while preserving the greatest opportunity to make the next successful play.",
+  "purpose": "Win possession while maintaining balance, movement, protection, vision, and control.",
+  "coachPrinciple": "Winning the ball is only the beginning.",
+  "components": [
+    {
+      "id": "gb_approach",
+      "name": "Approach",
+      "purpose": "Arrive balanced, under control, and on the best line to the ball.",
+      "objectives": [
+        {
+          "id": "gb_app_close",
+          "name": "Close space efficiently",
+          "observableBehaviors": [
+            "Feet remain active",
+            "Player arrives without slowing too early"
+          ],
+          "coachingCues": [
+            "Beat it there",
+            "Attack the ball"
+          ],
+          "commonMistakes": [
+            "Slowing too early",
+            "Reaching"
+          ],
+          "corrections": [
+            "Move feet before the stick",
+            "Attack through the ball"
+          ],
+          "progressions": [
+            "Stationary ball",
+            "Rolling ball",
+            "Light pressure",
+            "Live pressure"
+          ]
+        },
+        {
+          "id": "gb_app_angle",
+          "name": "Arrive on the correct angle",
+          "observableBehaviors": [
+            "Body stays behind the ball",
+            "Player avoids crossing the ball line"
+          ],
+          "coachingCues": [
+            "Stay behind it",
+            "Own the line"
+          ],
+          "commonMistakes": [
+            "Poor approach angle",
+            "Crossing feet"
+          ],
+          "corrections": [
+            "Adjust the path earlier",
+            "Approach from behind the ball"
+          ],
+          "progressions": [
+            "Coach roll",
+            "Angled roll",
+            "Pressure from side"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gb_athletic_position",
+      "name": "Athletic Position",
+      "purpose": "Create a stable body position for balance, leverage, and acceleration.",
+      "objectives": [
+        {
+          "id": "gb_pos_low",
+          "name": "Maintain a low balanced position",
+          "observableBehaviors": [
+            "Hips lowered",
+            "Chest over knees",
+            "Balance maintained through scoop"
+          ],
+          "coachingCues": [
+            "Nose over toes",
+            "Get low early"
+          ],
+          "commonMistakes": [
+            "Standing tall",
+            "Locked knees"
+          ],
+          "corrections": [
+            "Lower hips before reaching",
+            "Bend through knees"
+          ],
+          "progressions": [
+            "Walkthrough",
+            "Moving ball",
+            "Contact pressure"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gb_hand_placement",
+      "name": "Hand Placement",
+      "purpose": "Create leverage and control through the scoop.",
+      "objectives": [
+        {
+          "id": "gb_hands_control",
+          "name": "Use efficient hand spacing and leverage",
+          "observableBehaviors": [
+            "Top hand controls stick head",
+            "Bottom hand supports leverage",
+            "Hands stay away from body"
+          ],
+          "coachingCues": [
+            "Hands away",
+            "Top hand strong"
+          ],
+          "commonMistakes": [
+            "Hands together",
+            "Pulling with arms"
+          ],
+          "corrections": [
+            "Separate hands",
+            "Drive through the ball"
+          ],
+          "progressions": [
+            "Stationary technique",
+            "Moving pickup",
+            "Pressure pickup"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gb_scoop_through",
+      "name": "Scoop Through",
+      "purpose": "Secure possession in one continuous motion without losing speed.",
+      "objectives": [
+        {
+          "id": "gb_scoop_speed",
+          "name": "Maintain speed through the ball",
+          "observableBehaviors": [
+            "Feet continue moving",
+            "Player does not hesitate before contact"
+          ],
+          "coachingCues": [
+            "Run through it",
+            "Scoop and go"
+          ],
+          "commonMistakes": [
+            "Stopping feet",
+            "Stabbing"
+          ],
+          "corrections": [
+            "Sweep through the ball",
+            "Accelerate through possession"
+          ],
+          "progressions": [
+            "Stationary ball",
+            "Rolling ball",
+            "Coach pressure",
+            "Live pressure"
+          ]
+        },
+        {
+          "id": "gb_scoop_clean",
+          "name": "Secure the ball in one motion",
+          "observableBehaviors": [
+            "Ball enters pocket smoothly",
+            "Stick stays low through scoop"
+          ],
+          "coachingCues": [
+            "Sweep, don't stab",
+            "One clean motion"
+          ],
+          "commonMistakes": [
+            "Scooping upward",
+            "Multiple attempts"
+          ],
+          "corrections": [
+            "Flatten the head",
+            "Extend through the ball"
+          ],
+          "progressions": [
+            "Slow roll",
+            "Faster roll",
+            "Contested ball"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gb_stick_protection",
+      "name": "Stick Protection",
+      "purpose": "Keep possession immediately after the scoop.",
+      "objectives": [
+        {
+          "id": "gb_protect_first",
+          "name": "Protect immediately after possession",
+          "observableBehaviors": [
+            "Stick moves away from pressure",
+            "Two hands remain on stick"
+          ],
+          "coachingCues": [
+            "Protect first",
+            "Get it safe"
+          ],
+          "commonMistakes": [
+            "Exposing stick",
+            "Looking before protecting"
+          ],
+          "corrections": [
+            "Move stick to safe space",
+            "Two hands first"
+          ],
+          "progressions": [
+            "No pressure",
+            "Trailing pressure",
+            "Live checks"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gb_first_three",
+      "name": "First Three Steps",
+      "purpose": "Create separation immediately after possession.",
+      "objectives": [
+        {
+          "id": "gb_steps_accelerate",
+          "name": "Accelerate for the first three steps",
+          "observableBehaviors": [
+            "Explosive first step",
+            "Speed increases after scoop"
+          ],
+          "coachingCues": [
+            "Three hard steps",
+            "Explode"
+          ],
+          "commonMistakes": [
+            "Standing after scoop",
+            "Slow first step"
+          ],
+          "corrections": [
+            "Sprint immediately",
+            "Finish through the ball"
+          ],
+          "progressions": [
+            "Unopposed exit",
+            "Pressure from behind",
+            "Live competition"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gb_exit_direction",
+      "name": "Exit Direction",
+      "purpose": "Leave the ground ball toward the greatest available advantage.",
+      "objectives": [
+        {
+          "id": "gb_exit_space",
+          "name": "Exit into useful space",
+          "observableBehaviors": [
+            "Player avoids traffic",
+            "Escape angle creates separation"
+          ],
+          "coachingCues": [
+            "Find green grass",
+            "Escape first"
+          ],
+          "commonMistakes": [
+            "Running into pressure",
+            "Stopping after scoop"
+          ],
+          "corrections": [
+            "Choose space before contact",
+            "Exit away from pressure"
+          ],
+          "progressions": [
+            "Cone exit",
+            "Defender cue",
+            "Live read"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gb_outlet",
+      "name": "Outlet Recognition",
+      "purpose": "Identify the highest-value next action after possession.",
+      "objectives": [
+        {
+          "id": "gb_outlet_read",
+          "name": "Lift eyes and identify the next play",
+          "observableBehaviors": [
+            "Eyes rise quickly",
+            "Decision is made without delay"
+          ],
+          "coachingCues": [
+            "Eyes up",
+            "Find the next play"
+          ],
+          "commonMistakes": [
+            "Looking down too long",
+            "Forcing a pass"
+          ],
+          "corrections": [
+            "Protect, then scan",
+            "Carry when the pass is not clean"
+          ],
+          "progressions": [
+            "Preset outlet",
+            "Two-choice read",
+            "Live transition"
+          ]
+        }
+      ]
+    }
+  ]
+}

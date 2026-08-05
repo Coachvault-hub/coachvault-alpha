@@ -1,0 +1,268 @@
+{
+  "id": "skill_passing",
+  "name": "Passing",
+  "category": "Foundational Possession",
+  "definition": "Deliver the ball accurately, on time, and with the pace and placement needed for the receiver's next action.",
+  "purpose": "Move the ball without slowing the offense or transferring pressure to the receiver.",
+  "coachPrinciple": "A good pass helps the receiver make the next play.",
+  "components": [
+    {
+      "id": "pass_grip",
+      "name": "Grip and Hand Placement",
+      "purpose": "Create control and leverage.",
+      "objectives": [
+        {
+          "id": "pass_hands",
+          "name": "Use functional hand spacing",
+          "observableBehaviors": [
+            "Top hand controls direction",
+            "Bottom hand supports leverage"
+          ],
+          "coachingCues": [
+            "Hands apart",
+            "Top hand leads"
+          ],
+          "commonMistakes": [
+            "Hands together",
+            "Bottom-hand dominant"
+          ],
+          "corrections": [
+            "Separate hands",
+            "Lead with top hand"
+          ],
+          "progressions": [
+            "Stationary mechanics",
+            "Short passing",
+            "On move"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pass_body_position",
+      "name": "Body Position",
+      "purpose": "Create balance and power while staying ready to move.",
+      "objectives": [
+        {
+          "id": "pass_athletic",
+          "name": "Pass from a balanced athletic position",
+          "observableBehaviors": [
+            "Feet support target line",
+            "Shoulders remain controlled"
+          ],
+          "coachingCues": [
+            "Athletic feet",
+            "Step to target"
+          ],
+          "commonMistakes": [
+            "Falling backward",
+            "Feet crossed"
+          ],
+          "corrections": [
+            "Set base",
+            "Move feet before pass"
+          ],
+          "progressions": [
+            "Stationary",
+            "Shuffle",
+            "Run"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pass_release",
+      "name": "Release Mechanics",
+      "purpose": "Deliver a repeatable, efficient pass.",
+      "objectives": [
+        {
+          "id": "pass_push_pull",
+          "name": "Use coordinated push-pull mechanics",
+          "observableBehaviors": [
+            "Top hand drives",
+            "Bottom hand finishes",
+            "Release is compact"
+          ],
+          "coachingCues": [
+            "Push-pull",
+            "Finish to target"
+          ],
+          "commonMistakes": [
+            "Baseball throw",
+            "Long windup"
+          ],
+          "corrections": [
+            "Shorten motion",
+            "Use wrists and hands"
+          ],
+          "progressions": [
+            "Wrist passes",
+            "Short passes",
+            "Full distance"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pass_accuracy",
+      "name": "Accuracy",
+      "purpose": "Place the ball where the receiver can handle it.",
+      "objectives": [
+        {
+          "id": "pass_target",
+          "name": "Deliver to the receiver's target",
+          "observableBehaviors": [
+            "Ball reaches stick side",
+            "Pass avoids body and pressure"
+          ],
+          "coachingCues": [
+            "Hit the target",
+            "Pass to space"
+          ],
+          "commonMistakes": [
+            "Passing at body",
+            "Throwing behind receiver"
+          ],
+          "corrections": [
+            "Aim to target hand",
+            "Lead the receiver"
+          ],
+          "progressions": [
+            "Static targets",
+            "Moving targets",
+            "Pressure"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pass_pace",
+      "name": "Pace",
+      "purpose": "Use enough speed for the situation without reducing catchability.",
+      "objectives": [
+        {
+          "id": "pass_velocity",
+          "name": "Match pass speed to distance and pressure",
+          "observableBehaviors": [
+            "Ball arrives on time",
+            "Receiver can handle pass"
+          ],
+          "coachingCues": [
+            "Firm, not wild",
+            "Match the moment"
+          ],
+          "commonMistakes": [
+            "Floating passes",
+            "Overthrowing short passes"
+          ],
+          "corrections": [
+            "Adjust hand speed",
+            "Shorten or lengthen motion"
+          ],
+          "progressions": [
+            "Short range",
+            "Long range",
+            "Pressure windows"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pass_timing",
+      "name": "Timing",
+      "purpose": "Deliver when the receiver and opportunity are available.",
+      "objectives": [
+        {
+          "id": "pass_on_time",
+          "name": "Release the pass on time",
+          "observableBehaviors": [
+            "Ball arrives before pressure",
+            "Receiver stays in rhythm"
+          ],
+          "coachingCues": [
+            "Move it early",
+            "Pass before pressure"
+          ],
+          "commonMistakes": [
+            "Holding too long",
+            "Passing after window closes"
+          ],
+          "corrections": [
+            "Read earlier",
+            "Reduce extra cradles"
+          ],
+          "progressions": [
+            "Predetermined",
+            "Two-choice read",
+            "Live decision"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pass_on_move",
+      "name": "Passing on the Move",
+      "purpose": "Deliver accurately without stopping the offense.",
+      "objectives": [
+        {
+          "id": "pass_stride",
+          "name": "Pass without breaking stride",
+          "observableBehaviors": [
+            "Feet continue moving",
+            "Upper body stays controlled"
+          ],
+          "coachingCues": [
+            "Run through the pass",
+            "Hands work while feet move"
+          ],
+          "commonMistakes": [
+            "Stopping to throw",
+            "Drifting off target"
+          ],
+          "corrections": [
+            "Shorten release",
+            "Square shoulders briefly"
+          ],
+          "progressions": [
+            "Walk",
+            "Jog",
+            "Full speed",
+            "Pressure"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pass_decision",
+      "name": "Passing Decision",
+      "purpose": "Choose the highest-value available pass.",
+      "objectives": [
+        {
+          "id": "pass_right_option",
+          "name": "Select the correct receiver and window",
+          "observableBehaviors": [
+            "Pass avoids unnecessary risk",
+            "Ball advances advantage"
+          ],
+          "coachingCues": [
+            "See two",
+            "Move it to advantage"
+          ],
+          "commonMistakes": [
+            "Forcing skip pass",
+            "Missing adjacent option"
+          ],
+          "corrections": [
+            "Scan before catch",
+            "Use simple read progression"
+          ],
+          "progressions": [
+            "Two-option",
+            "Three-option",
+            "Live small-sided"
+          ]
+        }
+      ]
+    }
+  ]
+}

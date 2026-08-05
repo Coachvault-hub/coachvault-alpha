@@ -1,0 +1,170 @@
+{
+  "id": "skill_ball_protection",
+  "name": "Ball Protection",
+  "category": "Foundational Possession",
+  "definition": "Maintain possession while managing pressure and preserving the ability to pass, dodge, or carry.",
+  "purpose": "Keep the stick and hands safe without losing vision or offensive options.",
+  "coachPrinciple": "Protect the ball without hiding from the game.",
+  "components": [
+    {
+      "id": "protect_body",
+      "name": "Body Position",
+      "purpose": "Place the body between pressure and the stick.",
+      "objectives": [
+        {
+          "id": "protect_shield",
+          "name": "Use the body as a shield",
+          "observableBehaviors": [
+            "Shoulder and hip separate defender from stick",
+            "Player stays balanced"
+          ],
+          "coachingCues": [
+            "Body first",
+            "Own the space"
+          ],
+          "commonMistakes": [
+            "Stick exposed",
+            "Turning back without balance"
+          ],
+          "corrections": [
+            "Move feet to pressure",
+            "Keep body between defender and stick"
+          ],
+          "progressions": [
+            "Shadow pressure",
+            "Guided contact",
+            "Live pressure"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "protect_stick_location",
+      "name": "Stick Location",
+      "purpose": "Keep the stick in safe and useful space.",
+      "objectives": [
+        {
+          "id": "protect_safe",
+          "name": "Move the stick away from pressure",
+          "observableBehaviors": [
+            "Stick stays outside defender reach",
+            "Hands remain functional"
+          ],
+          "coachingCues": [
+            "Stick to safety",
+            "Away from pressure"
+          ],
+          "commonMistakes": [
+            "Carrying across body",
+            "Holding stick low near defender"
+          ],
+          "corrections": [
+            "Change stick side",
+            "Raise or reposition head"
+          ],
+          "progressions": [
+            "Static pressure",
+            "Moving pressure",
+            "Double pressure"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "protect_footwork",
+      "name": "Protective Footwork",
+      "purpose": "Use movement to maintain space and options.",
+      "objectives": [
+        {
+          "id": "protect_move",
+          "name": "Move feet to preserve separation",
+          "observableBehaviors": [
+            "Player circles or escapes pressure",
+            "Feet do not stop"
+          ],
+          "coachingCues": [
+            "Move your feet",
+            "Escape pressure"
+          ],
+          "commonMistakes": [
+            "Standing still",
+            "Backing into traffic"
+          ],
+          "corrections": [
+            "Change direction earlier",
+            "Use lateral movement"
+          ],
+          "progressions": [
+            "Mirror drill",
+            "Channel pressure",
+            "Live escape"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "protect_vision",
+      "name": "Vision Under Pressure",
+      "purpose": "Maintain awareness while protecting possession.",
+      "objectives": [
+        {
+          "id": "protect_scan",
+          "name": "See options while under pressure",
+          "observableBehaviors": [
+            "Eyes remain up",
+            "Player recognizes help and outlets"
+          ],
+          "coachingCues": [
+            "Protect and scan",
+            "See the help"
+          ],
+          "commonMistakes": [
+            "Looking down",
+            "Turning away from field"
+          ],
+          "corrections": [
+            "Use shoulder checks",
+            "Protect with body, not eyes"
+          ],
+          "progressions": [
+            "Coach cue",
+            "Outlet read",
+            "Live double"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "protect_escape",
+      "name": "Escape Decision",
+      "purpose": "Choose the correct response to pressure.",
+      "objectives": [
+        {
+          "id": "protect_choice",
+          "name": "Carry, roll, switch, or pass based on pressure",
+          "observableBehaviors": [
+            "Decision creates separation",
+            "Player avoids unnecessary risk"
+          ],
+          "coachingCues": [
+            "Escape with purpose",
+            "Simple first"
+          ],
+          "commonMistakes": [
+            "Rolling into pressure",
+            "Forcing pass"
+          ],
+          "corrections": [
+            "Identify pressure side",
+            "Use first available escape"
+          ],
+          "progressions": [
+            "Single read",
+            "Two-read",
+            "Live pressure"
+          ]
+        }
+      ]
+    }
+  ]
+}

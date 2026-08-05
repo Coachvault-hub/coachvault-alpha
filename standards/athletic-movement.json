@@ -1,0 +1,204 @@
+{
+  "id": "skill_athletic_movement",
+  "name": "Athletic Movement",
+  "category": "Universal Athlete Skill",
+  "definition": "Move with balance, control, speed, and efficiency while responding to the demands of play.",
+  "purpose": "Create a movement base that supports every lacrosse action.",
+  "coachPrinciple": "Better movers become better lacrosse players.",
+  "components": [
+    {
+      "id": "move_stance",
+      "name": "Athletic Stance",
+      "purpose": "Create a ready position for movement in any direction.",
+      "objectives": [
+        {
+          "id": "move_ready",
+          "name": "Maintain a balanced ready position",
+          "observableBehaviors": [
+            "Hips lowered",
+            "Weight centered",
+            "Feet active"
+          ],
+          "coachingCues": [
+            "Ready stance",
+            "Nose over toes"
+          ],
+          "commonMistakes": [
+            "Standing tall",
+            "Weight on heels"
+          ],
+          "corrections": [
+            "Lower hips",
+            "Shift weight to mid-foot"
+          ],
+          "progressions": [
+            "Static stance",
+            "Reaction stance",
+            "Live cue"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "move_acceleration",
+      "name": "Acceleration",
+      "purpose": "Reach useful speed quickly.",
+      "objectives": [
+        {
+          "id": "move_first_steps",
+          "name": "Produce efficient first steps",
+          "observableBehaviors": [
+            "Forward body angle",
+            "Quick powerful steps"
+          ],
+          "coachingCues": [
+            "Push the ground",
+            "Win the first three"
+          ],
+          "commonMistakes": [
+            "Popping upright",
+            "Overstriding"
+          ],
+          "corrections": [
+            "Short powerful steps",
+            "Lean and drive"
+          ],
+          "progressions": [
+            "Falling start",
+            "Cue start",
+            "Competitive start"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "move_deceleration",
+      "name": "Deceleration",
+      "purpose": "Reduce speed under control and prepare for the next movement.",
+      "objectives": [
+        {
+          "id": "move_stop",
+          "name": "Stop under control",
+          "observableBehaviors": [
+            "Hips lower",
+            "Steps shorten",
+            "Balance remains"
+          ],
+          "coachingCues": [
+            "Sink the hips",
+            "Chop under control"
+          ],
+          "commonMistakes": [
+            "Upright stop",
+            "Feet too narrow"
+          ],
+          "corrections": [
+            "Widen base",
+            "Lower center of gravity"
+          ],
+          "progressions": [
+            "Planned stop",
+            "Reactive stop",
+            "Ball-in-stick stop"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "move_change_direction",
+      "name": "Change of Direction",
+      "purpose": "Redirect movement without losing balance or excessive speed.",
+      "objectives": [
+        {
+          "id": "move_redirect",
+          "name": "Plant and redirect efficiently",
+          "observableBehaviors": [
+            "Plant occurs outside body",
+            "Hips and shoulders redirect together"
+          ],
+          "coachingCues": [
+            "Plant and go",
+            "Own the edge"
+          ],
+          "commonMistakes": [
+            "Rounded cut",
+            "Crossing feet"
+          ],
+          "corrections": [
+            "Lower before plant",
+            "Use decisive angle"
+          ],
+          "progressions": [
+            "Cone cut",
+            "Reaction cut",
+            "Defender read"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "move_balance",
+      "name": "Balance and Body Control",
+      "purpose": "Maintain control through contact and movement changes.",
+      "objectives": [
+        {
+          "id": "move_control",
+          "name": "Stay balanced through movement",
+          "observableBehaviors": [
+            "Player absorbs contact",
+            "Posture remains functional"
+          ],
+          "coachingCues": [
+            "Strong base",
+            "Stay centered"
+          ],
+          "commonMistakes": [
+            "Leaning",
+            "Feet too close"
+          ],
+          "corrections": [
+            "Widen base",
+            "Control torso"
+          ],
+          "progressions": [
+            "Single-leg balance",
+            "Contact balance",
+            "Live play"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "move_reaction",
+      "name": "Reaction",
+      "purpose": "Respond quickly to visual, verbal, and game cues.",
+      "objectives": [
+        {
+          "id": "move_cue",
+          "name": "React without hesitation",
+          "observableBehaviors": [
+            "First movement matches cue",
+            "Decision and movement connect"
+          ],
+          "coachingCues": [
+            "See it, go",
+            "React fast"
+          ],
+          "commonMistakes": [
+            "False steps",
+            "Delayed response"
+          ],
+          "corrections": [
+            "Simplify cue",
+            "Train first-step direction"
+          ],
+          "progressions": [
+            "Single cue",
+            "Multiple cue",
+            "Live opponent"
+          ]
+        }
+      ]
+    }
+  ]
+}

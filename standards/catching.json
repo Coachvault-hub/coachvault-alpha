@@ -1,0 +1,203 @@
+{
+  "id": "skill_catching",
+  "name": "Catching",
+  "category": "Foundational Possession",
+  "definition": "Receive a pass cleanly while maintaining control, body position, vision, and readiness for the next action.",
+  "purpose": "Secure the pass without stopping the flow of play.",
+  "coachPrinciple": "Catch into the next play.",
+  "components": [
+    {
+      "id": "catch_tracking",
+      "name": "Ball Tracking",
+      "purpose": "See the ball from release into the pocket.",
+      "objectives": [
+        {
+          "id": "catch_track",
+          "name": "Track the ball through reception",
+          "observableBehaviors": [
+            "Eyes follow ball",
+            "Head remains stable"
+          ],
+          "coachingCues": [
+            "See it in",
+            "Watch the ball"
+          ],
+          "commonMistakes": [
+            "Looking away early",
+            "Turning head"
+          ],
+          "corrections": [
+            "Slow the pass",
+            "Use colored-ball cues"
+          ],
+          "progressions": [
+            "Short toss",
+            "Varied location",
+            "Pressure"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "catch_target",
+      "name": "Target Presentation",
+      "purpose": "Give the passer a clear receiving target.",
+      "objectives": [
+        {
+          "id": "catch_show_target",
+          "name": "Present the stick as a clear target",
+          "observableBehaviors": [
+            "Stick head visible",
+            "Hands ready away from body"
+          ],
+          "coachingCues": [
+            "Show a target",
+            "Hands ready"
+          ],
+          "commonMistakes": [
+            "Stick hidden",
+            "Hands too close to body"
+          ],
+          "corrections": [
+            "Present early",
+            "Extend hands"
+          ],
+          "progressions": [
+            "Stationary",
+            "Moving target",
+            "Traffic"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "catch_soft_hands",
+      "name": "Soft Hands",
+      "purpose": "Absorb the ball into the pocket.",
+      "objectives": [
+        {
+          "id": "catch_absorb",
+          "name": "Receive with soft hands",
+          "observableBehaviors": [
+            "Hands give with pass",
+            "Ball settles without rebound"
+          ],
+          "coachingCues": [
+            "Give with it",
+            "Soft hands"
+          ],
+          "commonMistakes": [
+            "Snatching",
+            "Rigid hands"
+          ],
+          "corrections": [
+            "Receive toward shoulder",
+            "Relax grip"
+          ],
+          "progressions": [
+            "Tennis ball",
+            "Short passes",
+            "Faster passes"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "catch_body_position",
+      "name": "Body Position",
+      "purpose": "Stay balanced and aligned to the next action.",
+      "objectives": [
+        {
+          "id": "catch_balance",
+          "name": "Receive while balanced",
+          "observableBehaviors": [
+            "Feet under body",
+            "Shoulders prepared to move"
+          ],
+          "coachingCues": [
+            "Catch athletic",
+            "Ready feet"
+          ],
+          "commonMistakes": [
+            "Flat feet",
+            "Leaning away"
+          ],
+          "corrections": [
+            "Move feet to pass",
+            "Receive in athletic stance"
+          ],
+          "progressions": [
+            "Stationary",
+            "On move",
+            "Contact"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "catch_on_move",
+      "name": "Catching on the Move",
+      "purpose": "Receive without slowing or breaking stride.",
+      "objectives": [
+        {
+          "id": "catch_stride",
+          "name": "Catch without losing speed",
+          "observableBehaviors": [
+            "Player runs through catch",
+            "Hands meet ball in front"
+          ],
+          "coachingCues": [
+            "Run through the catch",
+            "Meet the pass"
+          ],
+          "commonMistakes": [
+            "Stopping feet",
+            "Catching behind body"
+          ],
+          "corrections": [
+            "Lead receiver",
+            "Move feet to the ball"
+          ],
+          "progressions": [
+            "Walk",
+            "Jog",
+            "Full speed"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "catch_next_action",
+      "name": "Next-Action Preparation",
+      "purpose": "Move directly from catch into pass, dodge, shot, or carry.",
+      "objectives": [
+        {
+          "id": "catch_ready",
+          "name": "Receive into the next action",
+          "observableBehaviors": [
+            "Stick moves immediately to ready position",
+            "Decision follows quickly"
+          ],
+          "coachingCues": [
+            "Catch ready",
+            "One motion"
+          ],
+          "commonMistakes": [
+            "Holding after catch",
+            "Resetting hands"
+          ],
+          "corrections": [
+            "Predetermine options",
+            "Catch to ready position"
+          ],
+          "progressions": [
+            "Catch-pass",
+            "Catch-dodge",
+            "Catch-shoot",
+            "Live read"
+          ]
+        }
+      ]
+    }
+  ]
+}
