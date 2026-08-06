@@ -402,3 +402,40 @@ body{background:var(--cv-bg);color:var(--cv-text)}
     justify-content:flex-start;
   }
 }
+
+
+/* Engine 3.0 Coach Practice Card */
+.cardType{display:inline-flex;margin:8px 0 2px;padding:5px 8px;border-radius:6px;background:#eef4ff;color:#174997;font-size:9px;font-weight:850;letter-spacing:.8px}
+.detailTabs{position:sticky;top:0;z-index:5;display:flex;gap:6px;padding:12px 28px;background:#fff;border-bottom:1px solid var(--cv-line)}
+.detailTabs button{border:0;background:transparent;padding:10px 14px;border-radius:8px;font-weight:800;color:#64748b}
+.detailTabs button.active{background:#eaf1ff;color:#123c83}
+.coachPracticeCard{max-width:980px;margin:0 auto;background:#fff;color:#15243a}
+.coachPracticeCard.compact{margin:22px 0;border:1px solid var(--cv-line);border-radius:18px;padding:22px;box-shadow:0 12px 32px rgba(21,36,58,.06)}
+.practiceHero{display:flex;justify-content:space-between;gap:24px;padding:26px 0;border-bottom:2px solid #dbe5f1}
+.practiceHero small{font-size:10px;letter-spacing:1.4px;font-weight:900;color:#1f5ca8}
+.practiceHero h2{font-size:34px;line-height:1.05;margin:6px 0 10px}
+.practiceHero p{font-size:17px;line-height:1.55;color:#52647a;max-width:720px}
+.practiceMeta{align-self:flex-start;display:flex;align-items:center;gap:10px;background:#eaf1ff;border-radius:999px;padding:8px 12px;color:#123c83;font-weight:800;white-space:nowrap}
+.practiceMeta b{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#123c83;color:#fff}
+.practiceSection{padding:22px 0;border-bottom:1px solid #e4ebf3}
+.practiceSection h3{margin:0 0 12px;font-size:18px}
+.practiceSection ul,.practiceSection ol{margin:0;padding-left:22px;display:grid;gap:8px;line-height:1.45}
+.practiceSection ol li::marker{font-weight:900;color:#1f5ca8}
+.setupGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.setupGrid article{display:flex;justify-content:space-between;gap:12px;min-height:82px;padding:13px;border:1px solid #dce5ef;border-radius:12px;background:#f8fafc}
+.setupGrid article>div{display:flex;flex-direction:column;gap:5px}
+.setupGrid article small{font-size:9px;font-weight:900;letter-spacing:.8px;color:#728197}
+.setupGrid article b{font-size:13px;line-height:1.35}
+.sourceBadge{align-self:flex-start;border-radius:999px;padding:4px 7px;background:#e8eef5;color:#617084;font-size:8px!important;white-space:nowrap}
+.sourceBadge.detected{background:#e6f6ec;color:#18733c}.sourceBadge.estimated{background:#fff3d6;color:#8a5a00}.sourceBadge.not-stated{background:#eef1f5;color:#6b7280}
+.practiceColumns{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.diagramSection{display:grid;grid-template-columns:1.3fr 1fr;gap:22px;align-items:center}
+.diagramSection p{color:#52647a;line-height:1.55}
+.fieldMini{position:relative;min-height:170px;border:2px solid #9db0c5;border-radius:12px;background:linear-gradient(90deg,transparent 49.5%,#d8e2ec 50%,transparent 50.5%);display:grid;place-items:center;color:#718096}
+.fieldMini:before,.fieldMini:after{content:'';position:absolute;top:20px;bottom:20px;width:1px;background:#d8e2ec}.fieldMini:before{left:25%}.fieldMini:after{right:25%}
+.fieldMini span{position:absolute;top:10px;font-size:9px;font-weight:900}.fieldMini i{width:56px;height:56px;border:2px solid #9db0c5;border-radius:50%}.fieldMini b{position:absolute;bottom:10px;font-size:9px}
+.coachNotes textarea{width:100%;min-height:120px;border:1px solid #ccd8e5;border-radius:12px;padding:12px;font:inherit}
+.engineAnalysisView{max-width:980px;margin:0 auto}
+@media(max-width:800px){.setupGrid{grid-template-columns:1fr 1fr}.practiceColumns,.diagramSection{grid-template-columns:1fr}.practiceHero{flex-direction:column}.practiceHero h2{font-size:28px}}
+@media(max-width:520px){.setupGrid{grid-template-columns:1fr}.detailTabs{padding-left:14px}.coachPracticeCard.compact{padding:14px}}
+@media print{.globalHeader,.sectionNav,.iconRail,.fixedDetailClose,.detailTabs,.detailFooter{display:none!important}.detailOverlay{position:static!important;background:#fff!important}.detailDrawer{position:static!important;max-width:none!important;height:auto!important;box-shadow:none!important}.detailBody{overflow:visible!important}.coachPracticeCard{max-width:none}.practiceSection{break-inside:avoid}}

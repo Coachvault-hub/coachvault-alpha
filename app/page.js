@@ -30,6 +30,42 @@ function suggestedFolderFor(item) {
     : skillFolderMap[skill] || 'Skills';
 }
 
+
+function makeLegacyPracticeCard(item) {
+  const setup = item?.setup || {};
+  return {
+    purpose: item?.summary || 'Use this drill to develop the listed skill and objectives.',
+    whenToUse: (item?.commonMistakes || []).slice(0, 4).map((mistake) => `Players ${String(mistake).replace(/^Players\s+/i, '').replace(/[.]$/, '').toLowerCase()}.`),
+    setup: {
+      players: { value: setup.players || 'Not stated', source: setup.players ? 'Detected' : 'Not stated' },
+      groups: { value: 'Not stated', source: 'Not stated' },
+      equipment: { value: setup.equipment || [], source: setup.equipment?.length ? 'Detected' : 'Not stated' },
+      space: { value: setup.space || 'Not stated', source: setup.space ? 'Detected' : 'Not stated' },
+      time: { value: setup.duration ? `${setup.duration} minutes` : 'Not stated', source: setup.duration ? 'Detected' : 'Not stated' },
+      rotation: { value: 'Not stated', source: 'Not stated' }
+    },
+    runTheDrill: ['Open the original source for full execution details. This item was approved before Coach Practice Cards were introduced.'],
+    coachFocus: (item?.coachingCues || []).slice(0, 4),
+    watchFor: (item?.commonMistakes || []).slice(0, 4),
+    makeEasier: item?.regressions || [],
+    makeHarder: item?.progressions || [],
+    prerequisites: [],
+    avoidIf: [],
+    successCriteria: item?.learningObjectives || [],
+    fieldDiagram: { type: 'text', description: 'No diagram description was saved with this legacy item.' },
+    notes: ''
+  };
+}
+
+function practiceCardFor(item) {
+  return item?.coachPracticeCard || makeLegacyPracticeCard(item);
+}
+
+function provenanceLabel(value) {
+  if (!value) return 'Not stated';
+  return value;
+}
+
 const seedDrills = [
   {
     id: 1,
@@ -39,6 +75,34 @@ const seedDrills = [
     folder: 'Skills',
     sourceType: 'CoachVault Foundation',
     summary: 'Competitive small-sided ground-ball work that finishes with an outlet decision.',
+    coachPracticeCard: {
+      purpose: 'Teach players to win a contested ground ball, secure possession, and make the next useful play.',
+      whenToUse: ['Players stop their feet before the scoop.', 'Players expose the stick after possession.', 'Players fail to find an outlet after winning the ball.'],
+      setup: {
+        players: { value: '6-12', source: 'Detected' },
+        groups: { value: 'Two teams or lines', source: 'Estimated' },
+        equipment: { value: ['Balls', 'Cones'], source: 'Detected' },
+        space: { value: 'Small grid', source: 'Detected' },
+        time: { value: '8-12 minutes', source: 'Estimated' },
+        rotation: { value: 'Players rotate out after each rep.', source: 'Estimated' }
+      },
+      runTheDrill: [
+        'Place players in two groups around a small grid.',
+        'Start each rep by rolling a loose ball into the playing area.',
+        'Players compete to gain possession without stopping their feet.',
+        'The winner protects the stick and accelerates away from pressure.',
+        'Complete an outlet pass to finish the rep, then rotate players.'
+      ],
+      coachFocus: ['Run through the ball.', 'Protect before looking for the outlet.', 'Accelerate for the first three steps.'],
+      watchFor: ['Stopping before the scoop.', 'Scooping upright.', 'Exposing the stick after possession.'],
+      makeEasier: ['Use an uncontested ball.', 'Shorten the approach distance.', 'Remove the outlet requirement.'],
+      makeHarder: ['Add a trailing defender.', 'Require an opposite-hand pickup.', 'Add a second outlet option and force a read.'],
+      prerequisites: ['Players understand basic ground-ball posture.'],
+      avoidIf: ['Players have not learned safe contact and box-out rules.'],
+      successCriteria: ['Possession is gained in one motion.', 'The ball carrier exits pressure under control.', 'The rep ends with a useful pass or clear.'],
+      fieldDiagram: { type: 'text', description: 'Two lines face a small central grid. The coach rolls a ball into the grid and an outlet waits outside.' },
+      notes: ''
+    },
     teachingMethod: 'Small-Sided Competition',
     primarySkill: { name: 'Ground Balls', weight: 96, reason: 'Winning and securing the loose ball is the central learning purpose.' },
     skillComponents: [
@@ -95,7 +159,8 @@ export default function Home() {
       if (stored) {
         const migrated = JSON.parse(stored).map((item) => ({
           ...item,
-          folder: suggestedFolderFor(item)
+          folder: suggestedFolderFor(item),
+          coachPracticeCard: item.coachPracticeCard || makeLegacyPracticeCard(item)
         }));
         setDrills(migrated);
       }
@@ -199,7 +264,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup">
           <span className="brandMark">CV</span>
-          <div><b>CoachVault</b><small>Engine 1.4</small></div>
+          <div><b>CoachVault</b><small>Engine 3.0</small></div>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -334,7 +399,7 @@ function Review({ result, sourceMeta, diagnostics, internalMode, updateResult, u
   const primary = result.primarySkill || { name: '', weight: 0, reason: '' };
   return <section className="review">
     <header className="reviewHead">
-      <div><span>REVIEW & CONFIRM</span><h2>Check what CoachVault found.</h2><p>Make quick corrections now. Larger edits remain available after the drill enters your Vault.</p></div>
+      <div><span>REVIEW & CONFIRM</span><h2>Review the Coach Practice Card.</h2><p>Confirm the field-ready instructions and the Engine analysis before approval.</p></div>
       <div className="confidence"><small>ENGINE CONFIDENCE</small><b>{result.confidence?.overall || 0}%</b><p>{result.confidence?.notes || ''}</p></div>
     </header>
 
@@ -352,6 +417,9 @@ function Review({ result, sourceMeta, diagnostics, internalMode, updateResult, u
       </div>
     </section>
 
+
+
+    <CoachPracticeCard item={result} editable updateResult={updateResult} compact />
 
     <div className="reviewGrid">
       <div className="reviewMain">
@@ -401,7 +469,7 @@ function Review({ result, sourceMeta, diagnostics, internalMode, updateResult, u
 
     {internalMode && <DebugPanel diagnostics={diagnostics} result={result} />}
 
-    <footer><button className="discard" onClick={discard}>Discard</button><button className="approve" onClick={approve}>Approve to Database</button></footer>
+    <footer><button className="discard" onClick={discard}>Discard</button><button className="approve" onClick={approve}>Approve Coach Practice Card</button></footer>
   </section>
 }
 
@@ -473,10 +541,12 @@ function ListBlock({ title, items, path, updateResult }) {
 }
 
 function DrillCard({ item, onClick }) {
-  return <article className="card" onClick={onClick}><header><span>{item.folder || suggestedFolderFor(item)}</span><small>{item.sourceType}</small></header><h3>{item.title}</h3><p>{item.summary}</p><div className="primaryTag"><b>{item.primarySkill?.weight}</b>{item.primarySkill?.name}</div><div className="pills">{(item.skillComponents || []).slice(0,4).map(x => <span key={x.name}>{x.name} {x.weight}</span>)}</div><footer><b>{item.teachingMethod}</b><span>{item.updated}</span></footer></article>
+  const practiceCard = practiceCardFor(item);
+  return <article className="card" onClick={onClick}><header><span>{item.folder || suggestedFolderFor(item)}</span><small>{item.sourceType}</small></header><h3>{item.title}</h3><p>{practiceCard.purpose || item.summary}</p><div className="cardType">COACH PRACTICE CARD</div><div className="primaryTag"><b>{item.primarySkill?.weight}</b>{item.primarySkill?.name}</div><div className="pills">{(item.skillComponents || []).slice(0,4).map(x => <span key={x.name}>{x.name} {x.weight}</span>)}</div><footer><b>{item.teachingMethod}</b><span>{item.updated}</span></footer></article>
 }
 
 function Detail({ item, onClose }) {
+  const [tab, setTab] = useState('practice');
   useEffect(() => {
     const closeOnEscape = (event) => {
       if (event.key === 'Escape') onClose();
@@ -490,87 +560,109 @@ function Detail({ item, onClose }) {
     <article className="detailDrawer" onClick={(e) => e.stopPropagation()}>
       <header className="detailHeader">
         <div>
-          <span>{item.folder || suggestedFolderFor(item).toUpperCase()} · APPROVED DRILL</span>
+          <span>{(item.folder || suggestedFolderFor(item)).toUpperCase()} · APPROVED DRILL</span>
           <h2>{item.title}</h2>
         </div>
-        
       </header>
 
+      <nav className="detailTabs">
+        <button className={tab === 'practice' ? 'active' : ''} onClick={() => setTab('practice')}>Coach Practice Card</button>
+        <button className={tab === 'analysis' ? 'active' : ''} onClick={() => setTab('analysis')}>Engine Analysis</button>
+      </nav>
+
       <div className="detailBody">
-        <p className="detailSummary">{item.summary}</p>
-
-        {item.sourceUrl && <a className="sourceLink detailSourceLink" href={item.sourceUrl} target="_blank" rel="noreferrer">Open original source</a>}
-
-        <section className="detailSection">
-          <h3>Primary Skill</h3>
-          <div className="primaryTag large"><b>{item.primarySkill?.weight}</b>{item.primarySkill?.name}</div>
-          {item.primarySkill?.reason && <p>{item.primarySkill.reason}</p>}
-        </section>
-
-        <section className="detailSection">
-          <h3>Skill Components</h3>
-          {(item.components || item.skillComponents || []).length ? (
-            <div className="detailComponents">
-              {(item.components || item.skillComponents || []).map((component) => <article key={component.name}>
-                <div className="componentScore"><b>{component.weight}</b><span>{component.name}</span></div>
-                {component.reason && <p>{component.reason}</p>}
-                {component.objectives?.length > 0 && <div className="objectiveList">
-                  <small>OBJECTIVES</small>
-                  {component.objectives.map((objective) => <div key={objective.name}>
-                    <b>{objective.weight}</b>
-                    <span>{objective.name}</span>
-                    {objective.reason && <p>{objective.reason}</p>}
-                  </div>)}
-                </div>}
-              </article>)}
-            </div>
-          ) : <p className="emptyDetail">No skill components were saved for this item.</p>}
-        </section>
-
-        <section className="detailSection">
-          <h3>Learning Objectives</h3>
-          <ul>{(item.learningObjectives || []).map(x => <li key={x}>{x}</li>)}</ul>
-        </section>
-
-        <section className="detailSection twoColumnDetail">
-          <div>
-            <h3>Coaching Cues</h3>
-            <ul>{(item.coachingCues || []).map(x => <li key={x}>{x}</li>)}</ul>
-          </div>
-          <div>
-            <h3>Common Mistakes</h3>
-            <ul>{(item.commonMistakes || []).map(x => <li key={x}>{x}</li>)}</ul>
-          </div>
-        </section>
-
-        <section className="detailSection twoColumnDetail">
-          <div>
-            <h3>Setup</h3>
-            <p><b>Players:</b> {item.setup?.players || 'Not stated'}</p>
-            <p><b>Duration:</b> {item.setup?.duration ? `${item.setup.duration} minutes` : 'Not stated'}</p>
-            <p><b>Space:</b> {item.setup?.space || 'Not stated'}</p>
-          </div>
-          <div>
-            <h3>Equipment</h3>
-            <ul>{(item.setup?.equipment || []).map(x => <li key={x}>{x}</li>)}</ul>
-          </div>
-        </section>
-
-        {item.evidence?.length > 0 && <section className="detailSection">
-          <h3>Source Evidence</h3>
-          {item.evidence.map((e, i) => <div className="evidence" key={i}>
-            <b>{e.location || `Evidence ${i + 1}`}</b>
-            <p>{e.text}</p>
-          </div>)}
-        </section>}
+        {tab === 'practice' ? <CoachPracticeCard item={item} /> : <EngineAnalysis item={item} />}
       </div>
 
       <footer className="detailFooter">
         {item.sourceUrl && <a href={item.sourceUrl} target="_blank" rel="noreferrer">View source</a>}
+        <button onClick={() => window.print()}>Print card</button>
         <button onClick={onClose}>Done</button>
       </footer>
     </article>
   </div>
+}
+
+function SourceBadge({ value }) {
+  return <small className={`sourceBadge ${String(value || '').toLowerCase().replace(/\s+/g, '-')}`}>{provenanceLabel(value)}</small>;
+}
+
+function SetupValue({ label, item }) {
+  const value = item?.value;
+  const display = Array.isArray(value) ? value.join(', ') : value;
+  return <article><div><small>{label}</small><b>{display || 'Not stated'}</b></div><SourceBadge value={item?.source} /></article>;
+}
+
+function CardList({ title, items, ordered=false }) {
+  if (!items?.length) return null;
+  const Tag = ordered ? 'ol' : 'ul';
+  return <section className="practiceSection"><h3>{title}</h3><Tag>{items.map((x, i) => <li key={`${title}-${i}`}>{x}</li>)}</Tag></section>;
+}
+
+function CoachPracticeCard({ item, editable=false, updateResult, compact=false }) {
+  const card = practiceCardFor(item);
+  const setup = card.setup || {};
+  return <section className={`coachPracticeCard ${compact ? 'compact' : ''}`}>
+    <header className="practiceHero">
+      <div><small>COACH PRACTICE CARD</small><h2>{item.title || 'Untitled Drill'}</h2><p>{card.purpose || item.summary}</p></div>
+      <div className="practiceMeta"><span>{item.primarySkill?.name || 'Skill pending'}</span><b>{item.primarySkill?.weight || 0}</b></div>
+    </header>
+
+    <CardList title="When to Use" items={card.whenToUse} />
+
+    <section className="practiceSection">
+      <h3>Setup</h3>
+      <div className="setupGrid">
+        <SetupValue label="Players" item={setup.players} />
+        <SetupValue label="Groups" item={setup.groups} />
+        <SetupValue label="Equipment" item={setup.equipment} />
+        <SetupValue label="Space" item={setup.space} />
+        <SetupValue label="Time" item={setup.time} />
+        <SetupValue label="Rotation" item={setup.rotation} />
+      </div>
+    </section>
+
+    <section className="practiceSection diagramSection">
+      <div><h3>Field Layout</h3><p>{card.fieldDiagram?.description || 'No field-layout description was returned.'}</p></div>
+      <div className="fieldMini"><span>GOAL</span><i></i><b>CoachVault diagram description</b></div>
+    </section>
+
+    <CardList title="Run the Drill" items={card.runTheDrill} ordered />
+
+    <div className="practiceColumns">
+      <CardList title="Coach Focus" items={card.coachFocus} />
+      <CardList title="Watch For" items={card.watchFor} />
+    </div>
+
+    <div className="practiceColumns">
+      <CardList title="Make It Easier" items={card.makeEasier} />
+      <CardList title="Make It Harder" items={card.makeHarder} />
+    </div>
+
+    <div className="practiceColumns">
+      <CardList title="Prerequisites" items={card.prerequisites} />
+      <CardList title="Avoid If" items={card.avoidIf} />
+    </div>
+
+    <CardList title="Success Criteria" items={card.successCriteria} />
+
+    <section className="practiceSection coachNotes">
+      <h3>Coach Notes</h3>
+      {editable ? <textarea value={card.notes || ''} onChange={(e) => updateResult('coachPracticeCard.notes', e.target.value)} placeholder="Add your own practice notes..." /> : <p>{card.notes || 'No coach notes yet.'}</p>}
+    </section>
+  </section>
+}
+
+function EngineAnalysis({ item }) {
+  return <section className="engineAnalysisView">
+    <p className="detailSummary">{item.summary}</p>
+    {item.sourceUrl && <a className="sourceLink detailSourceLink" href={item.sourceUrl} target="_blank" rel="noreferrer">Open original source</a>}
+    <section className="detailSection"><h3>Primary Skill</h3><div className="primaryTag large"><b>{item.primarySkill?.weight}</b>{item.primarySkill?.name}</div>{item.primarySkill?.reason && <p>{item.primarySkill.reason}</p>}</section>
+    <section className="detailSection"><h3>Skill Components</h3><div className="detailComponents">{(item.components || item.skillComponents || []).map((component) => <article key={component.name}><div className="componentScore"><b>{component.weight}</b><span>{component.name}</span></div>{component.reason && <p>{component.reason}</p>}{component.objectives?.length > 0 && <div className="objectiveList"><small>OBJECTIVES</small>{component.objectives.map((objective) => <div key={objective.name}><b>{objective.weight}</b><span>{objective.name}</span>{objective.reason && <p>{objective.reason}</p>}</div>)}</div>}</article>)}</div></section>
+    <section className="detailSection"><h3>Learning Objectives</h3><ul>{(item.learningObjectives || []).map(x => <li key={x}>{x}</li>)}</ul></section>
+    <section className="detailSection twoColumnDetail"><div><h3>Coaching Cues</h3><ul>{(item.coachingCues || []).map(x => <li key={x}>{x}</li>)}</ul></div><div><h3>Common Mistakes</h3><ul>{(item.commonMistakes || []).map(x => <li key={x}>{x}</li>)}</ul></div></section>
+    {item.evidence?.length > 0 && <section className="detailSection"><h3>Source Evidence</h3>{item.evidence.map((e, i) => <div className="evidence" key={i}><b>{e.location || `Evidence ${i + 1}`}</b><p>{e.text}</p></div>)}</section>}
+  </section>
 }
 
 

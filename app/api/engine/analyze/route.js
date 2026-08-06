@@ -164,7 +164,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 2.0 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.0 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -183,14 +183,17 @@ Return only components that the source intentionally teaches.
 For each component, return only objectives that the source intentionally teaches.
 Every score needs a short evidence-based reason.
 Do not divide scores to total 100.
-Do not infer setup information unless the source states it.
+Create two linked outputs: standardized Coach Intelligence and a field-ready Coach Practice Card.
+For Coach Practice Card setup details, use the source first. You may infer a detail only when it is strongly supported by the activity. Mark each setup field as Detected, Estimated, or Not stated.
+Never invent exact player counts, dimensions, timing, rotations, or equipment without support.
+The Coach Practice Card must let a coach run the drill without rewatching the source. Use short, ordered, field-ready instructions.
 
 CVIL:
 ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"2.0-cvil",
+  "engineVersion":"3.0-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -215,7 +218,37 @@ Return strict JSON:
   "progressions":[""],
   "regressions":[""],
   "evidence":[{"text":"","location":"timestamp, paragraph, or source section"}],
-  "confidence":{"overall":0,"primarySkill":0,"components":0,"objectives":0,"setup":0,"notes":""}
+  "confidence":{"overall":0,"primarySkill":0,"components":0,"objectives":0,"setup":0,"notes":""},
+  "knowledgeModel":{
+    "domain":"Skills|Offense|Defense|Transition|Goalie|Faceoffs|Athletic Development|Team Culture",
+    "trainingObjectives":[""],
+    "problemsSolved":[""],
+    "constraints":[""],
+    "prerequisites":[""],
+    "avoidIf":[""]
+  },
+  "coachPracticeCard":{
+    "purpose":"one field-ready sentence",
+    "whenToUse":["observable player problem"],
+    "setup":{
+      "players":{"value":"","source":"Detected|Estimated|Not stated"},
+      "groups":{"value":"","source":"Detected|Estimated|Not stated"},
+      "equipment":{"value":[""],"source":"Detected|Estimated|Not stated"},
+      "space":{"value":"","source":"Detected|Estimated|Not stated"},
+      "time":{"value":"","source":"Detected|Estimated|Not stated"},
+      "rotation":{"value":"","source":"Detected|Estimated|Not stated"}
+    },
+    "fieldDiagram":{"type":"text","description":"Describe player starting spots, ball location, goals, cones, and movement in plain language."},
+    "runTheDrill":["numbered step written as a direct coaching instruction"],
+    "coachFocus":["maximum four teaching points"],
+    "watchFor":["immediate correction"],
+    "makeEasier":["safe regression"],
+    "makeHarder":["useful progression or constraint"],
+    "prerequisites":["skill or concept players should already understand"],
+    "avoidIf":["condition where this drill is a poor fit"],
+    "successCriteria":["observable evidence the drill is working"],
+    "notes":""
+  }
 }
 
 SOURCE:
@@ -233,7 +266,7 @@ ${sourceText.slice(0, 50000)}`;
         temperature:0.05,
         response_format:{ type:'json_object' },
         messages:[
-          { role:'system', content:'Return valid JSON only. Match exact CVIL vocabulary. Do not invent skills, components, or objectives.' },
+          { role:'system', content:'Return valid JSON only. Match exact CVIL vocabulary. Produce a concise, field-ready Coach Practice Card. Mark inferred setup fields as Estimated.' },
           { role:'user', content:prompt }
         ]
       })
