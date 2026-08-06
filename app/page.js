@@ -44,7 +44,13 @@ function makeLegacyPracticeCard(item) {
       time: { value: setup.duration ? `${setup.duration} minutes` : 'Not stated', source: setup.duration ? 'Detected' : 'Not stated' },
       rotation: { value: 'Not stated', source: 'Not stated' }
     },
-    runTheDrill: ['Open the original source for full execution details. This item was approved before Coach Practice Cards were introduced.'],
+    runTheDrill: [
+      'Review the original source and identify the starting positions.',
+      'Organize players using the saved setup information.',
+      'Run the activity through the listed learning objectives and coaching cues.',
+      'Stop briefly to correct the most important common mistake.',
+      'Repeat the drill and use the success criteria to judge improvement.'
+    ],
     coachFocus: (item?.coachingCues || []).slice(0, 4),
     watchFor: (item?.commonMistakes || []).slice(0, 4),
     makeEasier: item?.regressions || [],
@@ -264,7 +270,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup">
           <span className="brandMark">CV</span>
-          <div><b>CoachVault</b><small>Engine 3.0</small></div>
+          <div><b>CoachVault</b><small>Engine 3.1</small></div>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
