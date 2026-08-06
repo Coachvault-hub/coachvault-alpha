@@ -438,4 +438,47 @@ body{background:var(--cv-bg);color:var(--cv-text)}
 .engineAnalysisView{max-width:980px;margin:0 auto}
 @media(max-width:800px){.setupGrid{grid-template-columns:1fr 1fr}.practiceColumns,.diagramSection{grid-template-columns:1fr}.practiceHero{flex-direction:column}.practiceHero h2{font-size:28px}}
 @media(max-width:520px){.setupGrid{grid-template-columns:1fr}.detailTabs{padding-left:14px}.coachPracticeCard.compact{padding:14px}}
-@media print{.globalHeader,.sectionNav,.iconRail,.fixedDetailClose,.detailTabs,.detailFooter{display:none!important}.detailOverlay{position:static!important;background:#fff!important}.detailDrawer{position:static!important;max-width:none!important;height:auto!important;box-shadow:none!important}.detailBody{overflow:visible!important}.coachPracticeCard{max-width:none}.practiceSection{break-inside:avoid}}
+@page{size:letter portrait;margin:.35in}
+@media print{
+  html,body{margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+  /* Print only the open Coach Practice Card. The app behind the modal was
+     still taking up printable space and creating several extra pages. */
+  body *{visibility:hidden!important}
+  .detailOverlay,.detailOverlay *{visibility:visible!important}
+  .appShell{min-height:0!important;height:0!important;overflow:visible!important}
+  .detailOverlay{position:absolute!important;inset:0!important;width:100%!important;height:auto!important;min-height:0!important;background:#fff!important;padding:0!important;overflow:visible!important}
+  .detailDrawer{position:static!important;width:100%!important;max-width:none!important;height:auto!important;max-height:none!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important}
+  .detailHeader,.globalHeader,.sectionNav,.iconRail,.fixedDetailClose,.detailTabs,.detailFooter{display:none!important}
+  .detailBody{padding:0!important;margin:0!important;overflow:visible!important;height:auto!important;max-height:none!important}
+
+  .coachPracticeCard{max-width:none!important;width:100%!important;margin:0!important;font-size:8.5pt!important;line-height:1.2!important}
+  .practiceHero{padding:0 0 8px!important;gap:12px!important;border-bottom:1px solid #9db0c5!important}
+  .practiceHero h2{font-size:20pt!important;line-height:1!important;margin:2px 0 4px!important}
+  .practiceHero p{font-size:9pt!important;line-height:1.25!important;margin:0!important;max-width:none!important}
+  .practiceHero small{font-size:7pt!important}
+  .practiceMeta{padding:4px 7px!important;gap:5px!important;font-size:7.5pt!important}
+  .practiceMeta b{width:24px!important;height:24px!important;font-size:8pt!important}
+
+  .practiceSection{padding:7px 0!important;border-bottom:1px solid #d7e0ea!important;break-inside:avoid-page!important;page-break-inside:avoid!important}
+  .practiceSection h3{font-size:11pt!important;margin:0 0 4px!important}
+  .practiceSection ul,.practiceSection ol{gap:2px!important;line-height:1.18!important;padding-left:17px!important;margin:0!important}
+  .practiceColumns{gap:14px!important;break-inside:avoid-page!important;page-break-inside:avoid!important}
+
+  .setupGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}
+  .setupGrid article{min-height:0!important;padding:6px!important;border-radius:6px!important;gap:5px!important}
+  .setupGrid article small{font-size:6.5pt!important}
+  .setupGrid article b{font-size:8pt!important;line-height:1.15!important}
+  .sourceBadge{font-size:5.5pt!important;padding:2px 4px!important}
+
+  .diagramSection{grid-template-columns:1.45fr .55fr!important;gap:10px!important}
+  .diagramSection p{font-size:8pt!important;line-height:1.2!important;margin:0!important}
+  .fieldMini{min-height:78px!important;border-radius:6px!important}
+  .fieldMini i{width:32px!important;height:32px!important}
+  .fieldMini span,.fieldMini b{font-size:5.5pt!important}
+
+  .coachNotes{display:none!important}
+  .engineAnalysisView{display:none!important}
+}
+
