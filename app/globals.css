@@ -505,3 +505,6 @@ body{background:var(--cv-bg);color:var(--cv-text)}
 
 /* 3.2.3 setup-only diagram */
 .goalLegacy{display:none}
+
+/* Engine 3.2.5 fixed lacrosse field templates */
+.restrainingLine{stroke:#93a79a;stroke-width:.9;stroke-dasharray:4 3}

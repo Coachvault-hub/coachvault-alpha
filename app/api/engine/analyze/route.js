@@ -193,7 +193,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.2.4-cpc",
+  "engineVersion":"3.2.5-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -240,9 +240,10 @@ Return strict JSON:
     },
     "fieldLayout":{
       "canvas":"crease-area|half-field|full-field|small-grid|no-goal",
+      "participationMode":"station|live-play",
       "confidence":"Detected|Estimated|Not stated",
       "players":[
-        {"id":"O1","role":"offense|defense|goalie","stationType":"player|line","x":50,"y":50}
+        {"id":"O1","role":"offense|defense|goalie","stationType":"player|line","queueDirection":"up|down|left|right|none","x":50,"y":50}
       ],
       "coach":{"x":50,"y":90},
       "balls":[{"x":50,"y":50}],
@@ -269,47 +270,101 @@ The Field Setup answers only:
 WHERE DOES EACH PERSON AND PIECE OF EQUIPMENT START BEFORE THE REP BEGINS?
 
 Do not diagram how the drill runs.
-Do not show passes.
-Do not show cuts.
-Do not show dodges.
-Do not show player movement.
-Do not show rotations.
-Do not show outcomes.
+Do not show passes, cuts, dodges, player movement, post-rep rotation, or outcomes.
 
-Populate only:
+FIRST classify participationMode:
+
+station
+Use when players rotate through fixed lines or starting stations.
+
+For station drills:
+- Waiting players must be staged OUTSIDE the playable field area.
+- The first player in line is closest to the field.
+- The queue extends AWAY from the field.
+- Sideline queues extend outside the sideline.
+- Endline queues extend behind the endline.
+- Waiting players never stack deeper into the active drill area.
+- Use stationType "line".
+- queueDirection tells the renderer which way the waiting line extends: up, down, left, or right.
+
+live-play
+Use when the rep is a live numerical situation such as 1v1, 2v2, 3v3, 4v4, 5v5, or 6v6.
+
+For live-play drills:
+- Show ONLY the players who actively begin the rep on the field.
+- Do not draw waiting player lines beside the drill.
+- Assume waiting players are on the sideline or at midfield unless their exact location matters to understanding setup.
+- Use stationType "player" for active players.
+
+Populate only starting information:
 - canvas
-- offensive player starting positions or lines
-- defensive player starting positions or lines
-- goalie starting position
-- coach starting position
-- starting ball locations
+- participationMode
+- offensive starting positions or stationary lines
+- defensive starting positions or stationary lines
+- goalie
+- coach
+- starting balls
 - cones or markers
-- short setup notes
+- setup notes
 
-LACROSSE DIAGRAM STANDARD:
-- Crease is a circle.
-- Goal is a triangle inside the crease circle.
-- Never draw the lacrosse goal as a rectangle.
-- Offense labels: O1, O2, O3...
-- Defense labels: D1, D2, D3...
-- Goalie: G.
-- Coach: C.
-- Use stationType "line" when a location is a line of players.
-- Use stationType "player" when it is one player.
+LACROSSE FIELD TEMPLATE RULES:
+The AI selects the field template. It does not invent field markings.
 
-For line drills, show the lines, not only the first player.
-For four-line or four-corner drills, show all four base lines.
-For randomized drills, show only the base pre-rep organization.
-The diagram should be understandable in three seconds.
+crease-area:
+- one end line
+- one circular crease
+- one triangle goal inside the crease
+- no midfield circle
 
-Use normalized coordinates.
-x = 0 left to 100 right.
-For crease-area and half-field: y = 0 at the endline and y = 120 toward midfield.
-For full-field: y = 0 to 160.
-For small-grid and no-goal: y = 0 to 100.
+half-field:
+- one end line
+- sidelines
+- one circular crease
+- one triangle goal inside the crease
+- one restraining line
+- no midfield circle
+- no second goal
 
-Mark confidence Detected when setup is shown or stated.
+full-field:
+- two end lines
+- sidelines
+- two circular creases
+- two triangle goals
+- midfield line
+- midfield faceoff markings
+- restraining lines
+
+small-grid:
+- simple rectangular drill area
+- no field markings unless needed
+
+no-goal:
+- simple rectangular playable area
+- no goal or crease
+
+LACROSSE SYMBOL STANDARD:
+- Crease = circle.
+- Goal = triangle inside the crease.
+- Never draw the goal as a rectangle.
+- Offense = O1, O2, O3...
+- Defense = D1, D2, D3...
+- Goalie = G.
+- Coach = C.
+- Ball = small dot.
+- Cone = triangle marker.
+
+For four-line or four-corner station drills:
+- show all four starting lines
+- place the first player nearest the field
+- extend each waiting line outside the playable area
+
+For randomized drills:
+- show only the base pre-rep organization
+
+Mark confidence Detected when setup is explicitly shown or stated.
 Mark confidence Estimated when spacing must be reconstructed.
+
+The setup diagram should be understandable in three seconds.
 
 SOURCE:
 ${sourceText.slice(0, 50000)}`;
