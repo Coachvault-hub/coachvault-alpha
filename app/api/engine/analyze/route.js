@@ -193,7 +193,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.2.5-cpc",
+  "engineVersion":"3.2.6-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -278,6 +278,14 @@ station
 Use when players rotate through fixed lines or starting stations.
 
 For station drills:
+- Determine the nearest field boundary for each stationary line.
+- Place the first player at the starting point nearest that boundary.
+- Place every waiting player on the OUTSIDE side of that boundary.
+- Never infer queue direction from page orientation alone.
+- Example: a line whose active player is near the bottom end line must stack downward, behind the end line.
+- Example: a line whose active player is near the top end line must stack upward, behind the end line.
+- Example: a line near the left sideline stacks left.
+- Example: a line near the right sideline stacks right.
 - Waiting players must be staged OUTSIDE the playable field area.
 - The first player in line is closest to the field.
 - The queue extends AWAY from the field.
@@ -321,7 +329,8 @@ half-field:
 - sidelines
 - one circular crease
 - one triangle goal inside the crease
-- one restraining line
+- one restraining line across the field between the goal area and midfield side
+- this line is a restraining line, NOT midfield
 - no midfield circle
 - no second goal
 

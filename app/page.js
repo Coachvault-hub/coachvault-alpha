@@ -182,10 +182,11 @@ export default function Home() {
       setProgressStep(0);
       return;
     }
-    const timer = setInterval(() => {
-      setProgressStep((current) => Math.min(current + 1, 6));
-    }, 900);
-    return () => clearInterval(timer);
+    const checkpoints = [900, 2300, 4200, 6500, 9000, 12000];
+    const timers = checkpoints.map((delay, index) =>
+      setTimeout(() => setProgressStep(index + 1), delay)
+    );
+    return () => timers.forEach(clearTimeout);
   }, [loading]);
 
   const filtered = useMemo(() => {
@@ -270,7 +271,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup">
           <span className="brandMark">CV</span>
-          <div><b>CoachVault</b><small>Engine 3.2.5</small></div>
+          <div><b>CoachVault</b><small>Engine 3.2.6</small></div>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -323,20 +324,20 @@ export default function Home() {
                 <button className={mode === 'file' ? 'active' : ''} onClick={() => setMode('file')}>Upload File</button>
               </div>
 
-              {mode === 'link' && <div className="inputBody">
+              {!loading && mode === 'link' && <div className="inputBody">
                 <label>Website, YouTube, Instagram, or TikTok URL</label>
                 <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste a public coaching link..." />
                 <details><summary>Paste transcript or source text as a fallback</summary><textarea value={transcript} onChange={(e) => setTranscript(e.target.value)} placeholder="Optional transcript..." /></details>
                 <button disabled={!url.trim()} onClick={runEngine}>Analyze with CoachVault</button>
               </div>}
 
-              {mode === 'text' && <div className="inputBody">
+              {!loading && mode === 'text' && <div className="inputBody">
                 <label>Drill description, transcript, or coaching notes</label>
                 <textarea className="large" value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste content for the Engine to analyze..." />
                 <button disabled={!text.trim()} onClick={runEngine}>Analyze with CoachVault</button>
               </div>}
 
-              {mode === 'file' && <div className="inputBody placeholder">
+              {!loading && mode === 'file' && <div className="inputBody placeholder">
                 <h3>File ingestion is staged next.</h3>
                 <p>PDF, DOCX, PPTX, image, and video upload will feed this same analysis and review workflow.</p>
               </div>}
@@ -379,25 +380,48 @@ export default function Home() {
 
 function EngineProgress({ step }) {
   const stages = [
-    'Reading the source',
-    'Identifying the activity',
-    'Finding the primary skill',
-    'Scoring skill components',
-    'Separating supporting skills',
-    'Attaching evidence',
-    'Preparing your review'
+    { title: 'Acquiring source', detail: 'Opening the submitted coaching source and preparing it for analysis.' },
+    { title: 'Reading coaching content', detail: 'Extracting the usable transcript, captions, text, and source context.' },
+    { title: 'Identifying the drill', detail: 'Determining drill structure, participation model, and central learning purpose.' },
+    { title: 'Mapping skills', detail: 'Matching the primary skill and supporting components to CoachVault standards.' },
+    { title: 'Building field setup', detail: 'Separating active players from waiting lines and reconstructing pre-rep positions.' },
+    { title: 'Building Coach Practice Card', detail: 'Turning the source into field-ready instructions, cues, objectives, and setup.' },
+    { title: 'Checking the analysis', detail: 'Reviewing evidence, confidence, and consistency before presenting the card.' }
   ];
+  const current = Math.min(step, stages.length - 1);
 
-  return <section className="engineProgress">
-    <div className="enginePulse"><span></span></div>
-    <div>
-      <small>COACHVAULT ENGINE</small>
-      <h3>{stages[Math.min(step, stages.length - 1)]}</h3>
-      <div className="progressTrack"><span style={{ width: `${Math.max(8, ((step + 1) / stages.length) * 100)}%` }} /></div>
-      <div className="progressSteps">
-        {stages.map((stage, index) => <span className={index < step ? 'done' : index === step ? 'current' : ''} key={stage}>{index < step ? '✓' : index + 1}</span>)}
+  return <section className="engineAnalysis">
+    <header className="engineAnalysisHead">
+      <div>
+        <small>COACHVAULT ENGINE • LIVE ANALYSIS</small>
+        <h2>Building your Coach Practice Card</h2>
+        <p>CoachVault is turning the submitted source into structured coaching knowledge.</p>
+      </div>
+      <div className="analysisSpinner"><span></span><span></span><span></span></div>
+    </header>
+
+    <div className="analysisCurrent">
+      <div className="analysisPulse"></div>
+      <div>
+        <small>WORKING NOW</small>
+        <h3>{stages[current].title}</h3>
+        <p>{stages[current].detail}</p>
       </div>
     </div>
+
+    <div className="analysisTimeline">
+      {stages.map((stage, index) => (
+        <div key={stage.title} className={`analysisStage ${index < current ? 'complete' : index === current ? 'active' : ''}`}>
+          <span className="analysisStageIcon">{index < current ? '✓' : index + 1}</span>
+          <div>
+            <b>{stage.title}</b>
+            <small>{index < current ? 'Complete' : index === current ? 'Analyzing…' : 'Waiting'}</small>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div className="analysisProgress"><span style={{width:`${Math.max(7,((current+1)/stages.length)*100)}%`}} /></div>
   </section>
 }
 

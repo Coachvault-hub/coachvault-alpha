@@ -508,3 +508,29 @@ body{background:var(--cv-bg);color:var(--cv-text)}
 
 /* Engine 3.2.5 fixed lacrosse field templates */
 .restrainingLine{stroke:#93a79a;stroke-width:.9;stroke-dasharray:4 3}
+
+/* Engine 3.2.6 live analysis */
+.engineAnalysis{padding:26px;border:1px solid #dbe4ef;border-radius:18px;background:#fff;display:grid;gap:22px;min-height:390px}
+.engineAnalysisHead{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
+.engineAnalysisHead small,.analysisCurrent small{font-size:11px;font-weight:800;letter-spacing:.11em;color:#2463eb}
+.engineAnalysisHead h2{margin:5px 0 7px;font-size:26px;color:#12213a}
+.engineAnalysisHead p,.analysisCurrent p{margin:0;color:#65758b}
+.analysisSpinner{display:flex;gap:5px;padding-top:10px}
+.analysisSpinner span{width:8px;height:8px;border-radius:50%;background:#2463eb;animation:cvThink 1.2s infinite ease-in-out}
+.analysisSpinner span:nth-child(2){animation-delay:.18s}.analysisSpinner span:nth-child(3){animation-delay:.36s}
+@keyframes cvThink{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-5px)}}
+.analysisCurrent{display:flex;gap:15px;align-items:center;padding:18px;border-radius:14px;background:#f5f8fd}
+.analysisCurrent h3{margin:3px 0 5px;font-size:19px;color:#12213a}
+.analysisPulse{width:13px;height:13px;flex:0 0 13px;border-radius:50%;background:#2463eb;box-shadow:0 0 0 0 rgba(36,99,235,.35);animation:cvPulse 1.5s infinite}
+@keyframes cvPulse{70%{box-shadow:0 0 0 12px rgba(36,99,235,0)}100%{box-shadow:0 0 0 0 rgba(36,99,235,0)}}
+.analysisTimeline{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px}
+.analysisStage{display:flex;gap:8px;align-items:flex-start;opacity:.48}
+.analysisStage.complete,.analysisStage.active{opacity:1}
+.analysisStageIcon{display:grid;place-items:center;width:25px;height:25px;flex:0 0 25px;border-radius:50%;border:1px solid #cbd7e6;font-size:11px;font-weight:800}
+.analysisStage.complete .analysisStageIcon{background:#e9f7ef;border-color:#b8e1c7;color:#16713a}
+.analysisStage.active .analysisStageIcon{background:#2463eb;border-color:#2463eb;color:#fff}
+.analysisStage b{display:block;font-size:11px;line-height:1.2;color:#24344e}
+.analysisStage small{display:block;margin-top:4px;font-size:10px;color:#78879b}
+.analysisProgress{height:7px;background:#e8eef6;border-radius:99px;overflow:hidden}
+.analysisProgress span{display:block;height:100%;background:#2463eb;border-radius:99px;transition:width .55s ease}
+@media(max-width:900px){.analysisTimeline{grid-template-columns:1fr 1fr}.engineAnalysisHead{flex-direction:column}}
