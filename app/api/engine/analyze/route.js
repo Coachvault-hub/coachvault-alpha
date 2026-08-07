@@ -193,7 +193,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.2.1-cpc",
+  "engineVersion":"3.2.4-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -242,20 +242,11 @@ Return strict JSON:
       "canvas":"crease-area|half-field|full-field|small-grid|no-goal",
       "confidence":"Detected|Estimated|Not stated",
       "players":[
-        {"id":"O1","role":"offense|defense|goalie","x":50,"y":50}
+        {"id":"O1","role":"offense|defense|goalie","stationType":"player|line","x":50,"y":50}
       ],
       "coach":{"x":50,"y":90},
       "balls":[{"x":50,"y":50}],
       "cones":[{"x":50,"y":50}],
-      "movements":[
-        {"from":"O1","to":{"x":50,"y":40}}
-      ],
-      "passes":[
-        {"from":"O1","to":"O2"}
-      ],
-      "rotation":[
-        {"from":"O1","to":{"x":20,"y":85}}
-      ],
       "notes":""
     },
     "runTheDrill":["numbered step written as a direct coaching instruction"],
@@ -271,41 +262,54 @@ Return strict JSON:
 }
 
 
-FIELD LAYOUT RULES:
-Generate a structured top-down field diagram for the Coach Practice Card.
+FIELD SETUP RULES:
+Generate a structured top-down SETUP diagram for the Coach Practice Card.
 
-IMPORTANT:
-- Populate fieldLayout.players whenever the source describes or visibly demonstrates starting player locations.
-- Populate fieldLayout.cones whenever cones are stated or clearly used.
-- Populate fieldLayout.balls whenever the starting ball location is known.
-- Populate fieldLayout.coach when a coach initiates or manages the drill.
-- Populate movements, passes, and rotation when they are central to understanding how the drill runs.
-- Do not return empty arrays when the source clearly gives enough information to reconstruct the setup.
+The Field Setup answers only:
+WHERE DOES EACH PERSON AND PIECE OF EQUIPMENT START BEFORE THE REP BEGINS?
+
+Do not diagram how the drill runs.
+Do not show passes.
+Do not show cuts.
+Do not show dodges.
+Do not show player movement.
+Do not show rotations.
+Do not show outcomes.
+
+Populate only:
+- canvas
+- offensive player starting positions or lines
+- defensive player starting positions or lines
+- goalie starting position
+- coach starting position
+- starting ball locations
+- cones or markers
+- short setup notes
+
+LACROSSE DIAGRAM STANDARD:
+- Crease is a circle.
+- Goal is a triangle inside the crease circle.
+- Never draw the lacrosse goal as a rectangle.
+- Offense labels: O1, O2, O3...
+- Defense labels: D1, D2, D3...
+- Goalie: G.
+- Coach: C.
+- Use stationType "line" when a location is a line of players.
+- Use stationType "player" when it is one player.
+
+For line drills, show the lines, not only the first player.
+For four-line or four-corner drills, show all four base lines.
+For randomized drills, show only the base pre-rep organization.
+The diagram should be understandable in three seconds.
 
 Use normalized coordinates.
 x = 0 left to 100 right.
-For crease-area and half-field: y = 0 at the endline/goal side and y = 120 toward midfield.
+For crease-area and half-field: y = 0 at the endline and y = 120 toward midfield.
 For full-field: y = 0 to 160.
 For small-grid and no-goal: y = 0 to 100.
 
-Choose the smallest useful canvas:
-- crease-area for drills concentrated around the cage
-- half-field for most settled offense, defense, shooting, and small-sided drills
-- full-field for clearing, riding, and full-field transition
-- small-grid for keep-away, station work, footwork, and compact competition
-- no-goal where a cage is irrelevant
-
-Use O1, O2, O3... for offense.
-Use D1, D2, D3... for defense.
-Use G for goalie.
-Use coach for the coach marker.
-
-Mark confidence Detected when the source explicitly states or shows the setup.
-Mark confidence Estimated when the setup is reasonably reconstructed but exact spacing is unclear.
-
-For drills like four-corner or four-line drills, place all four starting groups on the diagram even if only one example rep is described.
-For randomized drills, show the base starting positions and use only representative arrows needed to explain a typical rep.
-Keep the diagram readable. Do not draw every possible variation at once.
+Mark confidence Detected when setup is shown or stated.
+Mark confidence Estimated when spacing must be reconstructed.
 
 SOURCE:
 ${sourceText.slice(0, 50000)}`;

@@ -497,3 +497,11 @@ body{background:var(--cv-bg);color:var(--cv-text)}
   color:#64748b;
   font-size:12px;
 }
+
+/* Engine 3.2.2 setup-only field standard */
+.goalCrease{fill:none;stroke:#93a79a;stroke-width:1}
+.goalTriangle{fill:none;stroke:#66766c;stroke-width:1.2;stroke-linejoin:round}
+.diagramQueue{opacity:.58}
+
+/* 3.2.3 setup-only diagram */
+.goalLegacy{display:none}

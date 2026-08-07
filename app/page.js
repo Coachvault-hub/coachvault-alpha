@@ -270,7 +270,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup">
           <span className="brandMark">CV</span>
-          <div><b>CoachVault</b><small>Engine 3.2.1</small></div>
+          <div><b>CoachVault</b><small>Engine 3.2.4</small></div>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -614,22 +614,19 @@ function FieldDiagram({ layout }) {
   const resolvePoint = (ref) => { if (!ref) return {x:50,y:50}; if (typeof ref === 'string') { const f=(layout.players||[]).find(p=>p.id===ref||p.label===ref); if(f) return {x:Number(f.x),y:Number(f.y)};} return {x:Number(ref.x??50),y:Number(ref.y??50)}; };
   const roleClass=(r)=>r==='defense'?'diagramDefense':r==='goalie'?'diagramGoalie':'diagramOffense';
   return <section className="fieldDiagramWrap">
-    <div className="fieldDiagramHeader"><div><small>FIELD LAYOUT</small><b>{canvas.replace('-', ' ')}</b></div><span className={`confidenceBadge ${String(layout.confidence||'Estimated').toLowerCase().replace(' ','')}`}>{layout.confidence||'Estimated'}</span></div>
-    <svg className={`fieldDiagram ${canvas}`} viewBox={viewBox} style={{height}} role="img" aria-label="Coach Practice Card field layout">
+    <div className="fieldDiagramHeader"><div><small>FIELD SETUP</small><b>{canvas.replace('-', ' ')}</b></div><span className={`confidenceBadge ${String(layout.confidence||'Estimated').toLowerCase().replace(' ','')}`}>{layout.confidence||'Estimated'}</span></div>
+    <svg className={`fieldDiagram ${canvas}`} viewBox={viewBox} style={{height}} role="img" aria-label="Coach Practice Card field setup">
       <defs><marker id="arrowSolid" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" /></marker><marker id="arrowDash" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" /></marker></defs>
       <rect x="2" y="2" width="96" height={canvas==='full-field'?'156':canvas==='small-grid'?'96':'116'} rx="3" className="fieldBoundary"/>
       {canvas!=='small-grid'&&<><line x1="50" y1="2" x2="50" y2={canvas==='full-field'?'158':'118'} className="fieldCenterLine"/><circle cx="50" cy={canvas==='full-field'?'80':'60'} r="8" className="fieldCenterCircle"/></>}
-      {(canvas==='half-field'||canvas==='crease-area'||canvas==='full-field')&&<><path d="M38 20 Q50 10 62 20" className="goalCrease"/><rect x="46" y="10" width="8" height="3" rx="1" className="goal"/></>}
-      {canvas==='full-field'&&<><path d="M38 140 Q50 150 62 140" className="goalCrease"/><rect x="46" y="147" width="8" height="3" rx="1" className="goal"/></>}
+      {(canvas==='half-field'||canvas==='crease-area'||canvas==='full-field')&&<><circle cx="50" cy="22" r="8" className="goalCrease"/><path d="M46 24 L54 24 L50 17 Z" className="goalTriangle"/></>}
+      {canvas==='full-field'&&<><circle cx="50" cy="138" r="8" className="goalCrease"/><path d="M46 136 L54 136 L50 143 Z" className="goalTriangle"/></>}
       {(layout.cones||[]).map((c,i)=>{const x=Number(c.x??50),y=Number(c.y??50);return <path key={`cone-${i}`} d={`M${x} ${y-3.5} L${x-3} ${y+3.5} L${x+3} ${y+3.5} Z`} className="diagramCone"/>})}
       {(layout.balls||[]).map((b,i)=><circle key={`ball-${i}`} cx={Number(b.x??50)} cy={Number(b.y??50)} r="1.7" className="diagramBall"/>)}
       {layout.coach&&<g className="diagramCoach"><rect x={Number(layout.coach.x??50)-4} y={Number(layout.coach.y??90)-4} width="8" height="8" rx="1"/><text x={Number(layout.coach.x??50)} y={Number(layout.coach.y??90)+1.5} textAnchor="middle">C</text></g>}
-      {(layout.movements||[]).map((m,i)=>{const a=resolvePoint(m.from),b=resolvePoint(m.to);return <line key={`m-${i}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} className="diagramMovement" markerEnd="url(#arrowSolid)"/>})}
-      {(layout.passes||[]).map((m,i)=>{const a=resolvePoint(m.from),b=resolvePoint(m.to);return <line key={`p-${i}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} className="diagramPass" markerEnd="url(#arrowDash)"/>})}
-      {(layout.rotation||[]).map((m,i)=>{const a=resolvePoint(m.from),b=resolvePoint(m.to);return <path key={`r-${i}`} d={`M ${a.x} ${a.y} Q ${(a.x+b.x)/2+8} ${(a.y+b.y)/2+8} ${b.x} ${b.y}`} className="diagramRotation" markerEnd="url(#arrowSolid)"/>})}
-      {(layout.players||[]).map((p,i)=>{const x=Number(p.x??50),y=Number(p.y??50),label=p.id||p.label||'';return p.role==='goalie'?<g key={i} className="diagramPlayer"><rect x={x-4} y={y-4} width="8" height="8" rx="1.5" className={roleClass(p.role)}/><text x={x} y={y+1.5} textAnchor="middle">{label||'G'}</text></g>:<g key={i} className="diagramPlayer"><circle cx={x} cy={y} r="4.5" className={roleClass(p.role)}/><text x={x} y={y+1.5} textAnchor="middle">{label}</text></g>})}
+      {(layout.players||[]).map((p,i)=>{const x=Number(p.x??50),y=Number(p.y??50),label=p.id||p.label||'';if(p.role==='goalie')return <g key={i} className="diagramPlayer"><rect x={x-4} y={y-4} width="8" height="8" rx="1.5" className={roleClass(p.role)}/><text x={x} y={y+1.5} textAnchor="middle">{label||'G'}</text></g>;if(p.stationType==='line')return <g key={i} className="diagramPlayer diagramLineStation"><circle cx={x} cy={y} r="4.5" className={roleClass(p.role)}/><circle cx={x} cy={y+7} r="3.4" className={`${roleClass(p.role)} diagramQueue`}/><circle cx={x} cy={y+12.5} r="2.6" className={`${roleClass(p.role)} diagramQueue`}/><text x={x} y={y+1.5} textAnchor="middle">{label}</text></g>;return <g key={i} className="diagramPlayer"><circle cx={x} cy={y} r="4.5" className={roleClass(p.role)}/><text x={x} y={y+1.5} textAnchor="middle">{label}</text></g>})}
     </svg>
-    <div className="fieldLegend"><span><i className="legendCircle offense"></i>Offense</span><span><i className="legendCircle defense"></i>Defense</span><span><i className="legendSquare coach"></i>Coach</span><span><i className="legendBall"></i>Ball</span><span><i className="legendCone"></i>Cone</span><span><i className="legendLine"></i>Player movement</span><span><i className="legendLine dashed"></i>Pass</span></div>
+    <div className="fieldLegend"><span><i className="legendCircle offense"></i>Offense</span><span><i className="legendCircle defense"></i>Defense</span><span><i className="legendSquare coach"></i>Coach</span><span><i className="legendBall"></i>Ball</span><span><i className="legendCone"></i>Cone</span></div>
     {layout.notes&&<p className="fieldDiagramNotes">{layout.notes}</p>}
   </section>;
 }
