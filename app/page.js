@@ -145,6 +145,7 @@ export default function Home() {
   const [mode, setMode] = useState('link');
   const [url, setUrl] = useState('');
   const [text, setText] = useState('');
+  const [file, setFile] = useState(null);
   const [transcript, setTranscript] = useState('');
   const [result, setResult] = useState(null);
   const [sourceMeta, setSourceMeta] = useState(null);
@@ -209,11 +210,19 @@ export default function Home() {
     setLoading(true);
     const analysisStartedAt = Date.now();
     try {
-      const response = await fetch('/api/engine/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, url, text, transcript, atlasMode: true })
-      });
+      const requestOptions = file && mode === 'file'
+        ? (() => {
+            const form = new FormData();
+            form.append('file', file);
+            form.append('mode', 'file');
+            return { method: 'POST', body: form };
+          })()
+        : {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url, text, mode, transcript })
+          };
+      const response = await fetch('/api/engine/analyze', requestOptions);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'The Engine could not complete the analysis.');
       const analyzed = { ...data.analysis, sourceUrl: data.analysis?.sourceUrl || url || '' };
@@ -271,6 +280,7 @@ export default function Home() {
     setUrl('');
     setText('');
     setTranscript('');
+    setFile(null);
     setActive('Database');
     setSelected(null);
   }
@@ -280,7 +290,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.2.7</small>
+          <small className="engineVersion">Engine 3.3.0</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -346,9 +356,14 @@ export default function Home() {
                 <button disabled={!text.trim()} onClick={runEngine}>Analyze with CoachVault</button>
               </div>}
 
-              {!loading && mode === 'file' && <div className="inputBody placeholder">
-                <h3>File ingestion is staged next.</h3>
-                <p>PDF, DOCX, PPTX, image, and video upload will feed this same analysis and review workflow.</p>
+              {!loading && mode === 'file' && <div className="inputBody fileUploadBody">
+                <label className="fileDrop">
+                  <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.doc,.docx,.ppt,.pptx" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                  <strong>{file ? file.name : 'Drop a coaching file here or choose a file'}</strong>
+                  <span>PDF, image, practice plan, clinic notes, presentation, or text file</span>
+                </label>
+                {file && <div className="selectedFileMeta"><span>{file.name}</span><small>{Math.max(1, Math.round(file.size/1024))} KB</small></div>}
+                <button className="primaryBtn" disabled={!file || loading} onClick={runEngine}>Analyze with CoachVault</button>
               </div>}
 
               {loading && <EngineProgress step={progressStep} />}

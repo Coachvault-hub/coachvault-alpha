@@ -132,6 +132,35 @@ async function getSourceMeta(url) {
 }
 
 export async function POST(request) {
+  const contentType = request.headers.get('content-type') || '';
+  let uploadedFile = null;
+  let uploadedFileMeta = null;
+  let body = {};
+
+  if (contentType.includes('multipart/form-data')) {
+    const form = await request.formData();
+    uploadedFile = form.get('file');
+    body.mode = form.get('mode') || 'file';
+
+    if (uploadedFile && typeof uploadedFile === 'object') {
+      uploadedFileMeta = {
+        name: uploadedFile.name || 'uploaded-file',
+        type: uploadedFile.type || 'application/octet-stream',
+        size: uploadedFile.size || 0
+      };
+      const bytes = Buffer.from(await uploadedFile.arrayBuffer());
+      const filename = uploadedFileMeta.name.toLowerCase();
+
+      if (uploadedFileMeta.type.startsWith('text/') || filename.endsWith('.txt')) {
+        body.text = bytes.toString('utf8');
+      } else {
+        body.uploadedBinary = bytes.toString('base64');
+      }
+    }
+  } else {
+    body = await request.json();
+  }
+
   try {
     const standards = loadCVIL();
     const { mode, url, text, transcript } = await request.json();
@@ -193,7 +222,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.2.7-cpc",
+  "engineVersion":"3.3.0-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -241,13 +270,16 @@ Return strict JSON:
     "fieldLayout":{
       "canvas":"crease-area|half-field|full-field|small-grid|no-goal",
       "participationMode":"station|live-play",
+      "drillType":"skill-development|progression|transition|small-sided-game|shooting|ground-ball|clearing|riding|other",
+      "progressionBehavior":"none|reset|accumulate|replace|rotate",
+      "fieldTemplate":"full-field|half-field|offensive-end|defensive-end|crease-area|behind-goal|small-grid|no-goal|custom",
       "confidence":"Detected|Estimated|Not stated",
       "players":[
-        {"id":"O1","role":"offense|defense|goalie","stationType":"player|line","queueDirection":"up|down|left|right|none","x":50,"y":50}
+        {"id":"O1","role":"offense|defense|goalie","stationType":"player|line","participantState":"waiting|entering|active|exiting","lineRole":"waiting|entry|rotation|feeding|offensive-entry|defensive-entry|station","stagingZone":"high|low|left|right|sideline|end-line|midfield|outside-boundary|none","queueDirection":"up|down|left|right|up-left|up-right|down-left|down-right|none","entryPoint":"top-center|top-left|top-right|left-sideline|right-sideline|end-line|midfield|x|custom|none","x":50,"y":50}
       ],
       "coach":{"x":50,"y":90},
       "balls":[{"x":50,"y":50}],
-      "cones":[{"x":50,"y":50}],
+      "cones":[{"function":"boundary|landmark|gate|starting-point|entry-marker|target|turning-point|unknown","x":50,"y":50}],
       "notes":""
     },
     "runTheDrill":["numbered step written as a direct coaching instruction"],
@@ -269,122 +301,148 @@ Generate a structured top-down SETUP diagram for the Coach Practice Card.
 The Field Setup answers only:
 WHERE DOES EACH PERSON AND PIECE OF EQUIPMENT START BEFORE THE REP BEGINS?
 
-Do not diagram how the drill runs.
-Do not show passes, cuts, dodges, player movement, post-rep rotation, or outcomes.
+Do not use Field Setup to explain how the drill runs. Passes, cuts, dodges, shots, rotations, and movement belong in Run the Drill.
 
-FIRST classify participationMode:
+COACHVAULT DIAGRAM STANDARD — ENGINE 3.3
 
-station
-Use when players rotate through fixed lines or starting stations.
+PARTICIPATION MODE
+participationMode exists only to drive diagram behavior.
+station = fixed stations or queues.
+live-play = players participate simultaneously in a live numerical situation.
+Do not use progression, transition, skill-development, or small-sided-game as participationMode. Those belong in drillType.
 
-For station drills:
-- Determine the nearest field boundary for each stationary line.
-- Place the first player at the starting point nearest that boundary.
-- Place every waiting player on the OUTSIDE side of that boundary.
-- Never infer queue direction from page orientation alone.
-- Example: a line whose active player is near the bottom end line must stack downward, behind the end line.
-- Example: a line whose active player is near the top end line must stack upward, behind the end line.
-- Example: a line near the left sideline stacks left.
-- Example: a line near the right sideline stacks right.
-- Waiting players must be staged OUTSIDE the playable field area.
-- The first player in line is closest to the field.
-- The queue extends AWAY from the field.
-- Sideline queues extend outside the sideline.
-- Endline queues extend behind the endline.
-- Waiting players never stack deeper into the active drill area.
-- Use stationType "line".
-- queueDirection tells the renderer which way the waiting line extends: up, down, left, or right.
+DRILL TYPE
+Use drillType for coaching structure:
+skill-development, progression, transition, small-sided-game, shooting, ground-ball, clearing, riding, other.
 
-live-play
-Use when the rep is a live numerical situation such as 1v1, 2v2, 3v3, 4v4, 5v5, or 6v6.
+BASE SETUP FRAME
+For multi-frame PDFs, screenshots, or diagram sequences:
+- derive Field Setup from the earliest complete stable configuration
+- use later frames to understand execution and progression
+- do not overwrite base setup with a later movement frame
 
-For live-play drills:
-- Show ONLY the players who actively begin the rep on the field.
-- Do not draw waiting player lines beside the drill.
-- Assume waiting players are on the sideline or at midfield unless their exact location matters to understanding setup.
-- Use stationType "player" for active players.
+STATION DRILLS
+- waiting players stay outside the central active area
+- first player is nearest the station marker or entry point
+- waiting players extend away from the active area
+- preserve open central movement space
+- when a cone is the station launch point, visual order is:
+  active area -> cone -> first player -> waiting players
 
-Populate only starting information:
-- canvas
-- participationMode
-- offensive starting positions or stationary lines
-- defensive starting positions or stationary lines
-- goalie
-- coach
-- starting balls
-- cones or markers
-- setup notes
+RADIAL STATIONS
+- determine a shared drill center
+- queue direction follows the vector from drill center through station and continues outward
+- use diagonal queue directions when needed
 
-LACROSSE FIELD TEMPLATE RULES:
-The AI selects the field template. It does not invent field markings.
+LIVE PLAY
+- show active players inside the playable area
+- waiting players remain outside the live play
+- waiting groups may exist when feeding future reps
+- do not turn every roster player into an on-field participant
 
-crease-area:
-- one end line
-- one circular crease
-- one triangle goal inside the crease
-- no midfield circle
+PARTICIPANT STATE
+Use participantState:
+waiting, entering, active, exiting.
 
-half-field:
-- one end line
-- sidelines
-- one circular crease
-- one triangle goal inside the crease
-- one restraining line across the field between the goal area and midfield side
-- this line is a restraining line, NOT midfield
-- no midfield circle
-- no second goal
+LINE ROLE
+Use lineRole:
+waiting, entry, rotation, feeding, offensive-entry, defensive-entry, station.
 
-full-field:
-- two end lines
-- sidelines
-- two circular creases
-- two triangle goals
-- midfield line
-- midfield faceoff markings
-- restraining lines
+STAGING ZONE
+Use stagingZone:
+high, low, left, right, sideline, end-line, midfield, outside-boundary, none.
 
-small-grid:
-- simple rectangular drill area
-- no field markings unless needed
+ENTRY POINTS
+Entry points and active positions are separate concepts.
+entryPoint is where a player enters.
+The player's live position may be elsewhere.
+Never treat entry coordinate as permanent field position.
 
-no-goal:
-- simple rectangular playable area
-- no goal or crease
+PROGRESSIVE LIVE DRILLS
+Use progressionBehavior:
+none = no staged progression
+reset = each stage is a new rep
+accumulate = earlier active players remain as new players enter
+replace = new participants replace prior participants
+rotate = participants move through roles/stations
 
-LACROSSE SYMBOL STANDARD:
-- Crease = circle.
-- Goal = triangle inside the crease.
-- Never draw the goal as a rectangle.
-- Offense = O1, O2, O3...
-- Defense = D1, D2, D3...
-- Goalie = G.
-- Coach = C.
-- Ball = small dot.
-- Cone = triangle marker.
+For numerical build-up drills such as 2v1 -> 3v2 -> 4v3:
+- preserve earlier active players when progressionBehavior=accumulate
+- do not interpret each numerical state as a totally new setup
+- consolidated offense/defense entry queues may supply multiple roster positions
 
-QUEUE GEOMETRY VALIDATION:
-Before returning fieldLayout, verify every station line:
-- The first/darkest player is closest to the active drill area.
-- Waiting players extend in the opposite direction from entry into the drill.
-- A line at the top/endline stacks upward outside the boundary.
-- A line at the bottom/midfield boundary stacks downward outside the boundary.
-- A line at the left sideline stacks left.
-- A line at the right sideline stacks right.
-- A line staged behind a restraining line may remain physically on the field, but its waiting players must stay on the inactive side of that restraining line.
-- Never stack waiting players toward the goal or deeper into the active drill area.
+QUEUE BY DRILL ROLE
+Organize queues by drill function, not roster position.
+Attackers and midfielders may share one offensive-entry queue.
+Defenders, LSMs, and midfielders may share one defensive-entry queue.
 
-For four-line or four-corner station drills:
-- show all four starting lines
-- place the first player nearest the field
-- extend each waiting line outside the playable area
+QUEUE GEOMETRY
+- top/endline queue extends outward/up
+- bottom boundary queue extends outward/down
+- left sideline queue extends outward/left
+- right sideline queue extends outward/right
+- radial diagonal stations may use up-left, up-right, down-left, down-right
+- a line behind a restraining line stays on the inactive side
+- never stack waiting players toward goal or deeper into active space
 
-For randomized drills:
-- show only the base pre-rep organization
+CONE FUNCTION
+Classify cones:
+boundary, landmark, gate, starting-point, entry-marker, target, turning-point, unknown.
+Do not assume a cone cluster forms a boundary.
 
-Mark confidence Detected when setup is explicitly shown or stated.
-Mark confidence Estimated when spacing must be reconstructed.
+FUNCTIONAL FIELD ELEMENTS
+Do not assume every visible source-template element is required.
+Treat field elements as conceptually:
+required, contextual, decorative-template, uncertain.
+Do not force a goal/crease simply because a source background displayed one.
+
+FIELD TEMPLATES
+full-field
+half-field
+offensive-end
+defensive-end
+crease-area
+behind-goal
+small-grid
+no-goal
+custom
+
+LACROSSE SYMBOL STANDARD
+Crease = circle.
+Goal = triangle inside the crease.
+Never draw a lacrosse goal as a rectangle.
+Offense = O1, O2...
+Defense = D1, D2...
+Goalie = G.
+Coach = C.
+Ball = small dot.
+Cone = triangle marker.
+
+COACH RELATIONSHIPS
+When supported, identify coach function:
+initiator, feeder, observer, entry-controller.
+Preserve relationship between coach and entry point/station.
+
+SOURCE-SPECIFIC LABELS
+Preserve unfamiliar labels as annotations.
+Do not promote them to universal CoachVault vocabulary without repeated evidence.
+
+SETUP CONFIDENCE
+Detected = explicitly shown/stated.
+Estimated = spacing or exact position reconstructed.
 
 The setup diagram should be understandable in three seconds.
+
+FILE SOURCE RULES:
+When mode=file:
+- Treat upload as a first-class coaching source.
+- Preserve filename, MIME type, and source type in diagnostics.
+- A file may contain one drill, multiple drills, a progression, clinic packet, or practice plan.
+- Do not assume 1 upload = 1 drill.
+- For multi-drill documents, identify distinct drill candidates before creating Vault items.
+- For PDFs/images with sequential diagrams, apply the Base Setup Frame rule.
+- Text uploads can be analyzed immediately.
+- If binary visual extraction is not available for a format in this build, return a clear diagnostic rather than fabricating content.
 
 SOURCE:
 ${sourceText.slice(0, 50000)}`;

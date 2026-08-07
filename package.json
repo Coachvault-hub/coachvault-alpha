@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-327",
-  "version": "3.2.7",
+  "name": "coachvault-engine-330",
+  "version": "3.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
