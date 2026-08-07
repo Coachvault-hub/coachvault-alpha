@@ -251,6 +251,10 @@ Return strict JSON:
   }
 }
 
+
+FIELD LAYOUT RULES:
+Generate a structured top-down field diagram for the Coach Practice Card. Use normalized x/y coordinates. Choose crease-area, half-field, full-field, small-grid, or no-goal. Mark confidence Detected when positions are explicitly shown or stated, Estimated when reconstructed. Use O1/O2 for offense, D1/D2 for defense, G for goalie. movements = player movement, passes = ball movement, rotation = post-rep rotation. Keep it simple and do not invent unsupported details.
+
 SOURCE:
 ${sourceText.slice(0, 50000)}`;
 
