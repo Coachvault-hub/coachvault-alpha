@@ -485,3 +485,15 @@ body{background:var(--cv-bg);color:var(--cv-text)}
 
 /* Engine 3.2 Field Layout Generator */
 .fieldDiagramWrap{margin:18px 0 22px;border:1px solid var(--cv-line,#dfe5ee);border-radius:12px;background:#fff;overflow:hidden;break-inside:avoid}.fieldDiagramHeader{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--cv-line,#dfe5ee)}.fieldDiagramHeader small,.fieldDiagramHeader b{display:block}.fieldDiagramHeader small{font-size:9px;letter-spacing:1px;font-weight:850;color:#718197}.confidenceBadge{border-radius:999px;padding:5px 8px;font-size:9px;font-weight:850;background:#fff4db;color:#845e00}.confidenceBadge.detected{background:#e8f6ed;color:#17663a}.fieldDiagram{width:100%;display:block;background:#f6fbf7;border-bottom:1px solid var(--cv-line,#dfe5ee)}.fieldBoundary,.fieldCenterLine,.fieldCenterCircle,.goalCrease{fill:none;stroke:#9fb4a5;stroke-width:.7}.fieldCenterLine{stroke-dasharray:2.5 2.5}.goal{fill:none;stroke:#67776c;stroke-width:1}.diagramPlayer text,.diagramCoach text{font-size:3.7px;font-weight:900;fill:#fff}.diagramOffense{fill:#1f64f2;stroke:#0e3a91;stroke-width:.8}.diagramDefense{fill:#202938;stroke:#111827;stroke-width:.8}.diagramGoalie{fill:#586579;stroke:#202938;stroke-width:.8}.diagramCoach rect{fill:#8b5cf6;stroke:#5b21b6;stroke-width:.8}.diagramBall{fill:#f59e0b;stroke:#9a5c00;stroke-width:.5}.diagramCone{fill:#fff;stroke:#c56b00;stroke-width:.8}.diagramMovement{stroke:#202938;stroke-width:1}.diagramPass{stroke:#1f64f2;stroke-width:1;stroke-dasharray:3 2}.diagramRotation{stroke:#77859a;stroke-width:.8;stroke-dasharray:2 2;fill:none}.fieldDiagram marker path{fill:context-stroke}.fieldLegend{display:flex;flex-wrap:wrap;gap:10px 16px;padding:10px 14px;font-size:10px;color:#5d6b7e}.fieldLegend span{display:flex;align-items:center;gap:5px}.legendCircle{width:9px;height:9px;border-radius:50%;display:inline-block}.legendCircle.offense{background:#1f64f2}.legendCircle.defense{background:#202938}.legendSquare.coach{width:9px;height:9px;background:#8b5cf6;display:inline-block}.legendBall{width:5px;height:5px;border-radius:50%;background:#f59e0b;display:inline-block}.legendCone{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid #c56b00;display:inline-block}.legendLine{width:20px;border-top:2px solid #202938;display:inline-block}.legendLine.dashed{border-top:2px dashed #1f64f2}.fieldDiagramNotes{margin:0;padding:0 14px 12px;color:#6a7788;font-size:10px}@media print{.fieldDiagramWrap{margin:7px 0 9px!important;break-inside:avoid!important}.fieldDiagram{height:220px!important;background:#fff!important}.fieldLegend{font-size:7px!important;padding:5px 7px!important}}
+
+
+/* Engine 3.2.1 field layout wiring fix */
+.fieldDiagramEmpty{
+  margin:16px 0;
+  border:1px dashed #cbd5e1;
+  background:#f8fafc;
+  padding:18px;
+  border-radius:10px;
+  color:#64748b;
+  font-size:12px;
+}

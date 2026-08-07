@@ -193,7 +193,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.0-cpc",
+  "engineVersion":"3.2.1-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -238,7 +238,26 @@ Return strict JSON:
       "time":{"value":"","source":"Detected|Estimated|Not stated"},
       "rotation":{"value":"","source":"Detected|Estimated|Not stated"}
     },
-    "fieldDiagram":{"type":"text","description":"Describe player starting spots, ball location, goals, cones, and movement in plain language."},
+    "fieldLayout":{
+      "canvas":"crease-area|half-field|full-field|small-grid|no-goal",
+      "confidence":"Detected|Estimated|Not stated",
+      "players":[
+        {"id":"O1","role":"offense|defense|goalie","x":50,"y":50}
+      ],
+      "coach":{"x":50,"y":90},
+      "balls":[{"x":50,"y":50}],
+      "cones":[{"x":50,"y":50}],
+      "movements":[
+        {"from":"O1","to":{"x":50,"y":40}}
+      ],
+      "passes":[
+        {"from":"O1","to":"O2"}
+      ],
+      "rotation":[
+        {"from":"O1","to":{"x":20,"y":85}}
+      ],
+      "notes":""
+    },
     "runTheDrill":["numbered step written as a direct coaching instruction"],
     "coachFocus":["maximum four teaching points"],
     "watchFor":["immediate correction"],
@@ -253,7 +272,40 @@ Return strict JSON:
 
 
 FIELD LAYOUT RULES:
-Generate a structured top-down field diagram for the Coach Practice Card. Use normalized x/y coordinates. Choose crease-area, half-field, full-field, small-grid, or no-goal. Mark confidence Detected when positions are explicitly shown or stated, Estimated when reconstructed. Use O1/O2 for offense, D1/D2 for defense, G for goalie. movements = player movement, passes = ball movement, rotation = post-rep rotation. Keep it simple and do not invent unsupported details.
+Generate a structured top-down field diagram for the Coach Practice Card.
+
+IMPORTANT:
+- Populate fieldLayout.players whenever the source describes or visibly demonstrates starting player locations.
+- Populate fieldLayout.cones whenever cones are stated or clearly used.
+- Populate fieldLayout.balls whenever the starting ball location is known.
+- Populate fieldLayout.coach when a coach initiates or manages the drill.
+- Populate movements, passes, and rotation when they are central to understanding how the drill runs.
+- Do not return empty arrays when the source clearly gives enough information to reconstruct the setup.
+
+Use normalized coordinates.
+x = 0 left to 100 right.
+For crease-area and half-field: y = 0 at the endline/goal side and y = 120 toward midfield.
+For full-field: y = 0 to 160.
+For small-grid and no-goal: y = 0 to 100.
+
+Choose the smallest useful canvas:
+- crease-area for drills concentrated around the cage
+- half-field for most settled offense, defense, shooting, and small-sided drills
+- full-field for clearing, riding, and full-field transition
+- small-grid for keep-away, station work, footwork, and compact competition
+- no-goal where a cage is irrelevant
+
+Use O1, O2, O3... for offense.
+Use D1, D2, D3... for defense.
+Use G for goalie.
+Use coach for the coach marker.
+
+Mark confidence Detected when the source explicitly states or shows the setup.
+Mark confidence Estimated when the setup is reasonably reconstructed but exact spacing is unclear.
+
+For drills like four-corner or four-line drills, place all four starting groups on the diagram even if only one example rep is described.
+For randomized drills, show the base starting positions and use only representative arrows needed to explain a typical rep.
+Keep the diagram readable. Do not draw every possible variation at once.
 
 SOURCE:
 ${sourceText.slice(0, 50000)}`;

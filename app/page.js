@@ -270,7 +270,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup">
           <span className="brandMark">CV</span>
-          <div><b>CoachVault</b><small>Engine 3.2</small></div>
+          <div><b>CoachVault</b><small>Engine 3.2.1</small></div>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -657,10 +657,7 @@ function CoachPracticeCard({ item, editable=false, updateResult, compact=false }
       </div>
     </section>
 
-    <section className="practiceSection diagramSection">
-      <div><h3>Field Layout</h3><p>{card.fieldDiagram?.description || 'No field-layout description was returned.'}</p></div>
-      <div className="fieldMini"><span>GOAL</span><i></i><b>CoachVault diagram description</b></div>
-    </section>
+    <FieldDiagram layout={card.fieldLayout} />
 
     <CardList title="Run the Drill" items={card.runTheDrill} ordered />
 
