@@ -161,18 +161,26 @@ export async function POST(request) {
     body = await request.json();
   }
 
-  const { url, text, transcript, mode } = body;
-
   try {
     const standards = loadCVIL();
-  const { mode, url, text, transcript } = body;
+    const { mode, url, text, transcript } = body;
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({ error:'OPENAI_API_KEY is not configured.' }, { status:500 });
     }
 
     let sourceText = text || transcript || '';
-    let sourceMeta = null;
-    let transcriptSource = text ? 'Pasted text' : transcript ? 'Pasted fallback transcript' : 'Unknown';
+    let sourceMeta = uploadedFileMeta ? {
+      platform: 'File Upload',
+      title: uploadedFileMeta.name,
+      mimeType: uploadedFileMeta.type,
+      size: uploadedFileMeta.size
+    } : null;
+    let transcriptSource = text ? 'Pasted text' : transcript ? 'Pasted fallback transcript' : uploadedFileMeta ? 'Uploaded file' : 'Unknown';
+    const hasBinaryFile = mode === 'file' && uploadedFileMeta && body.uploadedBinary;
+    const isPdfFile = hasBinaryFile && (
+      uploadedFileMeta.type === 'application/pdf' ||
+      uploadedFileMeta.name.toLowerCase().endsWith('.pdf')
+    );
 
     if (mode === 'link') {
       sourceMeta = await getSourceMeta(url);
@@ -188,8 +196,14 @@ export async function POST(request) {
       }
     }
 
-    if (!sourceText.trim()) {
+    if (!sourceText.trim() && !hasBinaryFile) {
       return NextResponse.json({ error:'No source text was available for analysis.' }, { status:400 });
+    }
+
+    if (hasBinaryFile && !isPdfFile && !sourceText.trim()) {
+      return NextResponse.json({
+        error:`${uploadedFileMeta.name} uploaded successfully, but visual extraction for this file type is not enabled yet. For diagram-heavy documents, export the file as PDF and upload the PDF.`
+      }, { status:400 });
     }
 
     const library = standards.map(compactStandard);
@@ -223,7 +237,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.3.1-cpc",
+  "engineVersion":"3.3.2-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -443,12 +457,32 @@ When mode=file:
 - For multi-drill documents, identify distinct drill candidates before creating Vault items.
 - For PDFs/images with sequential diagrams, apply the Base Setup Frame rule.
 - Text uploads can be analyzed immediately.
-- If binary visual extraction is not available for a format in this build, return a clear diagnostic rather than fabricating content.
+- PDF uploads are analyzed directly as multimodal file inputs: inspect both extracted text and page images.
+- For diagram-heavy PDFs, visual page content is evidence and must be used when determining setup.
+- Do not assume a later progression frame is the initial setup.
+- Non-PDF binary visual extraction is not enabled in this build; return a clear diagnostic rather than fabricating content.
 
 SOURCE:
-${sourceText.slice(0, 50000)}`;
+${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.name || 'document.pdf'} — analyze the file contents and page images directly.]`}`;
 
-    const model = 'gpt-4.1-mini';
+    const model = isPdfFile ? 'gpt-4.1' : 'gpt-4.1-mini';
+
+    const userContent = isPdfFile
+      ? [
+          {
+            type: 'file',
+            file: {
+              filename: uploadedFileMeta.name,
+              file_data: `data:application/pdf;base64,${body.uploadedBinary}`
+            }
+          },
+          {
+            type: 'text',
+            text: prompt
+          }
+        ]
+      : prompt;
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST',
       headers:{
@@ -460,8 +494,8 @@ ${sourceText.slice(0, 50000)}`;
         temperature:0.05,
         response_format:{ type:'json_object' },
         messages:[
-          { role:'system', content:'Return valid JSON only. Match exact CVIL vocabulary. Produce a concise, field-ready Coach Practice Card. Mark inferred setup fields as Estimated.' },
-          { role:'user', content:prompt }
+          { role:'system', content:'Return valid JSON only. Match exact CVIL vocabulary. Produce a concise, field-ready Coach Practice Card. Mark inferred setup fields as Estimated. For PDFs, inspect both document text and page diagrams. Field Setup must come from the earliest complete stable setup frame; later frames describe progression unless the source indicates otherwise.' },
+          { role:'user', content:userContent }
         ]
       })
     });
@@ -474,13 +508,18 @@ ${sourceText.slice(0, 50000)}`;
     let analysis = JSON.parse(raw.choices?.[0]?.message?.content);
     analysis = reconcileAgainstCVIL(analysis, standards);
 
+    const diagnosticSourceText = sourceText || (isPdfFile ? `[PDF analyzed directly: ${uploadedFileMeta.name}]` : '');
     const diagnostics = buildDiagnostics({
       analysis,
-      sourceText,
+      sourceText: diagnosticSourceText,
       model,
-      transcriptSource,
+      transcriptSource: isPdfFile ? 'Uploaded PDF — text + page images' : transcriptSource,
       standards
     });
+    if (uploadedFileMeta) {
+      diagnostics.uploadedFile = uploadedFileMeta;
+      diagnostics.fileAnalysisMode = isPdfFile ? 'PDF multimodal file input' : 'Text extraction';
+    }
 
     return NextResponse.json({ analysis, sourceMeta, diagnostics });
   } catch (error) {
