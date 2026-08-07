@@ -182,11 +182,11 @@ export default function Home() {
       setProgressStep(0);
       return;
     }
-    const checkpoints = [900, 2300, 4200, 6500, 9000, 12000];
-    const timers = checkpoints.map((delay, index) =>
-      setTimeout(() => setProgressStep(index + 1), delay)
-    );
-    return () => timers.forEach(clearTimeout);
+    const stageMs = 2400;
+    const timer = setInterval(() => {
+      setProgressStep((current) => Math.min(current + 1, 5));
+    }, stageMs);
+    return () => clearInterval(timer);
   }, [loading]);
 
   const filtered = useMemo(() => {
@@ -207,6 +207,7 @@ export default function Home() {
     setResult(null);
     setDiagnostics(null);
     setLoading(true);
+    const analysisStartedAt = Date.now();
     try {
       const response = await fetch('/api/engine/analyze', {
         method: 'POST',
@@ -216,6 +217,14 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'The Engine could not complete the analysis.');
       const analyzed = { ...data.analysis, sourceUrl: data.analysis?.sourceUrl || url || '' };
+      const stageMs = 2400;
+      const minimumBeforeReview = stageMs * 6;
+      const elapsed = Date.now() - analysisStartedAt;
+      if (elapsed < minimumBeforeReview) {
+        await new Promise((resolve) => setTimeout(resolve, minimumBeforeReview - elapsed));
+      }
+      setProgressStep(6);
+      await new Promise((resolve) => setTimeout(resolve, stageMs));
       setResult({ ...analyzed, folder: suggestedFolderFor(analyzed) });
       setSourceMeta(data.sourceMeta || null);
       setDiagnostics(data.diagnostics || null);
@@ -269,9 +278,9 @@ export default function Home() {
   return (
     <main className="appShell">
       <header className="globalHeader">
-        <div className="brandLockup">
-          <span className="brandMark">CV</span>
-          <div><b>CoachVault</b><small>Engine 3.2.6</small></div>
+        <div className="brandLockup branded">
+          <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
+          <small className="engineVersion">Engine 3.2.7</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -633,7 +642,7 @@ function CardList({ title, items, ordered=false }) {
 function FieldDiagram({ layout }) {
   if (!layout) return <div className="fieldDiagramEmpty">No field layout available.</div>;
   const canvas = layout.canvas || 'half-field';
-  const viewBox = canvas === 'full-field' ? '0 0 100 160' : canvas === 'small-grid' ? '0 0 100 100' : '0 0 100 120';
+  const viewBox = canvas === 'full-field' ? '-16 -16 132 192' : canvas === 'small-grid' ? '-14 -14 128 128' : '-16 -16 132 152';
   const height = canvas === 'full-field' ? 520 : 390;
   const resolvePoint = (ref) => { if (!ref) return {x:50,y:50}; if (typeof ref === 'string') { const f=(layout.players||[]).find(p=>p.id===ref||p.label===ref); if(f) return {x:Number(f.x),y:Number(f.y)};} return {x:Number(ref.x??50),y:Number(ref.y??50)}; };
   const roleClass=(r)=>r==='defense'?'diagramDefense':r==='goalie'?'diagramGoalie':'diagramOffense';
@@ -642,13 +651,14 @@ function FieldDiagram({ layout }) {
     <svg className={`fieldDiagram ${canvas}`} viewBox={viewBox} style={{height}} role="img" aria-label="Coach Practice Card field setup">
       <defs><marker id="arrowSolid" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" /></marker><marker id="arrowDash" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" /></marker></defs>
       <rect x="2" y="2" width="96" height={canvas==='full-field'?'156':canvas==='small-grid'?'96':'116'} rx="3" className="fieldBoundary"/>
+      <image href="/coachvault-logo.png" x="25" y={canvas==='full-field'?'55':'38'} width="50" height="45" opacity="0.055" preserveAspectRatio="xMidYMid meet" className="diagramWatermark"/>
       {canvas==='full-field'&&<><line x1="50" y1="2" x2="50" y2="158" className="fieldCenterLine"/><circle cx="50" cy="80" r="8" className="fieldCenterCircle"/></>}
       {(canvas==='half-field'||canvas==='crease-area'||canvas==='full-field')&&<><circle cx="50" cy="22" r="8" className="goalCrease"/><path d="M46 24 L54 24 L50 17 Z" className="goalTriangle"/></>}{(canvas==='half-field'||canvas==='crease-area')&&<line x1="2" y1="52" x2="98" y2="52" className="restrainingLine"/>}
       {canvas==='full-field'&&<><circle cx="50" cy="138" r="8" className="goalCrease"/><path d="M46 136 L54 136 L50 143 Z" className="goalTriangle"/></>}
       {(layout.cones||[]).map((c,i)=>{const x=Number(c.x??50),y=Number(c.y??50);return <path key={`cone-${i}`} d={`M${x} ${y-3.5} L${x-3} ${y+3.5} L${x+3} ${y+3.5} Z`} className="diagramCone"/>})}
       {(layout.balls||[]).map((b,i)=><circle key={`ball-${i}`} cx={Number(b.x??50)} cy={Number(b.y??50)} r="1.7" className="diagramBall"/>)}
       {layout.coach&&<g className="diagramCoach"><rect x={Number(layout.coach.x??50)-4} y={Number(layout.coach.y??90)-4} width="8" height="8" rx="1"/><text x={Number(layout.coach.x??50)} y={Number(layout.coach.y??90)+1.5} textAnchor="middle">C</text></g>}
-      {(layout.players||[]).map((p,i)=>{const x=Number(p.x??50),y=Number(p.y??50),label=p.id||p.label||'';if(p.role==='goalie')return <g key={i} className="diagramPlayer"><rect x={x-4} y={y-4} width="8" height="8" rx="1.5" className={roleClass(p.role)}/><text x={x} y={y+1.5} textAnchor="middle">{label||'G'}</text></g>;if(p.stationType==='line'){const dir=p.queueDirection||'none';const offsets=dir==='up'?[[0,-7],[0,-12.5]]:dir==='down'?[[0,7],[0,12.5]]:dir==='left'?[[-7,0],[-12.5,0]]:dir==='right'?[[7,0],[12.5,0]]:[];return <g key={i} className="diagramPlayer diagramLineStation"><circle cx={x} cy={y} r="4.5" className={roleClass(p.role)}/>{offsets.map((o,q)=><circle key={q} cx={x+o[0]} cy={y+o[1]} r={q===0?3.4:2.6} className={`${roleClass(p.role)} diagramQueue`}/>) }<text x={x} y={y+1.5} textAnchor="middle">{label}</text></g>}return <g key={i} className="diagramPlayer"><circle cx={x} cy={y} r="4.5" className={roleClass(p.role)}/><text x={x} y={y+1.5} textAnchor="middle">{label}</text></g>})}
+      {(layout.players||[]).map((p,i)=>{const x=Number(p.x??50),y=Number(p.y??50),label=p.id||p.label||'';if(p.role==='goalie')return <g key={i} className="diagramPlayer"><rect x={x-4} y={y-4} width="8" height="8" rx="1.5" className={roleClass(p.role)}/><text x={x} y={y+1.5} textAnchor="middle">{label||'G'}</text></g>;if(p.stationType==='line'){const left=x<=12,right=x>=88,top=y<=14,bottom=(canvas==='full-field'?y>=146:y>=106);const dir=left?'left':right?'right':top?'up':bottom?'down':(p.queueDirection||'none');const offsets=dir==='up'?[[0,-7],[0,-12.5]]:dir==='down'?[[0,7],[0,12.5]]:dir==='left'?[[-7,0],[-12.5,0]]:dir==='right'?[[7,0],[12.5,0]]:[];return <g key={i} className="diagramPlayer diagramLineStation"><circle cx={x} cy={y} r="4.5" className={roleClass(p.role)}/>{offsets.map((o,q)=><circle key={q} cx={x+o[0]} cy={y+o[1]} r={q===0?3.4:2.6} className={`${roleClass(p.role)} diagramQueue`}/>) }<text x={x} y={y+1.5} textAnchor="middle">{label}</text></g>}return <g key={i} className="diagramPlayer"><circle cx={x} cy={y} r="4.5" className={roleClass(p.role)}/><text x={x} y={y+1.5} textAnchor="middle">{label}</text></g>})}
     </svg>
     <div className="fieldLegend"><span><i className="legendCircle offense"></i>Offense</span><span><i className="legendCircle defense"></i>Defense</span><span><i className="legendSquare coach"></i>Coach</span><span><i className="legendBall"></i>Ball</span><span><i className="legendCone"></i>Cone</span></div>
     {layout.notes&&<p className="fieldDiagramNotes">{layout.notes}</p>}

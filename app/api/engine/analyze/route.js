@@ -193,7 +193,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.2.6-cpc",
+  "engineVersion":"3.2.7-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -361,6 +361,17 @@ LACROSSE SYMBOL STANDARD:
 - Coach = C.
 - Ball = small dot.
 - Cone = triangle marker.
+
+QUEUE GEOMETRY VALIDATION:
+Before returning fieldLayout, verify every station line:
+- The first/darkest player is closest to the active drill area.
+- Waiting players extend in the opposite direction from entry into the drill.
+- A line at the top/endline stacks upward outside the boundary.
+- A line at the bottom/midfield boundary stacks downward outside the boundary.
+- A line at the left sideline stacks left.
+- A line at the right sideline stacks right.
+- A line staged behind a restraining line may remain physically on the field, but its waiting players must stay on the inactive side of that restraining line.
+- Never stack waiting players toward the goal or deeper into the active drill area.
 
 For four-line or four-corner station drills:
 - show all four starting lines

@@ -534,3 +534,17 @@ body{background:var(--cv-bg);color:var(--cv-text)}
 .analysisProgress{height:7px;background:#e8eef6;border-radius:99px;overflow:hidden}
 .analysisProgress span{display:block;height:100%;background:#2463eb;border-radius:99px;transition:width .55s ease}
 @media(max-width:900px){.analysisTimeline{grid-template-columns:1fr 1fr}.engineAnalysisHead{flex-direction:column}}
+
+/* Engine 3.2.7 Sprint 4.2 branding */
+.brandLockup.branded{display:flex;align-items:center;gap:10px;min-width:190px}
+.coachVaultLogo{display:block;width:145px;height:54px;object-fit:contain;object-position:left center}
+.engineVersion{display:block;font-size:10px;color:#718197;white-space:nowrap}
+.diagramWatermark{pointer-events:none}
+@media(max-width:760px){
+  .coachVaultLogo{width:118px;height:46px}
+  .brandLockup.branded{min-width:auto}
+  .engineVersion{display:none}
+}
+@media print{
+  .diagramWatermark{opacity:.035!important}
+}
