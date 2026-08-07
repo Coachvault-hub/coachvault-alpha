@@ -161,10 +161,11 @@ export async function POST(request) {
     body = await request.json();
   }
 
+  const { url, text, transcript, mode } = body;
+
   try {
     const standards = loadCVIL();
-    const { mode, url, text, transcript } = await request.json();
-
+  const { mode, url, text, transcript } = body;
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({ error:'OPENAI_API_KEY is not configured.' }, { status:500 });
     }
@@ -222,7 +223,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.3.0-cpc",
+  "engineVersion":"3.3.1-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
