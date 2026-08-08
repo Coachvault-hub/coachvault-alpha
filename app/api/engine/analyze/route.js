@@ -237,7 +237,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.3.2-cpc",
+  "engineVersion":"3.3.3-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -447,6 +447,15 @@ Detected = explicitly shown/stated.
 Estimated = spacing or exact position reconstructed.
 
 The setup diagram should be understandable in three seconds.
+
+PRACTICE CARD INTERPRETATION RULES:
+- Preserve consolidated entry queues from the source. Do not flatten an entry queue into several active-player dots.
+- For build-up drills, return the initial live state separately from staging groups.
+- A source that builds to 6v6 does NOT imply exactly 12+ required players. Player count should be roster-dependent unless the source states a minimum.
+- For a single-goal drill, equipment should say one goal, not plural goals.
+- Do not number Run the Drill strings; the UI supplies numbering.
+- If the source shows one offensive entry queue and one defensive entry queue, return exactly those queues unless other distinct queues are source-supported.
+- In a live progression, active players, waiting players, and entering players are different participant states.
 
 FILE SOURCE RULES:
 When mode=file:

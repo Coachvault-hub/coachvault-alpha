@@ -557,3 +557,80 @@ body{background:var(--cv-bg);color:var(--cv-text)}
 .fileDrop span{font-size:13px;color:#75849a}
 .selectedFileMeta{display:flex;justify-content:space-between;gap:12px;padding:11px 13px;border-radius:10px;background:#eef4fb;color:#31425d}
 .selectedFileMeta small{color:#718197}
+
+/* Engine 3.3.3 — livelier CoachVault workspace */
+body{background:linear-gradient(180deg,#f5f8fd 0%,#eef3f9 100%)}
+.main{padding-top:24px}
+.engineRunningPanel{margin-top:-8px;border-radius:22px;box-shadow:0 18px 50px rgba(24,47,82,.10)}
+.engineRunningPanel .tabs{display:none}
+.engineRunningPanel .engineAnalysis{border:0;box-shadow:none;min-height:360px}
+
+.welcomeStrip,.sectionSummary,.practiceBuilder,.practicePlanCard,.card,.inputPanel{border-radius:20px}
+.card{transition:transform .18s ease,box-shadow .18s ease;border:1px solid #dfe7f2;box-shadow:0 5px 18px rgba(30,49,78,.05)}
+.card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(30,49,78,.10)}
+
+.vaultActionRow{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:14px;margin:18px 0}
+.vaultBuilderLaunch,.addSourceCard{border:0;border-radius:18px;min-height:92px;padding:18px;background:#0e2a55;color:#fff;display:flex;align-items:center;gap:15px;text-align:left;box-shadow:0 12px 30px rgba(14,42,85,.16)}
+.vaultBuilderLaunch small{display:block;color:#b9c9df;margin-top:4px}
+.vaultBuilderIcon{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,#2f74ff,#7c4dff);font-size:23px}
+.addSourceCard{justify-content:center;background:#fff;color:#173052;border:1px solid #dbe5f1;box-shadow:0 8px 24px rgba(30,49,78,.06)}
+.addSourceCard span{font-size:24px}
+
+.practiceBuilder{padding:24px;margin:16px 0 22px;background:linear-gradient(135deg,#ffffff 0%,#f5f8ff 55%,#f8f3ff 100%);border:1px solid #dbe5f1;box-shadow:0 16px 40px rgba(32,55,91,.08);position:relative;overflow:hidden}
+.practiceBuilder:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-50px;top:-70px;background:radial-gradient(circle,#dce8ff 0%,rgba(220,232,255,0) 70%)}
+.practiceBuilderIntro{position:relative;z-index:1}
+.practiceBuilderIntro span,.planHero small{font-size:11px;letter-spacing:.12em;font-weight:800;color:#2d66d8}
+.practiceBuilderIntro h2{margin:5px 0 6px;font-size:24px;color:#132640}
+.practiceBuilderIntro p{margin:0;color:#6b7b90}
+.practiceBuilderGrid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) 110px 110px 180px;gap:12px;margin-top:18px;align-items:end}
+.practiceBuilderGrid label{display:grid;gap:7px}
+.practiceBuilderGrid label span{font-size:11px;font-weight:800;color:#5f7188;text-transform:uppercase;letter-spacing:.08em}
+.practiceBuilderGrid textarea,.practiceBuilderGrid input{border:1px solid #ccd8e8;border-radius:13px;background:#fff;padding:12px}
+.practiceBuilderGrid textarea{min-height:90px;resize:vertical}
+.buildPracticeBtn{height:48px;border:0;border-radius:13px;background:linear-gradient(135deg,#2268ef,#6b4de6);color:white;font-weight:800}
+
+.practicePlanCard{margin:18px 0 28px;background:white;border:1px solid #dce5f0;box-shadow:0 18px 48px rgba(29,49,82,.10);overflow:hidden}
+.planHero{display:flex;justify-content:space-between;gap:20px;padding:26px;background:linear-gradient(135deg,#f8fbff,#f6f1ff)}
+.planHero h2{margin:4px 0 6px;font-size:28px;color:#12233d}
+.planHero p{margin:0;color:#68788e;max-width:720px}
+.planHeroMeta{display:flex;align-items:flex-start;gap:8px}
+.planHeroMeta span{padding:9px 12px;border-radius:12px;background:#fff;border:1px solid #dce5f0;color:#42536c}
+.planHeroMeta button{border:0;background:#fff;width:34px;height:34px;border-radius:10px;font-size:20px}
+.planArc{display:flex;align-items:center;justify-content:center;gap:9px;padding:14px 20px;border-top:1px solid #edf1f7;border-bottom:1px solid #edf1f7;font-size:10px;font-weight:800;letter-spacing:.08em;color:#667991}
+.planArc i{height:2px;width:42px;background:linear-gradient(90deg,#2f6ef4,#764ee8);border-radius:9px}
+.planTimeline{display:grid;gap:0}
+.planSegment{display:grid;grid-template-columns:80px minmax(0,1fr) 145px;gap:18px;padding:18px 22px;border-bottom:1px solid #edf1f7;align-items:center}
+.planTime{display:grid;place-items:center;width:62px;height:62px;border-radius:18px;background:#eef4ff;color:#225bc6}
+.planTime b{font-size:22px;line-height:1}.planTime small{font-size:9px;letter-spacing:.1em}
+.planSegmentBody small{font-size:10px;color:#7b8ba0;font-weight:800;letter-spacing:.08em}
+.planSegmentBody h3{margin:3px 0 5px;color:#152944}
+.planSegmentBody p{margin:0;color:#6b7b90}
+.planSkill{display:inline-block;margin-top:9px;padding:5px 9px;border-radius:999px;background:#edf3ff;color:#2d63cf;font-size:10px;font-weight:800}
+.planVector svg{width:130px;height:72px}
+.planVector rect{fill:#f7faff;stroke:#cbd9eb}
+.planVector circle{fill:#2f6ef4}
+.planVector path{fill:none;stroke:#7c4de8;stroke-width:3;stroke-linecap:round}
+.planFooter{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:18px 22px;background:#fafcff}
+.planFooter small{display:block;font-size:9px;color:#7a8ba0;letter-spacing:.1em}
+.planFooterActions{display:flex;gap:8px}.planFooterActions button{border:1px solid #ced9e8;background:#fff;border-radius:10px;padding:10px 14px;font-weight:700}.planFooterActions .primaryPlanBtn{background:#0f2a54;color:#fff;border-color:#0f2a54}
+
+@media(max-width:900px){
+  .practiceBuilderGrid{grid-template-columns:1fr 1fr}
+  .builderPrompt{grid-column:1/-1}
+  .vaultActionRow{grid-template-columns:1fr}
+  .planSegment{grid-template-columns:70px 1fr}
+  .planVector{display:none}
+}
+
+@media print{
+  .coachPracticeCard{font-size:10.5px}
+  .coachPracticeCard .practiceSection{margin:7px 0}
+  .coachPracticeCard .practiceSection h3{margin-bottom:5px}
+  .coachPracticeCard .fieldDiagramWrap{margin:8px 0}
+  .coachPracticeCard .fieldDiagram{height:300px!important}
+  .coachPracticeCard .practiceColumns{gap:10px}
+  .coachPracticeCard .setupGrid{gap:7px}
+  .coachPracticeCard .setupGrid>div{padding:7px}
+  .coachPracticeCard .coachNotes{display:none}
+  .practicePlanCard{box-shadow:none}
+}

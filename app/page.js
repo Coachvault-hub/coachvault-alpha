@@ -160,6 +160,12 @@ export default function Home() {
   const [folderFilter, setFolderFilter] = useState('All');
   const [selectedSkillId, setSelectedSkillId] = useState(CVIL[0]?.id || '');
 
+  const [practicePrompt, setPracticePrompt] = useState('');
+  const [practiceDuration, setPracticeDuration] = useState(90);
+  const [practicePlayers, setPracticePlayers] = useState(18);
+  const [practicePlan, setPracticePlan] = useState(null);
+  const [practiceBuilderOpen, setPracticeBuilderOpen] = useState(false);
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem('coachvault-atlas-alpha');
@@ -264,6 +270,44 @@ export default function Home() {
     }));
   }
 
+  function buildPracticePlan() {
+    const words = practicePrompt.toLowerCase().split(/\W+/).filter(Boolean);
+    const scored = drills.map((drill) => {
+      const haystack = [
+        drill.title,
+        drill.summary,
+        drill.primarySkill?.name,
+        ...(drill.skillComponents || []).map(x => x.name)
+      ].join(' ').toLowerCase();
+      const score = words.reduce((sum, word) => sum + (haystack.includes(word) ? 1 : 0), 0);
+      return { drill, score };
+    }).sort((a,b) => b.score - a.score);
+
+    const selectedDrills = scored.slice(0, Math.min(4, Math.max(1, drills.length))).map(x => x.drill);
+    const warmup = selectedDrills[0];
+    const skill = selectedDrills[1] || selectedDrills[0];
+    const competition = selectedDrills[2] || selectedDrills[1] || selectedDrills[0];
+    const team = selectedDrills[3] || selectedDrills[2] || selectedDrills[0];
+
+    const total = Number(practiceDuration) || 90;
+    const segments = [
+      { label:'Arrival + Warm-Up', minutes:Math.max(10, Math.round(total*.14)), drill:warmup },
+      { label:'Skill Development', minutes:Math.max(15, Math.round(total*.23)), drill:skill },
+      { label:'Competitive Constraint', minutes:Math.max(15, Math.round(total*.22)), drill:competition },
+      { label:'Team Application', minutes:Math.max(20, Math.round(total*.28)), drill:team },
+      { label:'Finish + Review', minutes:Math.max(5, total - (Math.max(10, Math.round(total*.14))+Math.max(15, Math.round(total*.23))+Math.max(15, Math.round(total*.22))+Math.max(20, Math.round(total*.28)))), drill:null }
+    ];
+
+    setPracticePlan({
+      title:'CoachVault Practice Plan',
+      prompt:practicePrompt,
+      duration:total,
+      players:practicePlayers,
+      focus:practicePrompt || 'Coach-selected practice focus',
+      segments
+    });
+  }
+
   function approve() {
     const asset = {
       ...result,
@@ -290,7 +334,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.3.2</small>
+          <small className="engineVersion">Engine 3.3.3</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -314,7 +358,7 @@ export default function Home() {
         </aside>
 
         <section className="main">
-          <header className="pageHeader">
+          {!loading && <header className="pageHeader">
             <div>
               <small>COACHVAULT WORKSPACE</small>
               <h1>{active}</h1>
@@ -324,19 +368,19 @@ export default function Home() {
               <span><b>{drills.length}</b><small>Approved</small></span>
               <span><b>{CVIL.length}</b><small>Standards</small></span>
             </div>
-          </header>
+          </header>}
 
         {active === 'Atlas' && !result && (
           <>
-            <section className="welcomeStrip">
+            {!loading && <section className="welcomeStrip">
               <div>
                 <span>ENGINE WORKSPACE</span>
                 <h2>What would you like CoachVault to analyze?</h2>
                 <p>Paste a link, paste text, or upload a file. CoachVault will organize the result before anything enters your Vault.</p>
               </div>
               <button onClick={() => setActive('Database')}>Open Vault</button>
-            </section>
-            <section className="inputPanel inputPanelTop simplifiedPanel">
+            </section>}
+            <section className={`inputPanel inputPanelTop simplifiedPanel ${loading ? 'engineRunningPanel' : ''}`}>
               <div className="tabs">
                 <button className={mode === 'link' ? 'active' : ''} onClick={() => setMode('link')}>Web / Social Link</button>
                 <button className={mode === 'text' ? 'active' : ''} onClick={() => setMode('text')}>Paste Text</button>
@@ -382,10 +426,33 @@ export default function Home() {
         {active === 'Database' && (
           <>
             <section className="sectionSummary"><span>APPROVED CONTENT</span><h2>Your Vault</h2><p>Organized coaching assets, each linked to its original source.</p></section>
+            <div className="vaultActionRow">
+              <button className="vaultBuilderLaunch" onClick={() => setPracticeBuilderOpen(!practiceBuilderOpen)}>
+                <span className="vaultBuilderIcon">✦</span>
+                <span><b>Build a Practice</b><small>Assemble a plan from your Vault</small></span>
+              </button>
+              <button className="addSourceCard" onClick={() => setActive('Atlas')}><span>＋</span><b>Add Source</b></button>
+            </div>
+
+            {practiceBuilderOpen && <section className="practiceBuilder">
+              <div className="practiceBuilderIntro">
+                <span>VAULT → PRACTICE</span>
+                <h2>What does your team need today?</h2>
+                <p>CoachVault will assemble a practice from approved drills in your Vault. It does not invent drills.</p>
+              </div>
+              <div className="practiceBuilderGrid">
+                <label className="builderPrompt"><span>Practice focus</span><textarea value={practicePrompt} onChange={(e)=>setPracticePrompt(e.target.value)} placeholder="Example: 90 minute practice for 18 players. We need confidence passing under pressure, quicker decisions, and a competitive finish." /></label>
+                <label><span>Minutes</span><input type="number" min="30" max="180" value={practiceDuration} onChange={(e)=>setPracticeDuration(e.target.value)} /></label>
+                <label><span>Players</span><input type="number" min="4" max="60" value={practicePlayers} onChange={(e)=>setPracticePlayers(e.target.value)} /></label>
+                <button className="buildPracticeBtn" disabled={!drills.length} onClick={buildPracticePlan}>Build Practice Plan</button>
+              </div>
+            </section>}
+
+            {practicePlan && <PracticePlanCard plan={practicePlan} onClose={()=>setPracticePlan(null)} />}
+
             <div className="toolbar vaultToolbar">
               <select value={folderFilter} onChange={(e) => setFolderFilter(e.target.value)}>{folders.map((folder) => <option key={folder}>{folder}</option>)}</select>
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search your Vault..." />
-              <button onClick={() => setActive('Atlas')}>+ Add Source</button>
             </div>
             <div className="cards">{filtered.map((item) => <DrillCard key={item.id} item={item} onClick={() => setSelected(item)} />)}</div>
           </>
@@ -399,6 +466,53 @@ export default function Home() {
       {selected && <Detail item={selected} onClose={() => setSelected(null)} />}
     </main>
   );
+}
+
+
+function PracticePlanCard({ plan, onClose }) {
+  return <section className="practicePlanCard">
+    <header className="planHero">
+      <div>
+        <small>COACHVAULT PRACTICE PLAN</small>
+        <h2>{plan.title}</h2>
+        <p>{plan.focus}</p>
+      </div>
+      <div className="planHeroMeta">
+        <span><b>{plan.duration}</b> min</span>
+        <span><b>{plan.players}</b> players</span>
+        <button onClick={onClose}>×</button>
+      </div>
+    </header>
+
+    <div className="planArc">
+      <span>ARRIVE</span><i></i><span>TEACH</span><i></i><span>COMPETE</span><i></i><span>APPLY</span><i></i><span>REVIEW</span>
+    </div>
+
+    <div className="planTimeline">
+      {plan.segments.map((segment,index)=><article key={`${segment.label}-${index}`} className="planSegment">
+        <div className="planTime"><b>{segment.minutes}</b><small>MIN</small></div>
+        <div className="planSegmentBody">
+          <small>{segment.label}</small>
+          <h3>{segment.drill?.title || 'Coach-led review'}</h3>
+          <p>{segment.drill?.summary || 'Recap the day, reinforce one coaching point, and finish with a clear takeaway.'}</p>
+          {segment.drill?.primarySkill?.name && <span className="planSkill">{segment.drill.primarySkill.name}</span>}
+        </div>
+        <div className="planVector" aria-hidden="true">
+          <svg viewBox="0 0 120 72">
+            <rect x="5" y="5" width="110" height="62" rx="12"/>
+            <circle cx={25+(index%3)*25} cy="36" r="7"/>
+            <circle cx={62+(index%2)*22} cy="24" r="7"/>
+            <path d="M30 36 C48 30 54 24 60 24"/>
+          </svg>
+        </div>
+      </article>)}
+    </div>
+
+    <footer className="planFooter">
+      <div><small>BUILT FROM</small><b>{plan.segments.filter(x=>x.drill).length} approved Vault drills</b></div>
+      <div className="planFooterActions"><button onClick={()=>window.print()}>Print Plan</button><button className="primaryPlanBtn">Save Practice</button></div>
+    </footer>
+  </section>
 }
 
 
@@ -650,7 +764,8 @@ function SetupValue({ label, item }) {
 function CardList({ title, items, ordered=false }) {
   if (!items?.length) return null;
   const Tag = ordered ? 'ol' : 'ul';
-  return <section className="practiceSection"><h3>{title}</h3><Tag>{items.map((x, i) => <li key={`${title}-${i}`}>{x}</li>)}</Tag></section>;
+  const clean = (value) => ordered ? String(value).replace(/^\s*\d+[.)-]\s*/, '') : value;
+  return <section className="practiceSection"><h3>{title}</h3><Tag>{items.map((x, i) => <li key={`${title}-${i}`}>{clean(x)}</li>)}</Tag></section>;
 }
 
 
@@ -658,7 +773,7 @@ function FieldDiagram({ layout }) {
   if (!layout) return <div className="fieldDiagramEmpty">No field layout available.</div>;
   const canvas = layout.canvas || 'half-field';
   const viewBox = canvas === 'full-field' ? '-16 -16 132 192' : canvas === 'small-grid' ? '-14 -14 128 128' : '-16 -16 132 152';
-  const height = canvas === 'full-field' ? 520 : 390;
+  const height = canvas === 'full-field' ? 560 : 455;
   const resolvePoint = (ref) => { if (!ref) return {x:50,y:50}; if (typeof ref === 'string') { const f=(layout.players||[]).find(p=>p.id===ref||p.label===ref); if(f) return {x:Number(f.x),y:Number(f.y)};} return {x:Number(ref.x??50),y:Number(ref.y??50)}; };
   const roleClass=(r)=>r==='defense'?'diagramDefense':r==='goalie'?'diagramGoalie':'diagramOffense';
   return <section className="fieldDiagramWrap">
@@ -673,7 +788,7 @@ function FieldDiagram({ layout }) {
       {(layout.cones||[]).map((c,i)=>{const x=Number(c.x??50),y=Number(c.y??50);return <path key={`cone-${i}`} d={`M${x} ${y-3.5} L${x-3} ${y+3.5} L${x+3} ${y+3.5} Z`} className="diagramCone"/>})}
       {(layout.balls||[]).map((b,i)=><circle key={`ball-${i}`} cx={Number(b.x??50)} cy={Number(b.y??50)} r="1.7" className="diagramBall"/>)}
       {layout.coach&&<g className="diagramCoach"><rect x={Number(layout.coach.x??50)-4} y={Number(layout.coach.y??90)-4} width="8" height="8" rx="1"/><text x={Number(layout.coach.x??50)} y={Number(layout.coach.y??90)+1.5} textAnchor="middle">C</text></g>}
-      {(layout.players||[]).map((p,i)=>{const x=Number(p.x??50),y=Number(p.y??50),label=p.id||p.label||'';if(p.role==='goalie')return <g key={i} className="diagramPlayer"><rect x={x-4} y={y-4} width="8" height="8" rx="1.5" className={roleClass(p.role)}/><text x={x} y={y+1.5} textAnchor="middle">{label||'G'}</text></g>;if(p.stationType==='line'){const left=x<=12,right=x>=88,top=y<=14,bottom=(canvas==='full-field'?y>=146:y>=106);const dir=left?'left':right?'right':top?'up':bottom?'down':(p.queueDirection||'none');const offsets=dir==='up'?[[0,-7],[0,-12.5]]:dir==='down'?[[0,7],[0,12.5]]:dir==='left'?[[-7,0],[-12.5,0]]:dir==='right'?[[7,0],[12.5,0]]:[];return <g key={i} className="diagramPlayer diagramLineStation"><circle cx={x} cy={y} r="4.5" className={roleClass(p.role)}/>{offsets.map((o,q)=><circle key={q} cx={x+o[0]} cy={y+o[1]} r={q===0?3.4:2.6} className={`${roleClass(p.role)} diagramQueue`}/>) }<text x={x} y={y+1.5} textAnchor="middle">{label}</text></g>}return <g key={i} className="diagramPlayer"><circle cx={x} cy={y} r="4.5" className={roleClass(p.role)}/><text x={x} y={y+1.5} textAnchor="middle">{label}</text></g>})}
+      {(layout.players||[]).map((p,i)=>{const x=Number(p.x??50),y=Number(p.y??50),label=p.id||p.label||'';if(p.role==='goalie')return <g key={i} className="diagramPlayer"><rect x={x-4} y={y-4} width="8" height="8" rx="1.5" className={roleClass(p.role)}/><text x={x} y={y+1.5} textAnchor="middle">{label||'G'}</text></g>;if(p.stationType==='line' || ['waiting','entry','offensive-entry','defensive-entry','rotation','feeding'].includes(p.lineRole)){const left=x<=12,right=x>=88,top=y<=14,bottom=(canvas==='full-field'?y>=146:y>=106);const dir=left?'left':right?'right':top?'up':bottom?'down':(p.queueDirection||'none');const offsets=dir==='up'?[[0,-7],[0,-12.5]]:dir==='down'?[[0,7],[0,12.5]]:dir==='left'?[[-7,0],[-12.5,0]]:dir==='right'?[[7,0],[12.5,0]]:dir==='up-left'?[[-5,-5],[-9,-9]]:dir==='up-right'?[[5,-5],[9,-9]]:dir==='down-left'?[[-5,5],[-9,9]]:dir==='down-right'?[[5,5],[9,9]]:[];return <g key={i} className="diagramPlayer diagramLineStation"><circle cx={x} cy={y} r="4.5" className={roleClass(p.role)}/>{offsets.map((o,q)=><circle key={q} cx={x+o[0]} cy={y+o[1]} r={q===0?3.4:2.6} className={`${roleClass(p.role)} diagramQueue`}/>) }<text x={x} y={y+1.5} textAnchor="middle">{label}</text></g>}return <g key={i} className="diagramPlayer"><circle cx={x} cy={y} r="4.5" className={roleClass(p.role)}/><text x={x} y={y+1.5} textAnchor="middle">{label}</text></g>})}
     </svg>
     <div className="fieldLegend"><span><i className="legendCircle offense"></i>Offense</span><span><i className="legendCircle defense"></i>Defense</span><span><i className="legendSquare coach"></i>Coach</span><span><i className="legendBall"></i>Ball</span><span><i className="legendCone"></i>Cone</span></div>
     {layout.notes&&<p className="fieldDiagramNotes">{layout.notes}</p>}
