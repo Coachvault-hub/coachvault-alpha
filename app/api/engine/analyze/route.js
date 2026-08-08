@@ -473,7 +473,7 @@ export async function POST(request) {
   const contentType = request.headers.get('content-type') || '';
   let uploadedFile = null;
   let uploadedFileMeta = null;
-  let blobFileUrl = null;
+  let blobPathname = null;
   let body = {};
 
   if (contentType.includes('multipart/form-data')) {
@@ -499,8 +499,8 @@ export async function POST(request) {
   } else {
     body = await request.json();
 
-    if (body.mode === 'blob-file' && body.blobUrl && body.fileMeta) {
-      blobFileUrl = body.blobUrl;
+    if (body.mode === 'blob-file' && body.blobPathname && body.fileMeta) {
+      blobPathname = body.blobPathname;
       uploadedFileMeta = {
         name: body.fileMeta.name || 'uploaded-file',
         type: body.fileMeta.type || 'application/octet-stream',
@@ -515,7 +515,7 @@ export async function POST(request) {
 
       let bytes;
       try {
-        const blobResult = await get(blobFileUrl, { access:'private' });
+        const blobResult = await get(blobPathname, { access:'private', useCache:false });
         if (!blobResult?.stream) {
           return NextResponse.json({
             error:`CoachVault securely stored ${uploadedFileMeta.name}, but could not open the private file for analysis.`
@@ -693,7 +693,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.5.9 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.6.0 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -722,7 +722,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.5.9-cpc",
+  "engineVersion":"3.6.0-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",

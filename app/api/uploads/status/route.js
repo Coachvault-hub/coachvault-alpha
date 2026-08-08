@@ -11,9 +11,9 @@ export async function GET() {
     configured: hasLegacyToken || hasOidc,
     runningOnVercel,
     authMode: hasOidc ? 'OIDC' : hasLegacyToken ? 'Read/write token' : 'No Blob credential detected',
-    storageMode:'Private Blob',
+    storageMode:'Private Blob — signed URL upload',
     guidance: (hasLegacyToken || hasOidc)
-      ? 'Private Blob authentication is visible to this deployment.'
+      ? 'Private Blob authentication is visible. CoachVault can mint signed upload URLs from this deployment.'
       : 'Connect the private Blob store to this Vercel project/environment and redeploy.'
   });
 }

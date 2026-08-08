@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-359-vault-spacing-polish",
-  "version": "3.5.9",
+  "name": "coachvault-engine-360-signed-private-uploads",
+  "version": "3.6.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

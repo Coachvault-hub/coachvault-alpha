@@ -2,7 +2,6 @@
 
 import { CVIL } from './cvil';
 import { useEffect, useMemo, useState } from 'react';
-import { upload } from '@vercel/blob/client';
 
 
 const skillFolderMap = {
@@ -169,7 +168,7 @@ function friendlyEngineError(error) {
   const message = readableError(error);
 
   if (/Failed to retrieve the client token|client token/i.test(message)) {
-    return 'Large-file storage is not connected correctly to this CoachVault deployment. In Vercel, open the Blob store, confirm the CoachVault production project is connected, upgrade the connection to OIDC if offered, then redeploy.';
+    return 'CoachVault encountered the legacy Vercel client-token upload path. Engine 3.6.0 no longer uses that method for large documents; redeploy this version and retry the file.';
   }
 
   if (/BLOB_READ_WRITE_TOKEN|blob.*token|token.*blob/i.test(message)) {
@@ -388,30 +387,62 @@ export default function Home() {
       if (file && mode === 'file') {
         setUploadProgress(0);
 
-        // Large files bypass the Vercel Function body-size limit by uploading
-        // directly from the browser to Vercel Blob.
+        // Large files bypass the Vercel Function body-size limit.
+        // CoachVault requests a short-lived signed PUT URL, then the browser
+        // uploads directly to the private Blob store.
         if (file.size > 3.5 * 1024 * 1024) {
-          const blob = await upload(
-            `coachvault/${Date.now()}-${file.name}`,
-            file,
-            {
-              access: 'private',
-              handleUploadUrl: '/api/uploads',
-              multipart: true,
-              onUploadProgress: ({ percentage }) => setUploadProgress(Math.round(percentage || 0))
-            }
-          );
+          if (file.size > 10 * 1024 * 1024) {
+            throw new Error('CoachVault currently supports documents up to 10 MB.');
+          }
+
+          setUploadProgress(5);
+
+          const signResponse = await fetch('/api/uploads/sign', {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body:JSON.stringify({
+              filename:file.name,
+              contentType:file.type || 'application/octet-stream',
+              size:file.size
+            })
+          });
+
+          const signRaw = await signResponse.text();
+          let signData = {};
+          try { signData = signRaw ? JSON.parse(signRaw) : {}; }
+          catch (_) { throw new Error(signRaw || 'CoachVault could not prepare the private upload.'); }
+
+          if (!signResponse.ok) {
+            throw new Error(readableError(signData.error) || 'CoachVault could not prepare the private upload.');
+          }
+
+          setUploadProgress(20);
+
+          const putResponse = await fetch(signData.uploadUrl, {
+            method:'PUT',
+            headers:{
+              'Content-Type':file.type || 'application/octet-stream'
+            },
+            body:file
+          });
+
+          if (!putResponse.ok) {
+            const putText = await putResponse.text().catch(()=>'');
+            throw new Error(putText || `Private document upload failed (${putResponse.status}).`);
+          }
+
+          setUploadProgress(100);
 
           requestOptions = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              mode: 'blob-file',
-              blobUrl: blob.url,
-              fileMeta: {
-                name: file.name,
-                type: file.type || 'application/octet-stream',
-                size: file.size
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body:JSON.stringify({
+              mode:'blob-file',
+              blobPathname:signData.pathname,
+              fileMeta:{
+                name:file.name,
+                type:file.type || 'application/octet-stream',
+                size:file.size
               }
             })
           };
@@ -642,7 +673,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.5.9</small>
+          <small className="engineVersion">Engine 3.6.0</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -742,7 +773,7 @@ export default function Home() {
                   <div><span>Uploading document securely</span><b>{uploadProgress}%</b></div>
                   <progress value={uploadProgress} max="100" />
                 </div>}
-                <div className="largeFileSupport"><b>Private document upload</b><span>PDFs up to 10 MB • larger files are stored privately before Engine analysis</span></div>
+                <div className="largeFileSupport"><b>Private document upload</b><span>PDFs up to 10 MB • large files upload directly to private storage with a short-lived signed URL</span></div>
                 <button className="primaryBtn" disabled={!file || loading} onClick={runEngine}>Analyze with CoachVault</button>
               </div>}
 
