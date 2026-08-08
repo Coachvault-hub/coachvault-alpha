@@ -2,6 +2,7 @@
 
 import { CVIL } from './cvil';
 import { useEffect, useMemo, useState } from 'react';
+import { upload } from '@vercel/blob/client';
 
 
 const skillFolderMap = {
@@ -159,6 +160,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [progressStep, setProgressStep] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [internalMode, setInternalMode] = useState(false);
   const [drills, setDrills] = useState(seedDrills);
   const [selected, setSelected] = useState(null);
@@ -247,20 +249,64 @@ export default function Home() {
     setLoading(true);
     const analysisStartedAt = Date.now();
     try {
-      const requestOptions = file && mode === 'file'
-        ? (() => {
-            const form = new FormData();
-            form.append('file', file);
-            form.append('mode', 'file');
-            return { method: 'POST', body: form };
-          })()
-        : {
+      let requestOptions;
+
+      if (file && mode === 'file') {
+        setUploadProgress(0);
+
+        // Large files bypass the Vercel Function body-size limit by uploading
+        // directly from the browser to Vercel Blob.
+        if (file.size > 3.5 * 1024 * 1024) {
+          const blob = await upload(
+            `coachvault/${Date.now()}-${file.name}`,
+            file,
+            {
+              access: 'public',
+              handleUploadUrl: '/api/uploads',
+              multipart: true,
+              onUploadProgress: ({ percentage }) => setUploadProgress(Math.round(percentage || 0))
+            }
+          );
+
+          requestOptions = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url, text, mode, transcript })
+            body: JSON.stringify({
+              mode: 'blob-file',
+              blobUrl: blob.url,
+              fileMeta: {
+                name: file.name,
+                type: file.type || 'application/octet-stream',
+                size: file.size
+              }
+            })
           };
+        } else {
+          const form = new FormData();
+          form.append('file', file);
+          form.append('mode', 'file');
+          requestOptions = { method: 'POST', body: form };
+        }
+      } else {
+        requestOptions = {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, text, mode, transcript })
+        };
+      }
+
       const response = await fetch('/api/engine/analyze', requestOptions);
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (_) {
+        throw new Error(
+          response.status === 413
+            ? 'The upload exceeded the server request limit before CoachVault could process it.'
+            : (responseText || `Unexpected server response (${response.status}).`)
+        );
+      }
       if (!response.ok) throw new Error(data.error || 'The Engine could not complete the analysis.');
       const analyzed = { ...data.analysis, sourceUrl: data.analysis?.sourceUrl || url || '' };
       const stageMs = 2400;
@@ -278,6 +324,7 @@ export default function Home() {
       setError(e.message);
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   }
 
@@ -425,7 +472,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.5.0</small>
+          <small className="engineVersion">Engine 3.5.1</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -517,7 +564,15 @@ export default function Home() {
                   </div>
                   <small className="fileDropHint">Practice plans, clinic notes, drill diagrams, presentations, and coaching documents</small>
                 </label>
-                {file && <div className="selectedFileMeta"><span>{file.name}</span><small>{Math.max(1, Math.round(file.size/1024))} KB</small></div>}
+                {file && <div className="selectedFileMeta">
+                  <span>{file.name}</span>
+                  <small>{file.size >= 1024*1024 ? `${(file.size/(1024*1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(file.size/1024))} KB`}</small>
+                </div>}
+                {loading && uploadProgress > 0 && uploadProgress < 100 && <div className="largeUploadProgress">
+                  <div><span>Uploading document securely</span><b>{uploadProgress}%</b></div>
+                  <progress value={uploadProgress} max="100" />
+                </div>}
+                <div className="largeFileSupport"><b>Large documents supported</b><span>PDFs up to 10 MB in this test build</span></div>
                 <button className="primaryBtn" disabled={!file || loading} onClick={runEngine}>Analyze with CoachVault</button>
               </div>}
 

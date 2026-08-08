@@ -409,6 +409,7 @@ export async function POST(request) {
   const contentType = request.headers.get('content-type') || '';
   let uploadedFile = null;
   let uploadedFileMeta = null;
+  let blobFileUrl = null;
   let body = {};
 
   if (contentType.includes('multipart/form-data')) {
@@ -433,6 +434,37 @@ export async function POST(request) {
     }
   } else {
     body = await request.json();
+
+    if (body.mode === 'blob-file' && body.blobUrl && body.fileMeta) {
+      blobFileUrl = body.blobUrl;
+      uploadedFileMeta = {
+        name: body.fileMeta.name || 'uploaded-file',
+        type: body.fileMeta.type || 'application/octet-stream',
+        size: Number(body.fileMeta.size || 0)
+      };
+
+      if (uploadedFileMeta.size > 10 * 1024 * 1024) {
+        return NextResponse.json({
+          error:`${uploadedFileMeta.name} is ${(uploadedFileMeta.size/(1024*1024)).toFixed(1)} MB. CoachVault 3.5.1 currently supports documents up to 10 MB.`
+        }, { status:413 });
+      }
+
+      const blobResponse = await fetch(blobFileUrl);
+      if (!blobResponse.ok) {
+        return NextResponse.json({
+          error:`CoachVault uploaded ${uploadedFileMeta.name}, but could not retrieve it for analysis (${blobResponse.status}).`
+        }, { status:502 });
+      }
+
+      const bytes = Buffer.from(await blobResponse.arrayBuffer());
+      const filename = uploadedFileMeta.name.toLowerCase();
+
+      if (uploadedFileMeta.type.startsWith('text/') || filename.endsWith('.txt')) {
+        body.text = bytes.toString('utf8');
+      } else {
+        body.uploadedBinary = bytes.toString('base64');
+      }
+    }
   }
 
   try {
@@ -444,13 +476,13 @@ export async function POST(request) {
 
     let sourceText = text || transcript || '';
     let sourceMeta = uploadedFileMeta ? {
-      platform: 'File Upload',
+      platform: mode === 'blob-file' ? 'Large File Upload' : 'File Upload',
       title: uploadedFileMeta.name,
       mimeType: uploadedFileMeta.type,
       size: uploadedFileMeta.size
     } : null;
     let transcriptSource = text ? 'Pasted text' : transcript ? 'Pasted fallback transcript' : uploadedFileMeta ? 'Uploaded file' : 'Unknown';
-    const hasBinaryFile = mode === 'file' && uploadedFileMeta && body.uploadedBinary;
+    const hasBinaryFile = ['file','blob-file'].includes(mode) && uploadedFileMeta && body.uploadedBinary;
     const isPdfFile = hasBinaryFile && (
       uploadedFileMeta.type === 'application/pdf' ||
       uploadedFileMeta.name.toLowerCase().endsWith('.pdf')
@@ -552,7 +584,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.5.0 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.5.1 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -581,7 +613,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.5.0-cpc",
+  "engineVersion":"3.5.1-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -839,7 +871,7 @@ When mode=link and the source is TikTok or Instagram:
 - The goal is progressive enhancement: analyze everything publicly available now, while keeping unsupported details marked for review.
 
 FILE SOURCE RULES:
-When mode=file:
+When mode=file or mode=blob-file:
 - Treat upload as a first-class coaching source.
 - Preserve filename, MIME type, and source type in diagnostics.
 - A file may contain one drill, multiple drills, a progression, clinic packet, or practice plan.
@@ -914,7 +946,10 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
     });
     if (uploadedFileMeta) {
       diagnostics.uploadedFile = uploadedFileMeta;
-      diagnostics.fileAnalysisMode = isPdfFile ? 'PDF multimodal file input' : 'Text extraction';
+      diagnostics.fileAnalysisMode = isPdfFile
+        ? (mode === 'blob-file' ? 'Large PDF via direct Blob upload + multimodal file input' : 'PDF multimodal file input')
+        : (mode === 'blob-file' ? 'Large file via direct Blob upload' : 'Text extraction');
+      diagnostics.fileTransport = mode === 'blob-file' ? 'Vercel Blob client upload' : 'Direct request upload';
     }
     if (mode === 'link' && sourceMeta) {
       diagnostics.recognizedSource = {
