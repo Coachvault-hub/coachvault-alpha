@@ -3,6 +3,30 @@ import { NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
+function errorText(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (value instanceof Error) return value.message || String(value);
+
+  if (typeof value === 'object') {
+    const candidates = [
+      value.message,
+      value.details,
+      value.detail,
+      value.error_description,
+      value.error?.message,
+      value.error?.details,
+      value.error
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string' && candidate.trim()) return candidate.trim();
+    }
+    try { return JSON.stringify(value); } catch (_) {}
+  }
+
+  return String(value);
+}
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -55,7 +79,7 @@ export async function POST(request) {
 
     if (result.status === 'failed') {
       return NextResponse.json({
-        error:result.error?.message || result.error?.details || 'Social video analysis failed.'
+        error:errorText(result.error) || 'Social video analysis failed.'
       }, { status:400 });
     }
 
@@ -118,6 +142,6 @@ export async function POST(request) {
 
     return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json({ error:error?.message || 'Unexpected social-video polling error.' }, { status:500 });
+    return NextResponse.json({ error:errorText(error) || 'Unexpected social-video polling error.' }, { status:500 });
   }
 }

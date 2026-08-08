@@ -39,6 +39,30 @@ function normalizeList(value) {
 }
 
 
+function errorText(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (value instanceof Error) return value.message || String(value);
+
+  if (typeof value === 'object') {
+    const candidates = [
+      value.message,
+      value.details,
+      value.detail,
+      value.error_description,
+      value.error?.message,
+      value.error?.details,
+      value.error
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string' && candidate.trim()) return candidate.trim();
+    }
+    try { return JSON.stringify(value); } catch (_) {}
+  }
+
+  return String(value);
+}
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -306,7 +330,7 @@ async function extractSocialVideo(url) {
     let details = '';
     try {
       const errorBody = await start.json();
-      details = errorBody?.details || errorBody?.error || '';
+      details = errorText(errorBody?.details || errorBody?.error || errorBody);
     } catch (_) {}
     return {
       status:'failed',
@@ -334,7 +358,7 @@ async function extractSocialVideo(url) {
       return { status:'completed', data:result.data || {}, jobId };
     }
     if (result.status === 'failed') {
-      return { status:'failed', error:result.error?.message || result.error?.details || 'Video extraction failed.', jobId };
+      return { status:'failed', error:errorText(result.error) || 'Video extraction failed.', jobId };
     }
   }
 
@@ -669,7 +693,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.5.6 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.5.7 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -698,7 +722,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.5.6-cpc",
+  "engineVersion":"3.5.7-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",

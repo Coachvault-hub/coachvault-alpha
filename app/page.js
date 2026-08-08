@@ -141,8 +141,32 @@ const skillFramework = {
   purposeRule: 'Tag Ground Balls only when gaining, securing, or exiting possession from a loose-ball situation is a central learning purpose.'
 };
 
+function readableError(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (value instanceof Error) return value.message || String(value);
+
+  if (typeof value === 'object') {
+    const candidates = [
+      value.message,
+      value.details,
+      value.detail,
+      value.error_description,
+      value.error?.message,
+      value.error?.details,
+      value.error
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string' && candidate.trim()) return candidate.trim();
+    }
+    try { return JSON.stringify(value); } catch (_) {}
+  }
+
+  return String(value);
+}
+
 function friendlyEngineError(error) {
-  const message = String(error?.message || error || '');
+  const message = readableError(error);
 
   if (/Failed to retrieve the client token|client token/i.test(message)) {
     return 'Large-file storage is not connected correctly to this CoachVault deployment. In Vercel, open the Blob store, confirm the CoachVault production project is connected, upgrade the connection to OIDC if offered, then redeploy.';
@@ -154,6 +178,10 @@ function friendlyEngineError(error) {
 
   if (/PRIVATE_BLOB_RETRIEVAL_FAILED|could not retrieve the private file|could not open the private file/i.test(message)) {
     return 'CoachVault stored the document privately, but the Engine could not reopen it for analysis. Confirm the private Blob store is connected to the production CoachVault project and redeploy.';
+  }
+
+  if (/rate.limit|429|too many requests/i.test(message)) {
+    return `The social-video service temporarily rate-limited this request. CoachVault will retry automatically when possible. ${message}`.trim();
   }
 
   return message || 'CoachVault could not complete the request.';
@@ -288,7 +316,7 @@ export default function Home() {
         continue;
       }
 
-      if (!response.ok) throw new Error(data.error || 'Social video analysis failed.');
+      if (!response.ok) throw new Error(readableError(data.error) || 'Social video analysis failed.');
 
       setSocialJobStatus('Video understood. Building the Coach Practice Card…');
       setProgressStep(4);
@@ -367,7 +395,7 @@ export default function Home() {
         data = await waitForSocialVideo(data.pendingSocialJob.jobId, url);
       }
 
-      if (!response.ok && response.status !== 202) throw new Error(data.error || 'The Engine could not complete the analysis.');
+      if (!response.ok && response.status !== 202) throw new Error(readableError(data.error) || 'The Engine could not complete the analysis.');
       const analyzed = { ...data.analysis, sourceUrl: data.analysis?.sourceUrl || url || '' };
       const stageMs = 2400;
       const minimumBeforeReview = stageMs * 6;
@@ -564,7 +592,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.5.6</small>
+          <small className="engineVersion">Engine 3.5.7</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
