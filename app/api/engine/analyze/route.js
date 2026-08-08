@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { get } from '@vercel/blob';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -449,14 +450,29 @@ export async function POST(request) {
         }, { status:413 });
       }
 
-      const blobResponse = await fetch(blobFileUrl);
-      if (!blobResponse.ok) {
+      let bytes;
+      try {
+        const blobResult = await get(blobFileUrl, { access:'private' });
+        if (!blobResult?.stream) {
+          return NextResponse.json({
+            error:`CoachVault securely stored ${uploadedFileMeta.name}, but could not open the private file for analysis.`
+          }, { status:502 });
+        }
+
+        const chunks = [];
+        const reader = blobResult.stream.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) chunks.push(Buffer.from(value));
+        }
+        bytes = Buffer.concat(chunks);
+      } catch (error) {
         return NextResponse.json({
-          error:`CoachVault uploaded ${uploadedFileMeta.name}, but could not retrieve it for analysis (${blobResponse.status}).`
+          error:`CoachVault securely stored ${uploadedFileMeta.name}, but the Engine could not retrieve the private file. Check that the Blob store is connected to this production deployment and redeploy.`,
+          code:'PRIVATE_BLOB_RETRIEVAL_FAILED'
         }, { status:502 });
       }
-
-      const bytes = Buffer.from(await blobResponse.arrayBuffer());
       const filename = uploadedFileMeta.name.toLowerCase();
 
       if (uploadedFileMeta.type.startsWith('text/') || filename.endsWith('.txt')) {
@@ -476,7 +492,7 @@ export async function POST(request) {
 
     let sourceText = text || transcript || '';
     let sourceMeta = uploadedFileMeta ? {
-      platform: mode === 'blob-file' ? 'Large File Upload' : 'File Upload',
+      platform: mode === 'blob-file' ? 'Private File Upload' : 'File Upload',
       title: uploadedFileMeta.name,
       mimeType: uploadedFileMeta.type,
       size: uploadedFileMeta.size
@@ -584,7 +600,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.5.1 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.5.4 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -613,7 +629,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.5.1-cpc",
+  "engineVersion":"3.5.4-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -947,9 +963,10 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
     if (uploadedFileMeta) {
       diagnostics.uploadedFile = uploadedFileMeta;
       diagnostics.fileAnalysisMode = isPdfFile
-        ? (mode === 'blob-file' ? 'Large PDF via direct Blob upload + multimodal file input' : 'PDF multimodal file input')
-        : (mode === 'blob-file' ? 'Large file via direct Blob upload' : 'Text extraction');
-      diagnostics.fileTransport = mode === 'blob-file' ? 'Vercel Blob client upload' : 'Direct request upload';
+        ? (mode === 'blob-file' ? 'Large PDF via private Blob upload + multimodal file input' : 'PDF multimodal file input')
+        : (mode === 'blob-file' ? 'Large file via private Blob upload' : 'Text extraction');
+      diagnostics.fileTransport = mode === 'blob-file' ? 'Vercel Private Blob client upload' : 'Direct request upload';
+      diagnostics.filePrivacy = mode === 'blob-file' ? 'Private storage' : 'Request-scoped upload';
     }
     if (mode === 'link' && sourceMeta) {
       diagnostics.recognizedSource = {

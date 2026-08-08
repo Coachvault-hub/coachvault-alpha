@@ -32,6 +32,10 @@ export async function POST(request) {
         }
 
         return {
+          tokenPayload: JSON.stringify({
+            purpose:'coachvault-engine-ingestion',
+            createdAt:new Date().toISOString()
+          }),
           allowedContentTypes: [
             'application/pdf',
             'text/plain',
@@ -56,8 +60,17 @@ export async function POST(request) {
 
     return NextResponse.json(jsonResponse);
   } catch (error) {
+    const raw = String(error?.message || error || '');
+    const authProblem =
+      /Failed to retrieve the client token|BLOB_READ_WRITE_TOKEN|OIDC|token/i.test(raw);
+
     return NextResponse.json(
-      { error: error?.message || 'Large file upload could not be authorized.' },
+      {
+        error: authProblem
+          ? 'Large-file storage is not connected correctly to this CoachVault deployment. Open the Vercel Blob store, confirm this production project is connected, upgrade the connection to OIDC if offered, and redeploy.'
+          : (raw || 'Large file upload could not be authorized.'),
+        code: authProblem ? 'BLOB_CONNECTION_REQUIRED' : 'BLOB_UPLOAD_AUTH_FAILED'
+      },
       { status: 400 }
     );
   }

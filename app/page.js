@@ -141,6 +141,24 @@ const skillFramework = {
   purposeRule: 'Tag Ground Balls only when gaining, securing, or exiting possession from a loose-ball situation is a central learning purpose.'
 };
 
+function friendlyEngineError(error) {
+  const message = String(error?.message || error || '');
+
+  if (/Failed to retrieve the client token|client token/i.test(message)) {
+    return 'Large-file storage is not connected correctly to this CoachVault deployment. In Vercel, open the Blob store, confirm the CoachVault production project is connected, upgrade the connection to OIDC if offered, then redeploy.';
+  }
+
+  if (/BLOB_READ_WRITE_TOKEN|blob.*token|token.*blob/i.test(message)) {
+    return 'CoachVault can see the large-file upload feature, but this deployment does not currently have permission to use its Blob store. Check the Blob store project connection in Vercel and redeploy.';
+  }
+
+  if (/PRIVATE_BLOB_RETRIEVAL_FAILED|could not retrieve the private file|could not open the private file/i.test(message)) {
+    return 'CoachVault stored the document privately, but the Engine could not reopen it for analysis. Confirm the private Blob store is connected to the production CoachVault project and redeploy.';
+  }
+
+  return message || 'CoachVault could not complete the request.';
+}
+
 function formatConfidence(value) {
   const n = Number(value || 0);
   if (!Number.isFinite(n)) return 0;
@@ -180,6 +198,9 @@ export default function Home() {
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
   const [scheduleLocation, setScheduleLocation] = useState('');
+  const [pendingCalendarDate, setPendingCalendarDate] = useState('');
+  const [calendarCreateDate, setCalendarCreateDate] = useState('');
+
 
 
   useEffect(() => {
@@ -261,7 +282,7 @@ export default function Home() {
             `coachvault/${Date.now()}-${file.name}`,
             file,
             {
-              access: 'public',
+              access: 'private',
               handleUploadUrl: '/api/uploads',
               multipart: true,
               onUploadProgress: ({ percentage }) => setUploadProgress(Math.round(percentage || 0))
@@ -420,6 +441,24 @@ export default function Home() {
       const exists = current.some(p => p.id === saved.id);
       return exists ? current.map(p => p.id === saved.id ? saved : p) : [saved, ...current];
     });
+
+    if (pendingCalendarDate) {
+      setCalendarEvents((current) => [
+        ...current.filter(event => !(event.practiceId === saved.id && event.date === pendingCalendarDate)),
+        {
+          id: Date.now() + 1,
+          practiceId: saved.id,
+          title: saved.title || 'Practice',
+          focus: saved.focus || '',
+          date: pendingCalendarDate,
+          time: '',
+          location: '',
+          duration: saved.duration
+        }
+      ]);
+      setPendingCalendarDate('');
+    }
+
     setPracticePlan(saved);
   }
 
@@ -444,6 +483,19 @@ export default function Home() {
     };
     setCalendarEvents((current) => [event, ...current]);
     setCalendarPractice(null);
+  }
+
+  function beginPracticeFromCalendar(date) {
+    setCalendarCreateDate('');
+    setPendingCalendarDate(date);
+    setPracticePrompt('');
+    setPracticePlan(null);
+    setPracticeBuilderOpen(true);
+    setActive('Database');
+  }
+
+  function calendarDayClicked(date) {
+    setCalendarCreateDate(date);
   }
 
   function approve() {
@@ -472,7 +524,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.5.1</small>
+          <small className="engineVersion">Engine 3.5.4</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -572,7 +624,7 @@ export default function Home() {
                   <div><span>Uploading document securely</span><b>{uploadProgress}%</b></div>
                   <progress value={uploadProgress} max="100" />
                 </div>}
-                <div className="largeFileSupport"><b>Large documents supported</b><span>PDFs up to 10 MB in this test build</span></div>
+                <div className="largeFileSupport"><b>Private document upload</b><span>PDFs up to 10 MB • larger files are stored privately before Engine analysis</span></div>
                 <button className="primaryBtn" disabled={!file || loading} onClick={runEngine}>Analyze with CoachVault</button>
               </div>}
 
@@ -596,6 +648,11 @@ export default function Home() {
             </div>
 
             {practiceBuilderOpen && <section className="practiceBuilder">
+              {pendingCalendarDate && <div className="calendarReservationBanner">
+                <div><small>CALENDAR DATE RESERVED</small><b>{new Date(`${pendingCalendarDate}T12:00:00`).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</b></div>
+                <span>This practice will be added to that date when you save it.</span>
+                <button onClick={()=>setPendingCalendarDate('')}>Remove date</button>
+              </div>}
               <div className="practiceBuilderIntro">
                 <span>VAULT → PRACTICE</span>
                 <h2>What does your team need today?</h2>
@@ -634,12 +691,26 @@ export default function Home() {
           </>
         )}
 
-        {active === 'Calendar' && <PracticeCalendar events={calendarEvents} savedPractices={savedPractices} schedulePractice={schedulePractice} />}
+        {active === 'Calendar' && <PracticeCalendar events={calendarEvents} savedPractices={savedPractices} schedulePractice={schedulePractice} onDayClick={calendarDayClicked} />}
 
         {active === 'Skills' && <CVILLibrary selectedSkillId={selectedSkillId} setSelectedSkillId={setSelectedSkillId} />}
         {active === 'Test Results' && <TestResults drills={drills} />}
         </section>
       </div>
+
+      {calendarCreateDate && <div className="scheduleOverlay" onClick={()=>setCalendarCreateDate('')}>
+        <section className="calendarCreateModal" onClick={(e)=>e.stopPropagation()}>
+          <div className="calendarCreateIcon">＋</div>
+          <small>NEW PRACTICE</small>
+          <h2>Create practice?</h2>
+          <p>{new Date(`${calendarCreateDate}T12:00:00`).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</p>
+          <span>CoachVault will take you to the Practice Builder. When you save the finished plan, it will automatically be added to this date.</span>
+          <footer>
+            <button onClick={()=>setCalendarCreateDate('')}>Cancel</button>
+            <button className="primaryPlanBtn" onClick={()=>beginPracticeFromCalendar(calendarCreateDate)}>Create Practice</button>
+          </footer>
+        </section>
+      </div>}
 
       {calendarPractice && <div className="scheduleOverlay" onClick={()=>setCalendarPractice(null)}>
         <section className="scheduleModal" onClick={(e)=>e.stopPropagation()}>
@@ -723,7 +794,7 @@ function PracticePlanCard({ plan, replaceIndex, setReplaceIndex, replacementOpti
   </section>
 }
 
-function PracticeCalendar({ events, savedPractices, schedulePractice }) {
+function PracticeCalendar({ events, savedPractices, schedulePractice, onDayClick }) {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
@@ -731,28 +802,41 @@ function PracticeCalendar({ events, savedPractices, schedulePractice }) {
   const daysInMonth = new Date(year,month+1,0).getDate();
   const blanks = first.getDay();
   const cells = Array.from({length:blanks},()=>null).concat(Array.from({length:daysInMonth},(_,i)=>i+1));
+  const isoForDay = (day) => `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
 
   return <section className="calendarWorkspace">
     <header className="calendarHeader">
-      <div><small>PRACTICE CALENDAR</small><h2>{now.toLocaleString(undefined,{month:'long',year:'numeric'})}</h2><p>Scheduling is optional. Unscheduled practices remain in your Practice Library.</p></div>
+      <div><small>PRACTICE CALENDAR</small><h2>{now.toLocaleString(undefined,{month:'long',year:'numeric'})}</h2><p>Click any day to create a new practice there, or schedule an existing saved practice.</p></div>
       {!!savedPractices.length && <button onClick={()=>schedulePractice(savedPractices[0])}>+ Schedule Practice</button>}
     </header>
     <div className="calendarWeekdays">{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=><span key={d}>{d}</span>)}</div>
     <div className="calendarGrid">
-      {cells.map((day,i)=><div className={`calendarDay ${day?'':'blank'}`} key={i}>
-        {day && <><b>{day}</b>
-          <div className="calendarEvents">
-            {events.filter(event=>{
-              const d=new Date(`${event.date}T12:00:00`);
-              return d.getFullYear()===year && d.getMonth()===month && d.getDate()===day;
-            }).map(event=><article key={event.id}><span>{event.time || 'Practice'}</span><strong>{event.title}</strong>{event.location&&<small>{event.location}</small>}</article>)}
-          </div>
-        </>}
-      </div>)}
+      {cells.map((day,i)=>{
+        const dayEvents = day ? events.filter(event=>{
+          const d=new Date(`${event.date}T12:00:00`);
+          return d.getFullYear()===year && d.getMonth()===month && d.getDate()===day;
+        }) : [];
+        return <div
+          className={`calendarDay ${day?'':'blank'} ${day && !dayEvents.length ? 'clickableEmptyDay' : ''}`}
+          key={i}
+          onClick={() => day && !dayEvents.length && onDayClick(isoForDay(day))}
+          role={day && !dayEvents.length ? 'button' : undefined}
+          tabIndex={day && !dayEvents.length ? 0 : undefined}
+          onKeyDown={(e)=>{
+            if(day && !dayEvents.length && (e.key==='Enter' || e.key===' ')) onDayClick(isoForDay(day));
+          }}
+        >
+          {day && <><b>{day}</b>
+            <div className="calendarEvents">
+              {dayEvents.map(event=><article key={event.id} onClick={(e)=>e.stopPropagation()}><span>{event.time || 'Practice'}</span><strong>{event.title}</strong>{event.location&&<small>{event.location}</small>}</article>)}
+            </div>
+            {!dayEvents.length && <span className="emptyDayHint">＋ Create practice</span>}
+          </>}
+        </div>
+      })}
     </div>
   </section>
 }
-
 
 function EngineProgress({ step }) {
   const stages = [

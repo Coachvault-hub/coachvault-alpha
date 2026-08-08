@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-351-large-documents",
-  "version": "3.5.1",
+  "name": "coachvault-engine-354-calendar-create-practice",
+  "version": "3.5.4",
   "private": true,
   "scripts": {
     "dev": "next dev",
