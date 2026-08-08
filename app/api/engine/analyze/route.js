@@ -38,6 +38,33 @@ function normalizeList(value) {
   return Array.isArray(value) ? value : [];
 }
 
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function supadataFetch(url, options={}, retries=4) {
+  let lastResponse = null;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(url, options);
+    lastResponse = response;
+
+    if (response.status !== 429) return response;
+
+    let retryAfterMs = 1100 * Math.pow(2, attempt);
+    const retryAfter = response.headers.get('retry-after');
+    if (retryAfter) {
+      const seconds = Number(retryAfter);
+      if (Number.isFinite(seconds)) retryAfterMs = Math.max(retryAfterMs, seconds * 1000);
+    }
+
+    await sleep(Math.min(retryAfterMs, 9000));
+  }
+
+  return lastResponse;
+}
+
 function reconcileAgainstCVIL(analysis, standards) {
   const skill = standards.find((item) => item.name === analysis?.primarySkill?.name);
   if (!skill) return analysis;
@@ -111,7 +138,7 @@ async function getSupadataTranscript(url) {
   if (!key) return { text:null, source:'Supadata key missing', segments:[], status:'unavailable' };
 
   const headers = { 'x-api-key':key };
-  const response = await fetch(`https://api.supadata.ai/v1/transcript?url=${encodeURIComponent(url)}&mode=auto`, { headers });
+  const response = await supadataFetch(`https://api.supadata.ai/v1/transcript?url=${encodeURIComponent(url)}&mode=auto`, { headers });
 
   if (!response.ok && response.status !== 202) {
     return { text:null, source:`Supadata transcript error ${response.status}`, segments:[], status:'failed' };
@@ -123,7 +150,7 @@ async function getSupadataTranscript(url) {
     const jobId = data.jobId;
     for (let attempt = 0; attempt < 24; attempt++) {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      const poll = await fetch(`https://api.supadata.ai/v1/transcript/${encodeURIComponent(jobId)}`, { headers });
+      const poll = await supadataFetch(`https://api.supadata.ai/v1/transcript/${encodeURIComponent(jobId)}`, { headers });
       if (!poll.ok) continue;
       data = await poll.json();
       if (data.status === 'failed') {
@@ -163,7 +190,7 @@ async function getSupadataMetadata(url) {
   const key = process.env.SUPADATA_API_KEY;
   if (!key) return null;
   try {
-    const response = await fetch(`https://api.supadata.ai/v1/metadata?url=${encodeURIComponent(url)}`, {
+    const response = await supadataFetch(`https://api.supadata.ai/v1/metadata?url=${encodeURIComponent(url)}`, {
       headers:{ 'x-api-key':key }
     });
     if (!response.ok) return null;
@@ -269,26 +296,38 @@ async function extractSocialVideo(url) {
     'Use approximate timestamps whenever possible.'
   ].join(' ');
 
-  const start = await fetch('https://api.supadata.ai/v1/extract', {
+  const start = await supadataFetch('https://api.supadata.ai/v1/extract', {
     method:'POST',
     headers:{ 'x-api-key':key, 'Content-Type':'application/json' },
     body:JSON.stringify({ url, prompt, schema })
   });
 
   if (!start.ok) {
-    return { status:'failed', error:`Supadata video extraction error ${start.status}` };
+    let details = '';
+    try {
+      const errorBody = await start.json();
+      details = errorBody?.details || errorBody?.error || '';
+    } catch (_) {}
+    return {
+      status:'failed',
+      error:start.status === 429
+        ? `Supadata temporarily rate-limited the video request${details ? `: ${details}` : ''}`
+        : `Supadata video extraction error ${start.status}${details ? `: ${details}` : ''}`
+    };
   }
 
   const job = await start.json();
   const jobId = job?.jobId;
   if (!jobId) return { status:'failed', error:'Supadata video extraction did not return a job ID.' };
 
-  for (let attempt = 0; attempt < 36; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const poll = await fetch(`https://api.supadata.ai/v1/extract/${encodeURIComponent(jobId)}`, {
+  // Wait briefly for fast short-form clips. Long jobs are handed back to
+  // the client as a persistent asynchronous job instead of being treated as errors.
+  for (let attempt = 0; attempt < 7; attempt++) {
+    await sleep(1200);
+    const poll = await supadataFetch(`https://api.supadata.ai/v1/extract/${encodeURIComponent(jobId)}`, {
       headers:{ 'x-api-key':key }
-    });
-    if (!poll.ok) continue;
+    }, 3);
+    if (!poll?.ok) continue;
     const result = await poll.json();
 
     if (result.status === 'completed') {
@@ -299,7 +338,7 @@ async function extractSocialVideo(url) {
     }
   }
 
-  return { status:'timeout', error:'Video analysis is still processing. Try the source again in a moment.', jobId };
+  return { status:'processing', jobId };
 }
 
 function platformFromUrl(url='') {
@@ -513,29 +552,67 @@ export async function POST(request) {
       const isSocialVideo = ['TikTok','Instagram'].includes(platform);
 
       if (isSocialVideo) {
-        const [metadataResult, transcriptResult, videoResult] = await Promise.all([
-          getSupadataMetadata(url),
-          getSupadataTranscript(url),
-          extractSocialVideo(url)
-        ]);
-
-        socialTranscript = transcriptResult;
+        // Social video reliability strategy:
+        // 1) TikTok/Instagram platform metadata comes from getSourceMeta.
+        // 2) Full-video extraction is the primary Supadata request.
+        // 3) Transcript is requested only after extraction and only as useful supplemental evidence.
+        // This avoids bursting multiple Supadata requests simultaneously.
+        const videoResult = await extractSocialVideo(url);
         socialVideoEvidence = videoResult;
 
-        if (metadataResult) {
-          sourceMeta = {
-            ...sourceMeta,
-            platform: metadataResult.platform ? String(metadataResult.platform).replace(/^./, c=>c.toUpperCase()) : platform,
-            title: metadataResult.title || sourceMeta?.title || metadataResult.description || url,
-            description: metadataResult.description || sourceMeta?.description || '',
-            author: metadataResult.author?.displayName || metadataResult.author?.username || sourceMeta?.author || '',
-            thumbnail: metadataResult.media?.thumbnailUrl || sourceMeta?.thumbnail || '',
-            duration: metadataResult.media?.duration || null,
-            tags: metadataResult.tags || [],
-            canonicalUrl: metadataResult.url || url,
-            accessStatus: videoResult?.status === 'completed' ? 'Full social video analyzed' : 'Social source recognized',
-            sourceMethod:'Supadata video intelligence + transcript + metadata'
-          };
+        let transcriptResult = { text:null, source:'Transcript not requested', status:'skipped' };
+
+        // Give the rate limiter breathing room before an optional second endpoint.
+        // Full-video extraction already understands visuals + audio, so transcript
+        // is supplemental rather than required.
+        if (videoResult?.status === 'completed') {
+          await sleep(1200);
+          transcriptResult = await getSupadataTranscript(url);
+        }
+
+        socialTranscript = transcriptResult;
+
+        sourceMeta = {
+          ...sourceMeta,
+          platform,
+          title: sourceMeta?.title || url,
+          description: sourceMeta?.description || '',
+          author: sourceMeta?.author || '',
+          thumbnail: sourceMeta?.thumbnail || '',
+          canonicalUrl: url,
+          accessStatus: videoResult?.status === 'completed' ? 'Full social video analyzed' : 'Social source recognized',
+          sourceMethod: videoResult?.status === 'completed'
+            ? 'Supadata full-video intelligence + platform metadata'
+            : 'Platform metadata + pending video intelligence'
+        };
+
+        if (videoResult?.status === 'processing' && videoResult?.jobId) {
+          return NextResponse.json({
+            status:'processing',
+            message:'CoachVault acquired the social source and is still reading the full video.',
+            pendingSocialJob:{
+              jobId:videoResult.jobId,
+              platform,
+              url,
+              sourceMeta
+            }
+          }, { status:202 });
+        }
+
+        if (videoResult?.status !== 'completed') {
+          // If full extraction truly failed, use transcript as a fallback but do
+          // not pretend transcript-only evidence is equivalent to full video.
+          await sleep(1200);
+          transcriptResult = await getSupadataTranscript(url);
+          socialTranscript = transcriptResult;
+
+          if (!transcriptResult?.text) {
+            return NextResponse.json({
+              error:`CoachVault recognized this ${platform} video, but the full-video service could not complete the analysis. ${videoResult?.error || ''}`.trim(),
+              sourceMeta,
+              socialVideoStatus:videoResult?.status || 'failed'
+            }, { status:400 });
+          }
         }
 
         const evidenceText = videoResult?.status === 'completed'
@@ -549,24 +626,16 @@ export async function POST(request) {
           sourceMeta?.author ? `CREATOR: ${sourceMeta.author}` : '',
           sourceMeta?.title ? `POST TITLE/CAPTION: ${sourceMeta.title}` : '',
           sourceMeta?.description && sourceMeta.description !== sourceMeta.title ? `POST DESCRIPTION: ${sourceMeta.description}` : '',
-          sourceMeta?.duration ? `VIDEO DURATION: ${sourceMeta.duration} seconds` : '',
           transcriptText ? `\nTIMESTAMPED SPOKEN/CAPTION TRANSCRIPT:\n${transcriptText}` : '',
           evidenceText ? `\nFULL VIDEO VISUAL/AUDIO EXTRACTION:\n${evidenceText}` : '',
           `\nSOURCE URL: ${url}`
         ].filter(Boolean).join('\n');
 
         transcriptSource = [
-          videoResult?.status === 'completed' ? 'Full social video visual/audio extraction' : 'Social video extraction unavailable',
+          videoResult?.status === 'completed' ? 'Full social video visual/audio extraction' : 'Transcript fallback',
           transcriptResult?.text ? 'timestamped transcript' : 'no transcript',
-          'metadata'
+          'platform metadata'
         ].join(' + ');
-
-        if (videoResult?.status !== 'completed' && !transcriptResult?.text) {
-          return NextResponse.json({
-            error:`CoachVault recognized this ${platform} video, but full video evidence could not be retrieved. ${videoResult?.error || ''}`.trim(),
-            sourceMeta
-          }, { status:400 });
-        }
       } else {
         if (!sourceText && /youtube\.com|youtu\.be/.test(url || '')) {
           const transcriptResult = await getSupadataTranscript(url);
@@ -600,7 +669,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.5.4 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.5.6 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -629,7 +698,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.5.4-cpc",
+  "engineVersion":"3.5.6-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",

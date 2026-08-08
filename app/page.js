@@ -179,6 +179,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [progressStep, setProgressStep] = useState(0);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [socialJobStatus, setSocialJobStatus] = useState('');
+
   const [internalMode, setInternalMode] = useState(false);
   const [drills, setDrills] = useState(seedDrills);
   const [selected, setSelected] = useState(null);
@@ -263,6 +265,39 @@ export default function Home() {
     return ['All', ...Array.from(new Set(drills.map((d) => d.folder || suggestedFolderFor(d))))];
   }, [drills]);
 
+  async function waitForSocialVideo(jobId, originalUrl) {
+    setSocialJobStatus('Reading the full social video…');
+
+    for (let attempt = 0; attempt < 72; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 2500));
+
+      const response = await fetch('/api/engine/analyze/social-status', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ jobId, url:originalUrl })
+      });
+
+      const raw = await response.text();
+      let data = {};
+      try { data = raw ? JSON.parse(raw) : {}; }
+      catch (_) { throw new Error(raw || 'Unexpected social-video status response.'); }
+
+      if (response.status === 202 || data.status === 'processing') {
+        setSocialJobStatus(data.message || 'Reading video actions and on-screen coaching text…');
+        setProgressStep((current) => Math.max(current, 1));
+        continue;
+      }
+
+      if (!response.ok) throw new Error(data.error || 'Social video analysis failed.');
+
+      setSocialJobStatus('Video understood. Building the Coach Practice Card…');
+      setProgressStep(4);
+      return data;
+    }
+
+    throw new Error('This video is taking longer than expected. Please try again later.');
+  }
+
   async function runEngine() {
     setError('');
     setResult(null);
@@ -328,7 +363,11 @@ export default function Home() {
             : (responseText || `Unexpected server response (${response.status}).`)
         );
       }
-      if (!response.ok) throw new Error(data.error || 'The Engine could not complete the analysis.');
+      if (response.status === 202 && data.pendingSocialJob?.jobId) {
+        data = await waitForSocialVideo(data.pendingSocialJob.jobId, url);
+      }
+
+      if (!response.ok && response.status !== 202) throw new Error(data.error || 'The Engine could not complete the analysis.');
       const analyzed = { ...data.analysis, sourceUrl: data.analysis?.sourceUrl || url || '' };
       const stageMs = 2400;
       const minimumBeforeReview = stageMs * 6;
@@ -346,6 +385,7 @@ export default function Home() {
     } finally {
       setLoading(false);
       setUploadProgress(0);
+      setSocialJobStatus('');
     }
   }
 
@@ -524,7 +564,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.5.4</small>
+          <small className="engineVersion">Engine 3.5.6</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -568,11 +608,11 @@ export default function Home() {
               <div>
                 <span>ENGINE WORKSPACE</span>
                 <h2>What would you like CoachVault to analyze?</h2>
-                <p>Paste a link, paste text, or upload a file. CoachVault will organize the result before anything enters your Vault.</p>
+                <p>Add a link, text, or file. CoachVault will organize it before anything enters your Vault.</p>
               </div>
               <button onClick={() => setActive('Database')}>Open Vault</button>
             </section>}
-            <section className={`inputPanel inputPanelTop simplifiedPanel ${loading ? 'engineRunningPanel' : ''}`}>
+            <section className={`inputPanel inputPanelTop simplifiedPanel compactAtlasPanel ${loading ? 'engineRunningPanel' : ''}`}>
               <div className="tabs">
                 <button className={mode === 'link' ? 'active' : ''} onClick={() => setMode('link')}>Web / Social Link</button>
                 <button className={mode === 'text' ? 'active' : ''} onClick={() => setMode('text')}>Paste Text</button>
@@ -585,9 +625,9 @@ export default function Home() {
                 <div className="recognizedSources">
                   <span><b>▶</b>YouTube</span><span><b>♪</b>TikTok</span><span><b>◎</b>Instagram</span><span><b>↗</b>Web</span>
                 </div>
-                <div className="socialIntelligenceNote">
+                <div className="socialIntelligenceNote compact">
                   <b>Social Video Intelligence</b>
-                  <span>TikTok and Instagram videos are analyzed for visual actions, on-screen coaching text, audio/transcript, and post metadata.</span>
+                  <span>Reads video actions, on-screen text, audio, and post metadata. Slow jobs stay open automatically.</span>
                 </div>
                 <details><summary>Paste transcript or source text as a fallback</summary><textarea value={transcript} onChange={(e) => setTranscript(e.target.value)} placeholder="Optional transcript..." /></details>
                 <button disabled={!url.trim()} onClick={runEngine}>Analyze with CoachVault</button>
@@ -628,7 +668,7 @@ export default function Home() {
                 <button className="primaryBtn" disabled={!file || loading} onClick={runEngine}>Analyze with CoachVault</button>
               </div>}
 
-              {loading && <EngineProgress step={progressStep} />}
+              {loading && <EngineProgress step={progressStep} socialJobStatus={socialJobStatus} />}
               {error && <div className="error"><b>Engine stopped</b><p>{error}</p></div>}
             </section>
           </>
@@ -838,7 +878,7 @@ function PracticeCalendar({ events, savedPractices, schedulePractice, onDayClick
   </section>
 }
 
-function EngineProgress({ step }) {
+function EngineProgress({ step, socialJobStatus='' }) {
   const stages = [
     { title: 'Acquiring source', detail: 'Opening the submitted coaching source and preparing it for analysis.' },
     { title: 'Reading coaching content', detail: 'Reading transcripts, full-video actions, on-screen text, captions, and source context.' },
@@ -864,8 +904,8 @@ function EngineProgress({ step }) {
       <div className="analysisPulse"></div>
       <div>
         <small>WORKING NOW</small>
-        <h3>{stages[current].title}</h3>
-        <p>{stages[current].detail}</p>
+        <h3>{socialJobStatus || stages[current].title}</h3>
+        <p>{socialJobStatus ? 'CoachVault will keep checking this video automatically. You do not need to paste the link again.' : stages[current].detail}</p>
       </div>
     </div>
 

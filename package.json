@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-354-calendar-create-practice",
-  "version": "3.5.4",
+  "name": "coachvault-engine-356-social-video-reliability",
+  "version": "3.5.6",
   "private": true,
   "scripts": {
     "dev": "next dev",

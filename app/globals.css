@@ -786,3 +786,111 @@ body{background:linear-gradient(180deg,#f5f8fd 0%,#eef3f9 100%)}
 .calendarReservationBanner div{display:grid;gap:2px}.calendarReservationBanner small{font-size:8px;font-weight:900;letter-spacing:.1em;color:#2d66d8}.calendarReservationBanner b{font-size:12px;color:#29466c}
 .calendarReservationBanner>span{font-size:10px;color:#627892}.calendarReservationBanner button{border:1px solid #c7d6ea;border-radius:9px;background:#fff;padding:7px 9px;font-size:9px;font-weight:800;color:#536b89}
 @media(max-width:720px){.calendarReservationBanner{grid-template-columns:1fr}.calendarReservationBanner button{width:max-content}}
+
+/* Engine 3.5.5 — compact Atlas workspace */
+.main{padding-top:18px}
+.pageHeader{margin-bottom:14px}
+.pageHeader h1{margin-bottom:2px}
+.pageHeader p{margin-top:2px}
+.headerMetrics{gap:10px}
+.headerMetrics span{min-width:94px;padding:13px 14px;border-radius:15px}
+
+.welcomeStrip{
+  min-height:auto;
+  padding:18px 22px;
+  margin-bottom:14px;
+  border-radius:18px;
+}
+.welcomeStrip h2{
+  margin:4px 0 4px;
+  font-size:26px;
+  line-height:1.12;
+}
+.welcomeStrip p{
+  margin:0;
+  font-size:13px;
+  line-height:1.4;
+}
+.welcomeStrip button{
+  padding:10px 16px;
+  border-radius:11px;
+}
+
+.compactAtlasPanel{
+  border-radius:18px;
+  overflow:hidden;
+}
+.compactAtlasPanel .tabs{
+  min-height:48px;
+}
+.compactAtlasPanel .tabs button{
+  padding:13px 16px;
+  font-size:14px;
+}
+.compactAtlasPanel .inputBody{
+  padding:18px 20px 16px;
+}
+.compactAtlasPanel .inputBody>label{
+  margin-bottom:6px;
+  font-size:11px;
+}
+.compactAtlasPanel input,
+.compactAtlasPanel textarea{
+  min-height:44px;
+}
+.compactAtlasPanel details{
+  margin-top:8px;
+}
+.compactAtlasPanel details summary{
+  font-size:11px;
+}
+.compactAtlasPanel .recognizedSources{
+  gap:6px;
+  margin-top:8px;
+}
+.compactAtlasPanel .recognizedSources span{
+  padding:5px 8px;
+  font-size:9px;
+}
+.compactAtlasPanel .socialIntelligenceNote{
+  margin-top:8px;
+  padding:8px 10px;
+  border-radius:10px;
+}
+.compactAtlasPanel .socialIntelligenceNote.compact{
+  align-items:center;
+}
+.compactAtlasPanel .socialIntelligenceNote.compact b{
+  font-size:9px;
+}
+.compactAtlasPanel .socialIntelligenceNote.compact span{
+  font-size:9px;
+  line-height:1.3;
+}
+.compactAtlasPanel .inputBody>button,
+.compactAtlasPanel .primaryBtn{
+  margin-top:12px;
+  min-height:44px;
+}
+.compactAtlasPanel .fileDrop{
+  min-height:190px;
+  padding:20px;
+}
+.compactAtlasPanel .fileDropHeroIcon{
+  width:44px;
+  height:44px;
+  font-size:22px;
+}
+.compactAtlasPanel .fileDropCopy strong{
+  font-size:18px;
+}
+.compactAtlasPanel .fileDropHint{
+  font-size:10px;
+}
+
+.engineRunningPanel{
+  margin-top:0;
+}
+.engineRunningPanel .engineAnalysis{
+  min-height:320px;
+}
