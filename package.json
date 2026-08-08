@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-357-readable-social-errors",
-  "version": "3.5.7",
+  "name": "coachvault-engine-358-protected-deployment-fix",
+  "version": "3.5.8",
   "private": true,
   "scripts": {
     "dev": "next dev",

@@ -320,6 +320,56 @@ export default function Home() {
 
       setSocialJobStatus('Video understood. Building the Coach Practice Card…');
       setProgressStep(4);
+
+      if (data.status === 'completed' && data.evidence) {
+        const evidenceText = [
+          'FULL SOCIAL VIDEO VISUAL/AUDIO EXTRACTION:',
+          JSON.stringify(data.evidence, null, 2),
+          '',
+          `ORIGINAL SOCIAL SOURCE URL: ${originalUrl}`,
+          '',
+          'This is evidence from the full video. Prioritize on-screen instructional text and repeated demonstrated actions. Preserve named variations. Do not invent setup details that are not supported.'
+        ].join('\n');
+
+        const analyzeResponse = await fetch('/api/engine/analyze', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body:JSON.stringify({
+            mode:'text',
+            text:evidenceText
+          })
+        });
+
+        const analyzeRaw = await analyzeResponse.text();
+        let analyzeData = {};
+        try { analyzeData = analyzeRaw ? JSON.parse(analyzeRaw) : {}; }
+        catch (_) { throw new Error(analyzeRaw || 'CoachVault could not interpret the completed video evidence.'); }
+
+        if (!analyzeResponse.ok) {
+          throw new Error(readableError(analyzeData.error) || 'CoachVault could not build the Practice Card from the completed video.');
+        }
+
+        analyzeData.sourceMeta = {
+          ...(analyzeData.sourceMeta || {}),
+          platform:'Social Video',
+          url:originalUrl,
+          accessStatus:'Full social video analyzed',
+          sourceMethod:'Supadata asynchronous full-video intelligence'
+        };
+
+        if (analyzeData.diagnostics) {
+          analyzeData.diagnostics.recognizedSource = {
+            platform:'Social Video',
+            method:'Asynchronous full-video intelligence',
+            accessStatus:'Full video analyzed',
+            fullVideoAnalyzed:true,
+            videoExtractionJobId:jobId
+          };
+        }
+
+        return analyzeData;
+      }
+
       return data;
     }
 
@@ -592,7 +642,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.5.7</small>
+          <small className="engineVersion">Engine 3.5.8</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">

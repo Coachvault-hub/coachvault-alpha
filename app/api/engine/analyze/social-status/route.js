@@ -90,57 +90,16 @@ export async function POST(request) {
       }, { status:202 });
     }
 
-    // Feed completed full-video evidence through CoachVault's normal CVIL analysis.
-    const origin = new URL(request.url).origin;
-    const evidence = JSON.stringify(result.data || {}, null, 2);
-
-    // Wait before the next API/service operation to avoid burst behavior.
-    await sleep(1200);
-
-    const analyze = await fetch(`${origin}/api/engine/analyze`, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body:JSON.stringify({
-        mode:'text',
-        text:[
-          'FULL SOCIAL VIDEO VISUAL/AUDIO EXTRACTION:',
-          evidence,
-          '',
-          `ORIGINAL SOCIAL SOURCE URL: ${url}`,
-          '',
-          'This is evidence from the full video. Prioritize on-screen instructional text and repeated demonstrated actions. Preserve named variations. Do not invent setup details that are not supported.'
-        ].join('\n')
-      })
-    });
-
-    const raw = await analyze.text();
-    let data;
-    try { data = JSON.parse(raw); }
-    catch (_) {
-      return NextResponse.json({ error:raw || 'CoachVault could not interpret the completed video evidence.' }, { status:500 });
-    }
-
-    if (!analyze.ok) return NextResponse.json(data, { status:analyze.status });
-
-    data.sourceMeta = {
-      ...(data.sourceMeta || {}),
-      platform:'Social Video',
+    // Return the completed evidence to the authenticated browser.
+    // The browser will submit it to CoachVault's normal relative analysis route,
+    // avoiding a server-to-server call that Vercel Deployment Protection can block.
+    return NextResponse.json({
+      status:'completed',
+      jobId,
       url,
-      accessStatus:'Full social video analyzed',
-      sourceMethod:'Supadata asynchronous full-video intelligence'
-    };
-
-    if (data.diagnostics) {
-      data.diagnostics.recognizedSource = {
-        platform:'Social Video',
-        method:'Asynchronous full-video intelligence',
-        accessStatus:'Full video analyzed',
-        fullVideoAnalyzed:true,
-        videoExtractionJobId:jobId
-      };
-    }
-
-    return NextResponse.json(data);
+      evidence:result.data || {},
+      message:'Full social video analysis is complete.'
+    });
   } catch (error) {
     return NextResponse.json({ error:errorText(error) || 'Unexpected social-video polling error.' }, { status:500 });
   }
