@@ -894,3 +894,87 @@ body{background:linear-gradient(180deg,#f5f8fd 0%,#eef3f9 100%)}
 .engineRunningPanel .engineAnalysis{
   min-height:320px;
 }
+
+/* Engine 3.5.9 — Vault spacing polish */
+.vaultActionRow{
+  margin:22px 0 26px;
+  gap:18px;
+}
+
+.vaultToolbar{
+  margin:0 0 26px;
+  gap:14px;
+}
+
+.vaultToolbar select,
+.vaultToolbar input{
+  min-height:54px;
+}
+
+.cards{
+  gap:24px;
+  row-gap:28px;
+}
+
+.card{
+  padding:22px 24px;
+  border-radius:20px;
+}
+
+.card header{
+  margin-bottom:14px;
+}
+
+.card h3{
+  margin:0 0 14px;
+  line-height:1.24;
+}
+
+.card>p,
+.card .cardSummary{
+  margin-bottom:18px;
+  line-height:1.5;
+}
+
+.cardType,
+.primaryTag{
+  margin-top:10px;
+}
+
+.card .pills{
+  gap:9px;
+  margin-top:16px;
+  margin-bottom:18px;
+}
+
+.card .pills span{
+  padding:7px 10px;
+}
+
+.card footer{
+  margin-top:18px;
+  padding-top:14px;
+}
+
+.sectionSummary{
+  margin-bottom:22px;
+}
+
+.vaultBuilderLaunch,
+.addSourceCard{
+  min-height:104px;
+}
+
+.vaultBuilderLaunch{
+  padding:20px 22px;
+}
+
+@media(max-width:900px){
+  .cards{
+    gap:18px;
+    row-gap:20px;
+  }
+  .card{
+    padding:19px 20px;
+  }
+}

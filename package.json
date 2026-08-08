@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-358-protected-deployment-fix",
-  "version": "3.5.8",
+  "name": "coachvault-engine-359-vault-spacing-polish",
+  "version": "3.5.9",
   "private": true,
   "scripts": {
     "dev": "next dev",
