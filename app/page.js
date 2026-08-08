@@ -140,6 +140,12 @@ const skillFramework = {
   purposeRule: 'Tag Ground Balls only when gaining, securing, or exiting possession from a loose-ball situation is a central learning purpose.'
 };
 
+function formatConfidence(value) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n <= 1 ? n * 100 : n);
+}
+
 export default function Home() {
   const [active, setActive] = useState('Atlas');
   const [mode, setMode] = useState('link');
@@ -165,6 +171,14 @@ export default function Home() {
   const [practicePlayers, setPracticePlayers] = useState(18);
   const [practicePlan, setPracticePlan] = useState(null);
   const [practiceBuilderOpen, setPracticeBuilderOpen] = useState(false);
+  const [savedPractices, setSavedPractices] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [replaceIndex, setReplaceIndex] = useState(null);
+  const [calendarPractice, setCalendarPractice] = useState(null);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [scheduleLocation, setScheduleLocation] = useState('');
+
 
   useEffect(() => {
     try {
@@ -183,6 +197,23 @@ export default function Home() {
   useEffect(() => {
     localStorage.setItem('coachvault-atlas-alpha', JSON.stringify(drills));
   }, [drills]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('coachvault-practices-alpha');
+      if (stored) setSavedPractices(JSON.parse(stored));
+      const scheduled = localStorage.getItem('coachvault-calendar-alpha');
+      if (scheduled) setCalendarEvents(JSON.parse(scheduled));
+    } catch (_) {}
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('coachvault-practices-alpha', JSON.stringify(savedPractices));
+  }, [savedPractices]);
+
+  useEffect(() => {
+    localStorage.setItem('coachvault-calendar-alpha', JSON.stringify(calendarEvents));
+  }, [calendarEvents]);
 
   useEffect(() => {
     if (!loading) {
@@ -299,13 +330,73 @@ export default function Home() {
     ];
 
     setPracticePlan({
+      id: Date.now(),
       title:'CoachVault Practice Plan',
       prompt:practicePrompt,
       duration:total,
       players:practicePlayers,
       focus:practicePrompt || 'Coach-selected practice focus',
-      segments
+      segments: segments.map(segment => ({...segment, status:'review', locked:false}))
     });
+    setReplaceIndex(null);
+  }
+
+  function updatePlanSegment(index, patch) {
+    setPracticePlan((current) => ({
+      ...current,
+      segments: current.segments.map((segment, i) => i === index ? { ...segment, ...patch } : segment)
+    }));
+  }
+
+  function replacementOptions(index) {
+    const current = practicePlan?.segments?.[index]?.drill;
+    const used = new Set((practicePlan?.segments || []).map(s => s.drill?.id).filter(Boolean));
+    return drills
+      .filter(d => d.id !== current?.id && !used.has(d.id))
+      .slice(0, 4);
+  }
+
+  function replacePracticeDrill(index, drill) {
+    updatePlanSegment(index, { drill, status:'review', locked:false });
+    setReplaceIndex(null);
+  }
+
+  function savePracticePlan() {
+    if (!practicePlan) return;
+    const saved = {
+      ...practicePlan,
+      id: practicePlan.id || Date.now(),
+      savedAt: new Date().toISOString(),
+      status: 'Saved'
+    };
+    setSavedPractices((current) => {
+      const exists = current.some(p => p.id === saved.id);
+      return exists ? current.map(p => p.id === saved.id ? saved : p) : [saved, ...current];
+    });
+    setPracticePlan(saved);
+  }
+
+  function schedulePractice(plan) {
+    setCalendarPractice(plan);
+    setScheduleDate('');
+    setScheduleTime('');
+    setScheduleLocation('');
+  }
+
+  function confirmSchedulePractice() {
+    if (!calendarPractice || !scheduleDate) return;
+    const event = {
+      id: Date.now(),
+      practiceId: calendarPractice.id || null,
+      title: calendarPractice.title || 'Practice',
+      focus: calendarPractice.focus || '',
+      date: scheduleDate,
+      time: scheduleTime,
+      location: scheduleLocation,
+      duration: calendarPractice.duration
+    };
+    setCalendarEvents((current) => [event, ...current]);
+    setCalendarPractice(null);
   }
 
   function approve() {
@@ -334,7 +425,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.3.4</small>
+          <small className="engineVersion">Engine 3.4.0</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -344,7 +435,7 @@ export default function Home() {
       </header>
 
       <nav className="sectionNav">
-        {['Atlas', 'Database', 'Skills', 'Test Results'].map((item) => (
+        {['Atlas', 'Database', 'Practices', 'Calendar', 'Skills', 'Test Results'].map((item) => (
           <button key={item} className={active === item ? 'active' : ''} onClick={() => setActive(item)}>{item}</button>
         ))}
       </nav>
@@ -353,6 +444,8 @@ export default function Home() {
         <aside className="iconRail">
           <button className={active === 'Atlas' ? 'active' : ''} onClick={() => setActive('Atlas')}><span>⚙</span><small>Engine</small></button>
           <button className={active === 'Database' ? 'active' : ''} onClick={() => setActive('Database')}><span>▣</span><small>Vault</small></button>
+          <button className={active === 'Practices' ? 'active' : ''} onClick={() => setActive('Practices')}><span>≡</span><small>Practices</small></button>
+          <button className={active === 'Calendar' ? 'active' : ''} onClick={() => setActive('Calendar')}><span>□</span><small>Calendar</small></button>
           <button className={active === 'Skills' ? 'active' : ''} onClick={() => setActive('Skills')}><span>◎</span><small>Skills</small></button>
           <button className={active === 'Test Results' ? 'active' : ''} onClick={() => setActive('Test Results')}><span>✓</span><small>Tests</small></button>
         </aside>
@@ -362,7 +455,7 @@ export default function Home() {
             <div>
               <small>COACHVAULT WORKSPACE</small>
               <h1>{active}</h1>
-              <p>{active === 'Atlas' ? 'Add a source and turn it into a structured coaching asset.' : active === 'Database' ? 'Review and organize approved items in your Vault.' : active === 'Skills' ? 'Manage the skill language that powers the Engine.' : 'Measure how consistently the Engine understands coaching content.'}</p>
+              <p>{active === 'Atlas' ? 'Add a source and turn it into a structured coaching asset.' : active === 'Database' ? 'Review and organize approved items in your Vault.' : active === 'Practices' ? 'Saved practice plans, ready to reuse or schedule.' : active === 'Calendar' ? 'Optionally schedule practices when it helps your season planning.' : active === 'Skills' ? 'Manage the skill language that powers the Engine.' : 'Measure how consistently the Engine understands coaching content.'}</p>
             </div>
             <div className="headerMetrics">
               <span><b>{drills.length}</b><small>Approved</small></span>
@@ -454,7 +547,7 @@ export default function Home() {
               </div>
             </section>}
 
-            {practicePlan && <PracticePlanCard plan={practicePlan} onClose={()=>setPracticePlan(null)} />}
+            {practicePlan && <PracticePlanCard plan={practicePlan} drills={drills} replaceIndex={replaceIndex} setReplaceIndex={setReplaceIndex} replacementOptions={replacementOptions} updatePlanSegment={updatePlanSegment} replacePracticeDrill={replacePracticeDrill} savePracticePlan={savePracticePlan} schedulePractice={schedulePractice} onClose={()=>setPracticePlan(null)} />}
 
             <div className="toolbar vaultToolbar">
               <select value={folderFilter} onChange={(e) => setFolderFilter(e.target.value)}>{folders.map((folder) => <option key={folder}>{folder}</option>)}</select>
@@ -464,10 +557,39 @@ export default function Home() {
           </>
         )}
 
+
+        {active === 'Practices' && (
+          <>
+            <section className="sectionSummary"><span>PRACTICE LIBRARY</span><h2>Saved Practices</h2><p>Practices can live here indefinitely. Scheduling is optional.</p></section>
+            {!savedPractices.length ? <div className="emptyState"><b>No saved practices yet.</b><p>Build a practice from your Vault, review the drills, and save it here.</p><button onClick={()=>setActive('Database')}>Build a Practice</button></div> :
+            <div className="practiceLibraryGrid">{savedPractices.map(plan => <article className="savedPracticeTile" key={plan.id}>
+              <header><span>SAVED PRACTICE</span><b>{plan.duration} min</b></header>
+              <h3>{plan.title}</h3>
+              <p>{plan.focus}</p>
+              <div className="savedPracticeStats"><span>{plan.players} players</span><span>{plan.segments.filter(s=>s.drill).length} drills</span></div>
+              <footer><button onClick={()=>{setPracticePlan(plan);setActive('Database')}}>Open Plan</button><button onClick={()=>schedulePractice(plan)}>Add to Calendar</button></footer>
+            </article>)}</div>}
+          </>
+        )}
+
+        {active === 'Calendar' && <PracticeCalendar events={calendarEvents} savedPractices={savedPractices} schedulePractice={schedulePractice} />}
+
         {active === 'Skills' && <CVILLibrary selectedSkillId={selectedSkillId} setSelectedSkillId={setSelectedSkillId} />}
         {active === 'Test Results' && <TestResults drills={drills} />}
         </section>
       </div>
+
+      {calendarPractice && <div className="scheduleOverlay" onClick={()=>setCalendarPractice(null)}>
+        <section className="scheduleModal" onClick={(e)=>e.stopPropagation()}>
+          <header><div><small>OPTIONAL CALENDAR</small><h2>Schedule this practice</h2><p>{calendarPractice.focus}</p></div><button onClick={()=>setCalendarPractice(null)}>×</button></header>
+          <div className="scheduleFields">
+            <label><span>Date</span><input type="date" value={scheduleDate} onChange={(e)=>setScheduleDate(e.target.value)} /></label>
+            <label><span>Time</span><input type="time" value={scheduleTime} onChange={(e)=>setScheduleTime(e.target.value)} /></label>
+            <label><span>Location</span><input value={scheduleLocation} onChange={(e)=>setScheduleLocation(e.target.value)} placeholder="Optional location" /></label>
+          </div>
+          <footer><button onClick={()=>setCalendarPractice(null)}>Cancel</button><button className="primaryPlanBtn" disabled={!scheduleDate} onClick={confirmSchedulePractice}>Add to Calendar</button></footer>
+        </section>
+      </div>}
 
       {selected && <Detail item={selected} onClose={() => setSelected(null)} />}
     </main>
@@ -475,11 +597,12 @@ export default function Home() {
 }
 
 
-function PracticePlanCard({ plan, onClose }) {
+function PracticePlanCard({ plan, replaceIndex, setReplaceIndex, replacementOptions, updatePlanSegment, replacePracticeDrill, savePracticePlan, schedulePractice, onClose }) {
+  const approvedCount = plan.segments.filter(s => !s.drill || s.status === 'approved' || s.locked).length;
   return <section className="practicePlanCard">
     <header className="planHero">
       <div>
-        <small>COACHVAULT PRACTICE PLAN</small>
+        <small>COACHVAULT PRACTICE PLAN • REVIEW AT A GLANCE</small>
         <h2>{plan.title}</h2>
         <p>{plan.focus}</p>
       </div>
@@ -490,34 +613,81 @@ function PracticePlanCard({ plan, onClose }) {
       </div>
     </header>
 
+    <div className="planReviewBar">
+      <div><b>{approvedCount}/{plan.segments.length}</b><span>segments approved or locked</span></div>
+      <p>Keep what works. Replace one drill without rebuilding the whole practice.</p>
+    </div>
+
     <div className="planArc">
       <span>ARRIVE</span><i></i><span>TEACH</span><i></i><span>COMPETE</span><i></i><span>APPLY</span><i></i><span>REVIEW</span>
     </div>
 
     <div className="planTimeline">
-      {plan.segments.map((segment,index)=><article key={`${segment.label}-${index}`} className="planSegment">
+      {plan.segments.map((segment,index)=><article key={`${segment.label}-${index}`} className={`planSegment ${segment.status || 'review'} ${segment.locked ? 'locked' : ''}`}>
         <div className="planTime"><b>{segment.minutes}</b><small>MIN</small></div>
         <div className="planSegmentBody">
           <small>{segment.label}</small>
           <h3>{segment.drill?.title || 'Coach-led review'}</h3>
           <p>{segment.drill?.summary || 'Recap the day, reinforce one coaching point, and finish with a clear takeaway.'}</p>
           {segment.drill?.primarySkill?.name && <span className="planSkill">{segment.drill.primarySkill.name}</span>}
+          {segment.drill && <div className="whyChosen"><b>Why this fits</b><span>{segment.drill.primarySkill?.name || 'Vault match'} supports this practice focus and sequence.</span></div>}
         </div>
-        <div className="planVector" aria-hidden="true">
-          <svg viewBox="0 0 120 72">
-            <rect x="5" y="5" width="110" height="62" rx="12"/>
-            <circle cx={25+(index%3)*25} cy="36" r="7"/>
-            <circle cx={62+(index%2)*22} cy="24" r="7"/>
-            <path d="M30 36 C48 30 54 24 60 24"/>
-          </svg>
-        </div>
+
+        {segment.drill ? <div className="planApproval">
+          <button className={`approveDrill ${segment.status==='approved'?'selected':''}`} title="Keep this drill" onClick={()=>updatePlanSegment(index,{status:'approved'})}>✓</button>
+          <button className="rejectDrill" title="Replace this drill" onClick={()=>setReplaceIndex(replaceIndex===index?null:index)}>×</button>
+          <button className={`lockDrill ${segment.locked?'selected':''}`} title="Lock this drill" onClick={()=>updatePlanSegment(index,{locked:!segment.locked,status:segment.locked?'review':'approved'})}>{segment.locked?'🔒':'🔓'}</button>
+        </div> : <div className="planApproval"><button className="approveDrill selected">✓</button></div>}
+
+        {replaceIndex===index && segment.drill && <div className="replacementDrawer">
+          <div><small>REPLACE THIS DRILL</small><h4>Choose another Vault option</h4><p>Only this segment changes. The rest of the practice stays intact.</p></div>
+          <div className="replacementChoices">
+            {replacementOptions(index).length ? replacementOptions(index).map(drill=><button key={drill.id} onClick={()=>replacePracticeDrill(index,drill)}>
+              <b>{drill.title}</b><span>{drill.primarySkill?.name || 'Vault drill'}</span>
+            </button>) : <span className="noReplacement">No unused Vault alternatives yet.</span>}
+          </div>
+        </div>}
       </article>)}
     </div>
 
     <footer className="planFooter">
       <div><small>BUILT FROM</small><b>{plan.segments.filter(x=>x.drill).length} approved Vault drills</b></div>
-      <div className="planFooterActions"><button onClick={()=>window.print()}>Print Plan</button><button className="primaryPlanBtn">Save Practice</button></div>
+      <div className="planFooterActions">
+        <button onClick={()=>window.print()}>Print Plan</button>
+        <button onClick={()=>schedulePractice(plan)}>Add to Calendar</button>
+        <button className="primaryPlanBtn" onClick={savePracticePlan}>Save Practice</button>
+      </div>
     </footer>
+  </section>
+}
+
+function PracticeCalendar({ events, savedPractices, schedulePractice }) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const first = new Date(year,month,1);
+  const daysInMonth = new Date(year,month+1,0).getDate();
+  const blanks = first.getDay();
+  const cells = Array.from({length:blanks},()=>null).concat(Array.from({length:daysInMonth},(_,i)=>i+1));
+
+  return <section className="calendarWorkspace">
+    <header className="calendarHeader">
+      <div><small>PRACTICE CALENDAR</small><h2>{now.toLocaleString(undefined,{month:'long',year:'numeric'})}</h2><p>Scheduling is optional. Unscheduled practices remain in your Practice Library.</p></div>
+      {!!savedPractices.length && <button onClick={()=>schedulePractice(savedPractices[0])}>+ Schedule Practice</button>}
+    </header>
+    <div className="calendarWeekdays">{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=><span key={d}>{d}</span>)}</div>
+    <div className="calendarGrid">
+      {cells.map((day,i)=><div className={`calendarDay ${day?'':'blank'}`} key={i}>
+        {day && <><b>{day}</b>
+          <div className="calendarEvents">
+            {events.filter(event=>{
+              const d=new Date(`${event.date}T12:00:00`);
+              return d.getFullYear()===year && d.getMonth()===month && d.getDate()===day;
+            }).map(event=><article key={event.id}><span>{event.time || 'Practice'}</span><strong>{event.title}</strong>{event.location&&<small>{event.location}</small>}</article>)}
+          </div>
+        </>}
+      </div>)}
+    </div>
   </section>
 }
 
@@ -574,7 +744,7 @@ function Review({ result, sourceMeta, diagnostics, internalMode, updateResult, u
   return <section className="review">
     <header className="reviewHead">
       <div><span>REVIEW & CONFIRM</span><h2>Review the Coach Practice Card.</h2><p>Confirm the field-ready instructions and the Engine analysis before approval.</p></div>
-      <div className="confidence"><small>ENGINE CONFIDENCE</small><b>{result.confidence?.overall || 0}%</b><p>{result.confidence?.notes || ''}</p></div>
+      <div className="confidence"><small>ENGINE CONFIDENCE</small><b>{formatConfidence(result.confidence?.overall)}%</b><p>{result.confidence?.notes || ''}</p></div>
     </header>
 
     {sourceMeta && <div className="source"><div><small>SOURCE</small><b>{sourceMeta.title || sourceMeta.platform || 'Submitted source'}</b><span>{sourceMeta.author || ''}</span></div></div>}

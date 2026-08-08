@@ -710,3 +710,37 @@ body{background:linear-gradient(180deg,#f5f8fd 0%,#eef3f9 100%)}
   font-size:11px;
   line-height:1.4;
 }
+
+/* Engine 3.4.0 — Practice Review, Library & Optional Calendar */
+.planReviewBar{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:12px 22px;background:#0f2a54;color:#fff}
+.planReviewBar div{display:flex;align-items:baseline;gap:8px}.planReviewBar b{font-size:20px}.planReviewBar span,.planReviewBar p{font-size:11px;color:#c6d4e8}.planReviewBar p{margin:0}
+.planSegment{position:relative;grid-template-columns:80px minmax(0,1fr) 135px}
+.planSegment.approved{background:#fbfffc}.planSegment.locked{box-shadow:inset 4px 0 0 #2d66d8}
+.planApproval{display:flex;justify-content:flex-end;gap:8px;align-items:center}
+.planApproval button{width:38px;height:38px;border-radius:12px;border:1px solid #d5deea;background:#fff;font-size:19px;font-weight:900;cursor:pointer}
+.approveDrill{color:#27864b}.approveDrill.selected{background:#e9f7ee;border-color:#a9dbbb}
+.rejectDrill{color:#c74242}.rejectDrill:hover{background:#fff0f0;border-color:#f0b8b8}
+.lockDrill{font-size:15px!important}.lockDrill.selected{background:#eef4ff;border-color:#aac3f1}
+.whyChosen{display:flex;gap:7px;align-items:center;margin-top:8px;font-size:10px;color:#708197}.whyChosen b{color:#47627f}
+.replacementDrawer{grid-column:1/-1;display:grid;grid-template-columns:220px 1fr;gap:18px;margin-top:2px;padding:16px;border-radius:14px;background:#f6f8fc;border:1px solid #dce4ef}
+.replacementDrawer small{font-size:9px;font-weight:900;letter-spacing:.09em;color:#c74242}.replacementDrawer h4{margin:3px 0 4px}.replacementDrawer p{margin:0;color:#728197;font-size:11px}
+.replacementChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.replacementChoices button{text-align:left;border:1px solid #d5dfeb;border-radius:11px;padding:10px;background:#fff}.replacementChoices button b,.replacementChoices button span{display:block}.replacementChoices button span{margin-top:3px;font-size:10px;color:#74859a}
+.noReplacement{color:#7b8a9f;font-size:12px}
+
+.practiceLibraryGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.savedPracticeTile{padding:19px;border-radius:18px;background:#fff;border:1px solid #dce5f0;box-shadow:0 8px 24px rgba(30,49,78,.06)}
+.savedPracticeTile header,.savedPracticeTile footer,.savedPracticeStats{display:flex;justify-content:space-between;gap:10px}.savedPracticeTile header span{font-size:9px;font-weight:900;letter-spacing:.1em;color:#2d66d8}.savedPracticeTile h3{margin:12px 0 5px}.savedPracticeTile p{color:#6d7c91}.savedPracticeStats{justify-content:flex-start;margin:15px 0}.savedPracticeStats span{padding:5px 8px;border-radius:999px;background:#f1f5fa;font-size:10px;color:#62748b}.savedPracticeTile footer button,.emptyState button{border:1px solid #d2ddea;background:#fff;border-radius:10px;padding:9px 11px;font-weight:700}
+.emptyState{padding:34px;border:1px dashed #c7d5e6;border-radius:18px;background:#fff;text-align:center}.emptyState p{color:#718197}
+
+.calendarWorkspace{background:#fff;border:1px solid #dce5f0;border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(30,49,78,.07)}
+.calendarHeader{display:flex;justify-content:space-between;gap:20px;padding:22px;background:linear-gradient(135deg,#f8fbff,#f6f1ff)}.calendarHeader small{font-size:10px;font-weight:900;letter-spacing:.1em;color:#2d66d8}.calendarHeader h2{margin:4px 0}.calendarHeader p{margin:0;color:#718197}.calendarHeader button{align-self:center;border:0;border-radius:12px;padding:11px 14px;background:#0f2a54;color:#fff;font-weight:800}
+.calendarWeekdays,.calendarGrid{display:grid;grid-template-columns:repeat(7,1fr)}.calendarWeekdays{background:#f7f9fc;border-top:1px solid #e6ecf4;border-bottom:1px solid #e6ecf4}.calendarWeekdays span{padding:10px;text-align:center;font-size:10px;font-weight:800;color:#738298}
+.calendarDay{min-height:115px;padding:8px;border-right:1px solid #edf1f6;border-bottom:1px solid #edf1f6}.calendarDay>b{font-size:11px;color:#667891}.calendarDay.blank{background:#fafbfd}
+.calendarEvents{display:grid;gap:5px;margin-top:7px}.calendarEvents article{padding:6px 7px;border-radius:8px;background:#edf4ff;border-left:3px solid #2f6ef4}.calendarEvents article span,.calendarEvents article strong,.calendarEvents article small{display:block}.calendarEvents article span{font-size:8px;color:#6480a4}.calendarEvents article strong{font-size:10px}.calendarEvents article small{font-size:8px;color:#718197}
+
+.scheduleOverlay{position:fixed;inset:0;background:rgba(16,31,52,.38);z-index:1000;display:grid;place-items:center;padding:20px}.scheduleModal{width:min(560px,96vw);background:#fff;border-radius:20px;box-shadow:0 24px 80px rgba(17,34,57,.25);padding:22px}.scheduleModal header{display:flex;justify-content:space-between;gap:20px}.scheduleModal header small{font-size:9px;font-weight:900;letter-spacing:.1em;color:#2d66d8}.scheduleModal header h2{margin:4px 0}.scheduleModal header p{margin:0;color:#718197}.scheduleModal header button{border:0;background:#f3f6fa;width:34px;height:34px;border-radius:10px;font-size:20px}.scheduleFields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}.scheduleFields label:last-child{grid-column:1/-1}.scheduleFields label{display:grid;gap:6px}.scheduleFields span{font-size:10px;font-weight:800;color:#607188;text-transform:uppercase;letter-spacing:.08em}.scheduleFields input{padding:11px;border:1px solid #cfd9e6;border-radius:10px}.scheduleModal footer{display:flex;justify-content:flex-end;gap:8px}.scheduleModal footer button{padding:10px 14px;border-radius:10px;border:1px solid #d1dce9;background:#fff;font-weight:800}.scheduleModal footer .primaryPlanBtn{background:#0f2a54;color:#fff}
+
+@media(max-width:850px){
+ .replacementDrawer{grid-template-columns:1fr}.replacementChoices{grid-template-columns:1fr}
+ .calendarDay{min-height:90px}.planReviewBar{align-items:flex-start;flex-direction:column}
+}
