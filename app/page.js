@@ -334,7 +334,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.3.3</small>
+          <small className="engineVersion">Engine 3.3.4</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -403,8 +403,19 @@ export default function Home() {
               {!loading && mode === 'file' && <div className="inputBody fileUploadBody">
                 <label className="fileDrop">
                   <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.doc,.docx,.ppt,.pptx" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-                  <strong>{file ? file.name : 'Drop a coaching file here or choose a file'}</strong>
-                  <span>PDF, image, practice plan, clinic notes, presentation, or text file</span>
+                  <div className="fileDropHeroIcon" aria-hidden="true">⇧</div>
+                  <div className="fileDropCopy">
+                    <strong>{file ? file.name : 'Drop a coaching file here'}</strong>
+                    <span>{file ? 'Ready to analyze' : 'or click to choose a file'}</span>
+                  </div>
+                  <div className="fileTypeRow" aria-label="Supported file types">
+                    <span className="fileTypeChip"><i>PDF</i><b>PDF</b></span>
+                    <span className="fileTypeChip"><i>IMG</i><b>Images</b></span>
+                    <span className="fileTypeChip"><i>DOC</i><b>Docs</b></span>
+                    <span className="fileTypeChip"><i>PPT</i><b>Slides</b></span>
+                    <span className="fileTypeChip"><i>TXT</i><b>Text</b></span>
+                  </div>
+                  <small className="fileDropHint">Practice plans, clinic notes, drill diagrams, presentations, and coaching documents</small>
                 </label>
                 {file && <div className="selectedFileMeta"><span>{file.name}</span><small>{Math.max(1, Math.round(file.size/1024))} KB</small></div>}
                 <button className="primaryBtn" disabled={!file || loading} onClick={runEngine}>Analyze with CoachVault</button>
@@ -412,11 +423,6 @@ export default function Home() {
 
               {loading && <EngineProgress step={progressStep} />}
               {error && <div className="error"><b>Engine stopped</b><p>{error}</p></div>}
-            </section>
-
-            <section className="frameworkNote">
-              <div><small>ACTIVE SKILL FRAMEWORK</small><b>{skillFramework.name}</b></div>
-              <p>{skillFramework.purposeRule}</p>
             </section>
           </>
         )}
