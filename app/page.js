@@ -168,15 +168,19 @@ function friendlyEngineError(error) {
   const message = readableError(error);
 
   if (/Failed to retrieve the client token|client token/i.test(message)) {
-    return 'CoachVault encountered the legacy Vercel client-token upload path. Engine 3.6.0 no longer uses that method for large documents; redeploy this version and retry the file.';
+    return 'CoachVault encountered the legacy Vercel client-token upload path. Engine 3.6.1 no longer uses that method for large documents; redeploy this version and retry the file.';
   }
 
   if (/BLOB_READ_WRITE_TOKEN|blob.*token|token.*blob/i.test(message)) {
     return 'CoachVault can see the large-file upload feature, but this deployment does not currently have permission to use its Blob store. Check the Blob store project connection in Vercel and redeploy.';
   }
 
+  if (/SIGNED_PRIVATE_READ_FAILED|signed private read|temporary private read link/i.test(message)) {
+    return message;
+  }
+
   if (/PRIVATE_BLOB_RETRIEVAL_FAILED|could not retrieve the private file|could not open the private file/i.test(message)) {
-    return 'CoachVault stored the document privately, but the Engine could not reopen it for analysis. Confirm the private Blob store is connected to the production CoachVault project and redeploy.';
+    return 'CoachVault stored the document privately, but the Engine could not reopen it for analysis. Engine 3.6.1 uses a signed private read instead of the previous direct read path.';
   }
 
   if (/rate.limit|429|too many requests/i.test(message)) {
@@ -673,7 +677,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.6.0</small>
+          <small className="engineVersion">Engine 3.6.1</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">

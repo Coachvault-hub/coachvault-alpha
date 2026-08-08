@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { get } from '@vercel/blob';
+import { issueSignedToken, presignUrl } from '@vercel/blob';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -515,25 +515,58 @@ export async function POST(request) {
 
       let bytes;
       try {
-        const blobResult = await get(blobPathname, { access:'private', useCache:false });
-        if (!blobResult?.stream) {
+        // Use the same signed-URL architecture for the private read that we use
+        // for the successful browser upload. This avoids relying on a direct
+        // private `get()` call immediately after the write.
+        const readValidUntil = Date.now() + 5 * 60 * 1000;
+
+        const readToken = await issueSignedToken({
+          pathname: blobPathname,
+          operations:['get'],
+          validUntil: readValidUntil
+        });
+
+        const { presignedUrl: signedReadUrl } = await presignUrl(readToken, {
+          pathname: blobPathname,
+          operation:'get',
+          validUntil: readValidUntil,
+          useCache:false
+        });
+
+        const blobResponse = await fetch(signedReadUrl, {
+          method:'GET',
+          cache:'no-store'
+        });
+
+        if (!blobResponse.ok) {
+          const responseText = await blobResponse.text().catch(() => '');
           return NextResponse.json({
-            error:`CoachVault securely stored ${uploadedFileMeta.name}, but could not open the private file for analysis.`
+            error:`CoachVault securely stored ${uploadedFileMeta.name}, but the signed private read returned ${blobResponse.status}${responseText ? `: ${responseText.slice(0,300)}` : ''}.`,
+            code:'SIGNED_PRIVATE_READ_FAILED',
+            stage:'private-read'
           }, { status:502 });
         }
 
-        const chunks = [];
-        const reader = blobResult.stream.getReader();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          if (value) chunks.push(Buffer.from(value));
+        bytes = Buffer.from(await blobResponse.arrayBuffer());
+
+        if (!bytes.length) {
+          return NextResponse.json({
+            error:`CoachVault securely stored ${uploadedFileMeta.name}, but the private file was empty when the Engine opened it.`,
+            code:'SIGNED_PRIVATE_READ_EMPTY',
+            stage:'private-read'
+          }, { status:502 });
         }
-        bytes = Buffer.concat(chunks);
       } catch (error) {
+        const detail =
+          error?.message ||
+          error?.details ||
+          error?.error?.message ||
+          String(error || '');
+
         return NextResponse.json({
-          error:`CoachVault securely stored ${uploadedFileMeta.name}, but the Engine could not retrieve the private file. Check that the Blob store is connected to this production deployment and redeploy.`,
-          code:'PRIVATE_BLOB_RETRIEVAL_FAILED'
+          error:`CoachVault securely stored ${uploadedFileMeta.name}, but could not create or use the temporary private read link. ${detail}`.trim(),
+          code:'SIGNED_PRIVATE_READ_FAILED',
+          stage:'private-read'
         }, { status:502 });
       }
       const filename = uploadedFileMeta.name.toLowerCase();
@@ -693,7 +726,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.6.0 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.6.1 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -722,7 +755,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.6.0-cpc",
+  "engineVersion":"3.6.1-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -1056,9 +1089,9 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
     if (uploadedFileMeta) {
       diagnostics.uploadedFile = uploadedFileMeta;
       diagnostics.fileAnalysisMode = isPdfFile
-        ? (mode === 'blob-file' ? 'Large PDF via private Blob upload + multimodal file input' : 'PDF multimodal file input')
-        : (mode === 'blob-file' ? 'Large file via private Blob upload' : 'Text extraction');
-      diagnostics.fileTransport = mode === 'blob-file' ? 'Vercel Private Blob client upload' : 'Direct request upload';
+        ? (mode === 'blob-file' ? 'Large PDF via signed private PUT + signed private GET + multimodal file input' : 'PDF multimodal file input')
+        : (mode === 'blob-file' ? 'Large file via signed private PUT + signed private GET' : 'Text extraction');
+      diagnostics.fileTransport = mode === 'blob-file' ? 'Vercel Private Blob signed PUT + signed GET' : 'Direct request upload';
       diagnostics.filePrivacy = mode === 'blob-file' ? 'Private storage' : 'Request-scoped upload';
     }
     if (mode === 'link' && sourceMeta) {
