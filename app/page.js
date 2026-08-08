@@ -425,7 +425,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.4.0</small>
+          <small className="engineVersion">Engine 3.4.1</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -483,6 +483,9 @@ export default function Home() {
               {!loading && mode === 'link' && <div className="inputBody">
                 <label>Website, YouTube, Instagram, or TikTok URL</label>
                 <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste a public coaching link..." />
+                <div className="recognizedSources">
+                  <span><b>▶</b>YouTube</span><span><b>♪</b>TikTok</span><span><b>◎</b>Instagram</span><span><b>↗</b>Web</span>
+                </div>
                 <details><summary>Paste transcript or source text as a fallback</summary><textarea value={transcript} onChange={(e) => setTranscript(e.target.value)} placeholder="Optional transcript..." /></details>
                 <button disabled={!url.trim()} onClick={runEngine}>Analyze with CoachVault</button>
               </div>}
@@ -747,7 +750,15 @@ function Review({ result, sourceMeta, diagnostics, internalMode, updateResult, u
       <div className="confidence"><small>ENGINE CONFIDENCE</small><b>{formatConfidence(result.confidence?.overall)}%</b><p>{result.confidence?.notes || ''}</p></div>
     </header>
 
-    {sourceMeta && <div className="source"><div><small>SOURCE</small><b>{sourceMeta.title || sourceMeta.platform || 'Submitted source'}</b><span>{sourceMeta.author || ''}</span></div></div>}
+    {sourceMeta && <div className="source socialSourceCard">
+      {sourceMeta.thumbnail && <img src={sourceMeta.thumbnail} alt="" />}
+      <div>
+        <small>{sourceMeta.platform ? `${sourceMeta.platform.toUpperCase()} SOURCE` : 'SOURCE'}</small>
+        <b>{sourceMeta.title || sourceMeta.platform || 'Submitted source'}</b>
+        <span>{sourceMeta.author || ''}</span>
+        {sourceMeta.accessStatus && <em>{sourceMeta.accessStatus}</em>}
+      </div>
+    </div>}
 
     <section className="resultSnapshot">
       <div>

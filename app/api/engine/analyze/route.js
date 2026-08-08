@@ -120,15 +120,108 @@ async function getYouTubeTranscript(url) {
   return { text, source:text?'Supadata transcript':'Supadata returned no transcript' };
 }
 
-async function getSourceMeta(url) {
-  try {
-    const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
-    if (!response.ok) return { platform:'Web', title:url, url };
-    const data = await response.json();
-    return { platform:'YouTube', title:data.title, author:data.author_name, thumbnail:data.thumbnail_url, url };
-  } catch {
-    return { platform:'Web', title:url, url };
+function platformFromUrl(url='') {
+  if (/tiktok\.com/i.test(url)) return 'TikTok';
+  if (/instagram\.com/i.test(url)) return 'Instagram';
+  if (/youtube\.com|youtu\.be/i.test(url)) return 'YouTube';
+  return 'Web';
+}
+
+function decodeHtml(value='') {
+  return value
+    .replace(/&amp;/g,'&')
+    .replace(/&quot;/g,'"')
+    .replace(/&#39;/g,"'")
+    .replace(/&lt;/g,'<')
+    .replace(/&gt;/g,'>');
+}
+
+function metaValue(html, key) {
+  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const patterns = [
+    new RegExp(`<meta[^>]+property=["']${escaped}["'][^>]+content=["']([^"']*)["']`,'i'),
+    new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+property=["']${escaped}["']`,'i'),
+    new RegExp(`<meta[^>]+name=["']${escaped}["'][^>]+content=["']([^"']*)["']`,'i'),
+    new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+name=["']${escaped}["']`,'i')
+  ];
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match?.[1]) return decodeHtml(match[1]);
   }
+  return '';
+}
+
+async function getOpenGraphMeta(url, platform='Web') {
+  try {
+    const response = await fetch(url, {
+      redirect:'follow',
+      headers:{
+        'User-Agent':'Mozilla/5.0 (compatible; CoachVault/1.0; +https://coachvault.app)',
+        'Accept':'text/html,application/xhtml+xml'
+      }
+    });
+    if (!response.ok) return { platform, title:url, url, accessStatus:`HTTP ${response.status}` };
+    const html = await response.text();
+    const title = metaValue(html,'og:title') || metaValue(html,'twitter:title') || url;
+    const description = metaValue(html,'og:description') || metaValue(html,'description') || '';
+    const thumbnail = metaValue(html,'og:image') || metaValue(html,'twitter:image') || '';
+    return { platform, title, description, thumbnail, url, accessStatus:'Public metadata available' };
+  } catch (error) {
+    return { platform, title:url, url, accessStatus:'Public metadata unavailable', accessError:error.message };
+  }
+}
+
+async function getTikTokMeta(url) {
+  try {
+    const response = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`, {
+      headers:{ 'Accept':'application/json' }
+    });
+    if (!response.ok) {
+      const fallback = await getOpenGraphMeta(url,'TikTok');
+      return { ...fallback, sourceMethod:'TikTok public page metadata' };
+    }
+    const data = await response.json();
+    return {
+      platform:'TikTok',
+      title:data.title || 'TikTok video',
+      description:data.title || '',
+      author:data.author_name || '',
+      authorUrl:data.author_url || '',
+      thumbnail:data.thumbnail_url || '',
+      embedHtml:data.html || '',
+      provider:data.provider_name || 'TikTok',
+      url,
+      accessStatus:'Recognized via TikTok oEmbed',
+      sourceMethod:'TikTok oEmbed'
+    };
+  } catch (error) {
+    const fallback = await getOpenGraphMeta(url,'TikTok');
+    return { ...fallback, sourceMethod:'TikTok public page metadata', accessError:error.message };
+  }
+}
+
+async function getSourceMeta(url) {
+  const platform = platformFromUrl(url);
+
+  if (platform === 'TikTok') return getTikTokMeta(url);
+
+  if (platform === 'Instagram') {
+    const meta = await getOpenGraphMeta(url,'Instagram');
+    return { ...meta, sourceMethod:'Instagram public page metadata' };
+  }
+
+  if (platform === 'YouTube') {
+    try {
+      const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+      if (!response.ok) return getOpenGraphMeta(url,'YouTube');
+      const data = await response.json();
+      return { platform:'YouTube', title:data.title, author:data.author_name, thumbnail:data.thumbnail_url, url, accessStatus:'Recognized via YouTube oEmbed', sourceMethod:'YouTube oEmbed' };
+    } catch {
+      return getOpenGraphMeta(url,'YouTube');
+    }
+  }
+
+  return getOpenGraphMeta(url,'Web');
 }
 
 export async function POST(request) {
@@ -191,8 +284,21 @@ export async function POST(request) {
         transcriptSource = transcriptResult.source;
       }
 
+      const recognizedSocial = ['TikTok','Instagram'].includes(sourceMeta?.platform);
+      if (!sourceText && recognizedSocial) {
+        const parts = [
+          `Platform: ${sourceMeta.platform}`,
+          sourceMeta.author ? `Creator: ${sourceMeta.author}` : '',
+          sourceMeta.title ? `Caption/Title: ${sourceMeta.title}` : '',
+          sourceMeta.description && sourceMeta.description !== sourceMeta.title ? `Description: ${sourceMeta.description}` : '',
+          `Source URL: ${url}`
+        ].filter(Boolean);
+        sourceText = parts.join('\n');
+        transcriptSource = sourceMeta.sourceMethod || `${sourceMeta.platform} recognized source metadata`;
+      }
+
       if (!sourceText) {
-        return NextResponse.json({ error:'CoachVault could not retrieve usable source text. Paste the transcript or source text and try again.' }, { status:400 });
+        return NextResponse.json({ error:'CoachVault recognized the link but could not retrieve usable coaching content from the source.' }, { status:400 });
       }
     }
 
@@ -208,7 +314,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.0 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.4.1 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -237,7 +343,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.4.0-cpc",
+  "engineVersion":"3.4.1-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -457,6 +563,16 @@ PRACTICE CARD INTERPRETATION RULES:
 - If the source shows one offensive entry queue and one defensive entry queue, return exactly those queues unless other distinct queues are source-supported.
 - In a live progression, active players, waiting players, and entering players are different participant states.
 
+SOCIAL SOURCE RULES:
+When mode=link and the source is TikTok or Instagram:
+- Treat the platform as a recognized source, not a generic webpage.
+- Use public caption/title, creator information, thumbnail, and other available metadata as source evidence.
+- A social thumbnail is only one visual frame; do not pretend it proves movement, progression, or the full drill sequence.
+- Never infer a complete drill solely from a vague caption or thumbnail.
+- If visual evidence is incomplete, lower setup confidence and state exactly what is unsupported.
+- Preserve the original social URL as source attribution.
+- The goal is progressive enhancement: analyze everything publicly available now, while keeping unsupported details marked for review.
+
 FILE SOURCE RULES:
 When mode=file:
 - Treat upload as a first-class coaching source.
@@ -474,7 +590,8 @@ When mode=file:
 SOURCE:
 ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.name || 'document.pdf'} — analyze the file contents and page images directly.]`}`;
 
-    const model = isPdfFile ? 'gpt-4.1' : 'gpt-4.1-mini';
+    const hasSocialThumbnail = mode === 'link' && ['TikTok','Instagram'].includes(sourceMeta?.platform) && /^https?:\/\//.test(sourceMeta?.thumbnail || '');
+    const model = (isPdfFile || hasSocialThumbnail) ? 'gpt-4.1' : 'gpt-4.1-mini';
 
     const userContent = isPdfFile
       ? [
@@ -490,7 +607,12 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
             text: prompt
           }
         ]
-      : prompt;
+      : hasSocialThumbnail
+        ? [
+            { type:'text', text:prompt },
+            { type:'image_url', image_url:{ url:sourceMeta.thumbnail, detail:'high' } }
+          ]
+        : prompt;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST',
@@ -522,12 +644,20 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
       analysis,
       sourceText: diagnosticSourceText,
       model,
-      transcriptSource: isPdfFile ? 'Uploaded PDF — text + page images' : transcriptSource,
+      transcriptSource: isPdfFile ? 'Uploaded PDF — text + page images' : hasSocialThumbnail ? `${transcriptSource} + public thumbnail` : transcriptSource,
       standards
     });
     if (uploadedFileMeta) {
       diagnostics.uploadedFile = uploadedFileMeta;
       diagnostics.fileAnalysisMode = isPdfFile ? 'PDF multimodal file input' : 'Text extraction';
+    }
+    if (mode === 'link' && sourceMeta) {
+      diagnostics.recognizedSource = {
+        platform: sourceMeta.platform,
+        method: sourceMeta.sourceMethod || 'Public metadata',
+        accessStatus: sourceMeta.accessStatus || 'Unknown',
+        thumbnailAnalyzed: Boolean(hasSocialThumbnail)
+      };
     }
 
     return NextResponse.json({ analysis, sourceMeta, diagnostics });
