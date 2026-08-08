@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 function loadCVIL() {
   const dir = path.join(process.cwd(), 'standards');
@@ -104,20 +105,200 @@ function buildDiagnostics({ analysis, sourceText, model, transcriptSource, stand
   };
 }
 
-async function getYouTubeTranscript(url) {
+async function getSupadataTranscript(url) {
   const key = process.env.SUPADATA_API_KEY;
-  if (!key) return { text:null, source:'Supadata key missing' };
+  if (!key) return { text:null, source:'Supadata key missing', segments:[], status:'unavailable' };
 
-  const response = await fetch(`https://api.supadata.ai/v1/transcript?url=${encodeURIComponent(url)}`, {
-    headers:{ 'x-api-key':key }
+  const headers = { 'x-api-key':key };
+  const response = await fetch(`https://api.supadata.ai/v1/transcript?url=${encodeURIComponent(url)}&mode=auto`, { headers });
+
+  if (!response.ok && response.status !== 202) {
+    return { text:null, source:`Supadata transcript error ${response.status}`, segments:[], status:'failed' };
+  }
+
+  let data = await response.json();
+
+  if (response.status === 202 || data?.jobId) {
+    const jobId = data.jobId;
+    for (let attempt = 0; attempt < 24; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const poll = await fetch(`https://api.supadata.ai/v1/transcript/${encodeURIComponent(jobId)}`, { headers });
+      if (!poll.ok) continue;
+      data = await poll.json();
+      if (data.status === 'failed') {
+        return { text:null, source:'Supadata transcript job failed', segments:[], status:'failed' };
+      }
+      if (data.status === 'completed') break;
+    }
+  }
+
+  const content = data?.content;
+  const segments = Array.isArray(content) ? content.map(item => ({
+    text:item.text || '',
+    offset:Number(item.offset || 0),
+    duration:Number(item.duration || 0),
+    lang:item.lang || data?.lang || ''
+  })).filter(item => item.text) : [];
+
+  const text = Array.isArray(content)
+    ? segments.map(item => {
+        const seconds = Math.round(item.offset / 1000);
+        const mm = Math.floor(seconds / 60);
+        const ss = String(seconds % 60).padStart(2,'0');
+        return `[${mm}:${ss}] ${item.text}`;
+      }).join('\n')
+    : (typeof content === 'string' ? content : data?.transcript || null);
+
+  return {
+    text,
+    segments,
+    source:text ? 'Supadata social transcript' : 'Supadata returned no transcript',
+    status:text ? 'completed' : 'empty',
+    language:data?.lang || null
+  };
+}
+
+async function getSupadataMetadata(url) {
+  const key = process.env.SUPADATA_API_KEY;
+  if (!key) return null;
+  try {
+    const response = await fetch(`https://api.supadata.ai/v1/metadata?url=${encodeURIComponent(url)}`, {
+      headers:{ 'x-api-key':key }
+    });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+async function extractSocialVideo(url) {
+  const key = process.env.SUPADATA_API_KEY;
+  if (!key) return { status:'unavailable', error:'SUPADATA_API_KEY is not configured.' };
+
+  const schema = {
+    type:'object',
+    properties:{
+      videoPurpose:{
+        type:'string',
+        description:'The central coaching purpose of the video. Name the actual sport skill or concept being taught.'
+      },
+      primarySkillCandidate:{
+        type:'string',
+        description:'The most likely primary lacrosse skill being intentionally taught, e.g. Shooting, Passing, Dodging, Ground Balls, Defense.'
+      },
+      primarySkillEvidence:{
+        type:'array',
+        items:{ type:'string' },
+        description:'Concrete visual, spoken, or on-screen-text evidence supporting the primary skill.'
+      },
+      onScreenText:{
+        type:'array',
+        items:{
+          type:'object',
+          properties:{
+            text:{type:'string'},
+            approximateTime:{type:'string'},
+            meaning:{type:'string'}
+          },
+          required:['text']
+        },
+        description:'Read all meaningful instructional text overlays/captions visible inside the video. Preserve wording as closely as possible.'
+      },
+      demonstratedActions:{
+        type:'array',
+        items:{
+          type:'object',
+          properties:{
+            action:{type:'string'},
+            approximateTime:{type:'string'},
+            coachingMeaning:{type:'string'}
+          },
+          required:['action']
+        },
+        description:'Distinct lacrosse actions demonstrated in sequence.'
+      },
+      drillVariations:{
+        type:'array',
+        items:{
+          type:'object',
+          properties:{
+            name:{type:'string'},
+            evidence:{type:'string'},
+            approximateTime:{type:'string'}
+          },
+          required:['name']
+        },
+        description:'Named or clearly differentiated drill/skill variations demonstrated in the video.'
+      },
+      startingSetup:{
+        type:'object',
+        properties:{
+          players:{type:'string'},
+          goal:{type:'string'},
+          cones:{type:'string'},
+          balls:{type:'string'},
+          startingPositions:{type:'array',items:{type:'string'}},
+          space:{type:'string'}
+        }
+      },
+      sequenceSummary:{
+        type:'array',
+        items:{type:'string'},
+        description:'Short chronological summary of what the athlete(s) actually do.'
+      },
+      uncertainty:{
+        type:'array',
+        items:{type:'string'},
+        description:'Anything not visible or supported strongly enough to infer.'
+      }
+    },
+    required:['videoPurpose','primarySkillCandidate','primarySkillEvidence','onScreenText','demonstratedActions','sequenceSummary','uncertainty']
+  };
+
+  const prompt = [
+    'Analyze this lacrosse coaching video as evidence, not as generic inspiration.',
+    'Watch the full video, including visual actions, spoken audio, and text overlays inside the frames.',
+    'The PRIMARY SKILL must reflect what is intentionally taught most often and most explicitly.',
+    'Read instructional on-screen text carefully because it may name shot types, drill variations, constraints, or coaching cues.',
+    'Do not call something Passing merely because a ball changes hands before the main action.',
+    'Do not invent backyard setup, targets, cones, distances, repetitions, or mechanics unless they are visibly shown or stated.',
+    'Separate what is actually demonstrated from what you infer.',
+    'If multiple shooting variations appear, list each variation separately.',
+    'Use approximate timestamps whenever possible.'
+  ].join(' ');
+
+  const start = await fetch('https://api.supadata.ai/v1/extract', {
+    method:'POST',
+    headers:{ 'x-api-key':key, 'Content-Type':'application/json' },
+    body:JSON.stringify({ url, prompt, schema })
   });
 
-  if (!response.ok) return { text:null, source:`Supadata error ${response.status}` };
-  const data = await response.json();
-  const text = Array.isArray(data.content)
-    ? data.content.map(x => x.text || '').join(' ')
-    : data.content || data.transcript || null;
-  return { text, source:text?'Supadata transcript':'Supadata returned no transcript' };
+  if (!start.ok) {
+    return { status:'failed', error:`Supadata video extraction error ${start.status}` };
+  }
+
+  const job = await start.json();
+  const jobId = job?.jobId;
+  if (!jobId) return { status:'failed', error:'Supadata video extraction did not return a job ID.' };
+
+  for (let attempt = 0; attempt < 36; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const poll = await fetch(`https://api.supadata.ai/v1/extract/${encodeURIComponent(jobId)}`, {
+      headers:{ 'x-api-key':key }
+    });
+    if (!poll.ok) continue;
+    const result = await poll.json();
+
+    if (result.status === 'completed') {
+      return { status:'completed', data:result.data || {}, jobId };
+    }
+    if (result.status === 'failed') {
+      return { status:'failed', error:result.error?.message || result.error?.details || 'Video extraction failed.', jobId };
+    }
+  }
+
+  return { status:'timeout', error:'Video analysis is still processing. Try the source again in a moment.', jobId };
 }
 
 function platformFromUrl(url='') {
@@ -275,30 +456,87 @@ export async function POST(request) {
       uploadedFileMeta.name.toLowerCase().endsWith('.pdf')
     );
 
+    let socialVideoEvidence = null;
+    let socialTranscript = null;
+
     if (mode === 'link') {
       sourceMeta = await getSourceMeta(url);
+      const platform = sourceMeta?.platform || platformFromUrl(url);
+      const isSocialVideo = ['TikTok','Instagram'].includes(platform);
 
-      if (!sourceText && /youtube\.com|youtu\.be/.test(url || '')) {
-        const transcriptResult = await getYouTubeTranscript(url);
-        sourceText = transcriptResult.text || '';
-        transcriptSource = transcriptResult.source;
-      }
+      if (isSocialVideo) {
+        const [metadataResult, transcriptResult, videoResult] = await Promise.all([
+          getSupadataMetadata(url),
+          getSupadataTranscript(url),
+          extractSocialVideo(url)
+        ]);
 
-      const recognizedSocial = ['TikTok','Instagram'].includes(sourceMeta?.platform);
-      if (!sourceText && recognizedSocial) {
-        const parts = [
-          `Platform: ${sourceMeta.platform}`,
-          sourceMeta.author ? `Creator: ${sourceMeta.author}` : '',
-          sourceMeta.title ? `Caption/Title: ${sourceMeta.title}` : '',
-          sourceMeta.description && sourceMeta.description !== sourceMeta.title ? `Description: ${sourceMeta.description}` : '',
-          `Source URL: ${url}`
-        ].filter(Boolean);
-        sourceText = parts.join('\n');
-        transcriptSource = sourceMeta.sourceMethod || `${sourceMeta.platform} recognized source metadata`;
-      }
+        socialTranscript = transcriptResult;
+        socialVideoEvidence = videoResult;
 
-      if (!sourceText) {
-        return NextResponse.json({ error:'CoachVault recognized the link but could not retrieve usable coaching content from the source.' }, { status:400 });
+        if (metadataResult) {
+          sourceMeta = {
+            ...sourceMeta,
+            platform: metadataResult.platform ? String(metadataResult.platform).replace(/^./, c=>c.toUpperCase()) : platform,
+            title: metadataResult.title || sourceMeta?.title || metadataResult.description || url,
+            description: metadataResult.description || sourceMeta?.description || '',
+            author: metadataResult.author?.displayName || metadataResult.author?.username || sourceMeta?.author || '',
+            thumbnail: metadataResult.media?.thumbnailUrl || sourceMeta?.thumbnail || '',
+            duration: metadataResult.media?.duration || null,
+            tags: metadataResult.tags || [],
+            canonicalUrl: metadataResult.url || url,
+            accessStatus: videoResult?.status === 'completed' ? 'Full social video analyzed' : 'Social source recognized',
+            sourceMethod:'Supadata video intelligence + transcript + metadata'
+          };
+        }
+
+        const evidenceText = videoResult?.status === 'completed'
+          ? JSON.stringify(videoResult.data, null, 2)
+          : '';
+
+        const transcriptText = transcriptResult?.text || '';
+
+        sourceText = [
+          `SOCIAL PLATFORM: ${platform}`,
+          sourceMeta?.author ? `CREATOR: ${sourceMeta.author}` : '',
+          sourceMeta?.title ? `POST TITLE/CAPTION: ${sourceMeta.title}` : '',
+          sourceMeta?.description && sourceMeta.description !== sourceMeta.title ? `POST DESCRIPTION: ${sourceMeta.description}` : '',
+          sourceMeta?.duration ? `VIDEO DURATION: ${sourceMeta.duration} seconds` : '',
+          transcriptText ? `\nTIMESTAMPED SPOKEN/CAPTION TRANSCRIPT:\n${transcriptText}` : '',
+          evidenceText ? `\nFULL VIDEO VISUAL/AUDIO EXTRACTION:\n${evidenceText}` : '',
+          `\nSOURCE URL: ${url}`
+        ].filter(Boolean).join('\n');
+
+        transcriptSource = [
+          videoResult?.status === 'completed' ? 'Full social video visual/audio extraction' : 'Social video extraction unavailable',
+          transcriptResult?.text ? 'timestamped transcript' : 'no transcript',
+          'metadata'
+        ].join(' + ');
+
+        if (videoResult?.status !== 'completed' && !transcriptResult?.text) {
+          return NextResponse.json({
+            error:`CoachVault recognized this ${platform} video, but full video evidence could not be retrieved. ${videoResult?.error || ''}`.trim(),
+            sourceMeta
+          }, { status:400 });
+        }
+      } else {
+        if (!sourceText && /youtube\.com|youtu\.be/.test(url || '')) {
+          const transcriptResult = await getSupadataTranscript(url);
+          sourceText = transcriptResult.text || '';
+          transcriptSource = transcriptResult.source;
+        }
+
+        if (!sourceText) {
+          const parts = [
+            `Platform: ${sourceMeta?.platform || 'Web'}`,
+            sourceMeta?.author ? `Creator: ${sourceMeta.author}` : '',
+            sourceMeta?.title ? `Caption/Title: ${sourceMeta.title}` : '',
+            sourceMeta?.description && sourceMeta.description !== sourceMeta.title ? `Description: ${sourceMeta.description}` : '',
+            `Source URL: ${url}`
+          ].filter(Boolean);
+          sourceText = parts.join('\n');
+          transcriptSource = sourceMeta?.sourceMethod || 'Public source metadata';
+        }
       }
     }
 
@@ -314,7 +552,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.4.1 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.5.0 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -343,7 +581,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.4.1-cpc",
+  "engineVersion":"3.5.0-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -563,6 +801,33 @@ PRACTICE CARD INTERPRETATION RULES:
 - If the source shows one offensive entry queue and one defensive entry queue, return exactly those queues unless other distinct queues are source-supported.
 - In a live progression, active players, waiting players, and entering players are different participant states.
 
+SOCIAL VIDEO INTELLIGENCE RULES:
+For TikTok and Instagram videos, FULL VIDEO VISUAL/AUDIO EXTRACTION is higher-quality evidence than metadata or a thumbnail.
+Use evidence priority in this order:
+1. Explicit on-screen instructional text inside video frames.
+2. Repeated demonstrated actions across the video.
+3. Spoken/caption transcript.
+4. Creator caption/title/description.
+5. Thumbnail only as a weak supporting frame.
+
+PRIMARY SKILL EVIDENCE GATE:
+- A primary skill score of 85+ requires at least two concrete evidence items from the full video, on-screen text, or transcript.
+- Do not score Passing highly merely because the ball is passed before a shot.
+- If repeated actions are shots on goal and overlays describe shooting types, Shooting must dominate unless stronger contrary evidence exists.
+- Supporting/incidental actions must not displace the central teaching purpose.
+- If evidence is insufficient, lower confidence rather than inventing certainty.
+
+ON-SCREEN TEXT:
+- Treat instructional text overlays as first-class coaching evidence.
+- Preserve named techniques/variations from overlays.
+- Use the overlay wording in drill variations, coaching cues, or evidence when supported.
+- Do not silently replace specific overlay language with generic phrases.
+
+NO GENERIC FILLER:
+- Never invent a backyard, target, cone, marked spot, distance, rep count, or retrieval pattern unless seen/stated.
+- Never produce generic instructions merely because the source is visually incomplete.
+- When unsupported, use Not stated / Needs review.
+
 SOCIAL SOURCE RULES:
 When mode=link and the source is TikTok or Instagram:
 - Treat the platform as a recognized source, not a generic webpage.
@@ -625,7 +890,7 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
         temperature:0.05,
         response_format:{ type:'json_object' },
         messages:[
-          { role:'system', content:'Return valid JSON only. Match exact CVIL vocabulary. Produce a concise, field-ready Coach Practice Card. Mark inferred setup fields as Estimated. For PDFs, inspect both document text and page diagrams. Field Setup must come from the earliest complete stable setup frame; later frames describe progression unless the source indicates otherwise.' },
+          { role:'system', content:'Return valid JSON only. Match exact CVIL vocabulary. Produce a concise, field-ready Coach Practice Card. Mark inferred setup fields as Estimated. For PDFs, inspect both document text and page diagrams. For social video sources, prioritize explicit on-screen text, full-video visual evidence, and repeated demonstrated actions over metadata. Never invent generic setup instructions when the evidence does not support them. Field Setup must come from the earliest complete stable setup frame; later frames describe progression unless the source indicates otherwise.' },
           { role:'user', content:userContent }
         ]
       })
@@ -656,8 +921,14 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
         platform: sourceMeta.platform,
         method: sourceMeta.sourceMethod || 'Public metadata',
         accessStatus: sourceMeta.accessStatus || 'Unknown',
-        thumbnailAnalyzed: Boolean(hasSocialThumbnail)
+        thumbnailAnalyzed: Boolean(hasSocialThumbnail),
+        fullVideoAnalyzed: Boolean(socialVideoEvidence?.status === 'completed'),
+        transcriptAvailable: Boolean(socialTranscript?.text),
+        videoExtractionJobId: socialVideoEvidence?.jobId || null
       };
+      if (socialVideoEvidence?.status === 'completed') {
+        diagnostics.socialVideoEvidence = socialVideoEvidence.data;
+      }
     }
 
     return NextResponse.json({ analysis, sourceMeta, diagnostics });

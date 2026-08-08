@@ -425,7 +425,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.4.1</small>
+          <small className="engineVersion">Engine 3.5.0</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
@@ -485,6 +485,10 @@ export default function Home() {
                 <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste a public coaching link..." />
                 <div className="recognizedSources">
                   <span><b>▶</b>YouTube</span><span><b>♪</b>TikTok</span><span><b>◎</b>Instagram</span><span><b>↗</b>Web</span>
+                </div>
+                <div className="socialIntelligenceNote">
+                  <b>Social Video Intelligence</b>
+                  <span>TikTok and Instagram videos are analyzed for visual actions, on-screen coaching text, audio/transcript, and post metadata.</span>
                 </div>
                 <details><summary>Paste transcript or source text as a fallback</summary><textarea value={transcript} onChange={(e) => setTranscript(e.target.value)} placeholder="Optional transcript..." /></details>
                 <button disabled={!url.trim()} onClick={runEngine}>Analyze with CoachVault</button>
@@ -698,8 +702,8 @@ function PracticeCalendar({ events, savedPractices, schedulePractice }) {
 function EngineProgress({ step }) {
   const stages = [
     { title: 'Acquiring source', detail: 'Opening the submitted coaching source and preparing it for analysis.' },
-    { title: 'Reading coaching content', detail: 'Extracting the usable transcript, captions, text, and source context.' },
-    { title: 'Identifying the drill', detail: 'Determining drill structure, participation model, and central learning purpose.' },
+    { title: 'Reading coaching content', detail: 'Reading transcripts, full-video actions, on-screen text, captions, and source context.' },
+    { title: 'Identifying the drill', detail: 'Comparing repeated actions and instructional evidence to identify the real teaching purpose.' },
     { title: 'Mapping skills', detail: 'Matching the primary skill and supporting components to CoachVault standards.' },
     { title: 'Building field setup', detail: 'Separating active players from waiting lines and reconstructing pre-rep positions.' },
     { title: 'Building Coach Practice Card', detail: 'Turning the source into field-ready instructions, cues, objectives, and setup.' },
