@@ -1420,3 +1420,79 @@ body{background:var(--cv-bg);color:var(--cv-text)}
   .directorButtons{width:100%;flex-direction:column}.directorButtons button{width:100%}
   .builderMeta{grid-template-columns:1fr}.fieldSettingsRow{flex-wrap:wrap}.responseList dl{grid-template-columns:1fr}
 }
+
+
+/* Engine 3.9.0 — advanced roadmap forms */
+.phaseHeaderActions{display:flex;align-items:center;gap:10px}
+.phaseHeaderActions>span{font-size:9px;color:#8b939d}
+.phaseHeaderActions button{
+  border:1px solid #d5d9de;background:#fff;color:#111318;border-radius:9px;
+  padding:8px 10px;font-size:8px;font-weight:950
+}
+.phaseHeaderActions button:hover{background:#ffd51f;border-color:#e0bd1d}
+
+.builderField.sectionField{background:#111318;border-color:#111318}
+.builderField.sectionField .builderFieldNum{background:#ffd51f}
+.builderField.sectionField .fieldLabelInput{color:#fff;border-bottom-color:#3a3f47;background:transparent}
+.fieldTitleRow{display:flex;align-items:center;gap:10px}.fieldTitleRow .fieldLabelInput{flex:1}
+.fieldRemoveBtn{border:0;background:#f0f1f3!important;width:28px;height:28px;border-radius:50%!important;font-size:16px!important;padding:0!important;margin:0!important}
+.sectionField .fieldRemoveBtn{background:#292d34!important;color:#fff}
+.fieldHelpInput{border:0!important;border-bottom:1px dashed #d9dde1!important;border-radius:0!important;padding:5px 0!important;font-size:9px;color:#747d87}
+.optionsEditor>span,.scaleEditor span{display:block;font-size:8px;font-weight:900;color:#747d87;margin-bottom:5px}
+.optionsEditor input{width:100%;border:1px solid #d9dde1;border-radius:8px;padding:9px;font-size:9px}
+.scaleEditor{display:flex;gap:10px}.scaleEditor label{width:120px}.scaleEditor input{width:100%;border:1px solid #d9dde1;border-radius:8px;padding:8px}
+
+.logicBuilder{border:1px solid #e1d47d;background:#fffbee;border-radius:10px;padding:10px}
+.logicBuilder summary{display:flex;align-items:center;justify-content:space-between;cursor:pointer;list-style:none}
+.logicBuilder summary>span{font-size:8px;letter-spacing:.12em;font-weight:950;color:#675500}
+.logicBuilder summary label{display:flex;gap:5px;align-items:center;font-size:8px;font-weight:900}
+.logicGrid{margin-top:10px;display:grid;grid-template-columns:auto minmax(150px,1.3fr) minmax(120px,.8fr) minmax(120px,1fr);gap:7px;align-items:center}
+.logicGrid select,.logicGrid input{border:1px solid #d8d2a1;border-radius:8px;padding:8px;font-size:8px;background:#fff}
+.logicStatement{font-size:9px;font-weight:1000;color:#111318}.logicStatement.then{grid-column:1/-1;display:flex;gap:7px;align-items:center;border-top:1px solid #e4dda8;padding-top:8px}.logicStatement.then span{font-size:8px;color:#6e6743}
+.nativeSectionHeading{border-top:3px solid #ffd51f;background:#111318;color:#fff;border-radius:9px;padding:13px 14px;margin:8px 0 3px}
+.nativeSectionHeading h3{font-size:15px;margin:0}
+.nativeField>small{display:block;font-size:8px;color:#7b848e;margin:-2px 0 7px}
+.horizontalChoices{grid-template-columns:1fr 1fr}
+.scaleChoices{display:flex;gap:7px;flex-wrap:wrap}.scaleChoices button{width:39px;height:39px;border:1px solid #d9dde1;background:#fff;border-radius:9px;font-weight:900}.scaleChoices button.active{background:#111318;color:#ffd51f;border-color:#111318}
+
+@media(max-width:800px){
+  .phaseContent>header{align-items:flex-start}.phaseHeaderActions{align-items:flex-end;flex-direction:column}
+  .phaseHeaderActions button{white-space:normal;text-align:right}
+  .logicGrid{grid-template-columns:1fr}.logicStatement.then{grid-column:auto}
+}
+
+
+/* Engine 3.10.0 — team / club form sharing */
+.directorDashboard{grid-template-columns:repeat(4,1fr) auto}
+.formCardActions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.shareFormBtn{border:1px solid #d8bd31;background:#fff8c8;color:#4e4200;border-radius:9px;padding:8px 10px;font-size:8px;font-weight:950}
+.shareFormBtn:hover{background:#ffd51f}
+.shareFormModal>section{background:#fff;border-radius:19px;width:min(720px,100%);max-height:90vh;overflow:auto;padding:24px}
+.shareFormModal>section>header{display:flex;justify-content:space-between;align-items:start;border-bottom:1px solid #e2e5e8;padding-bottom:17px}
+.shareFormModal header small{font-size:8px;letter-spacing:.14em;color:#8d7300;font-weight:950}
+.shareFormModal header h2{font-size:27px;margin:5px 0 6px}.shareFormModal header p{font-size:10px;line-height:1.5;color:#747d87;max-width:540px}
+.shareFormModal header>button{border:0;background:#f0f1f2;width:32px;height:32px;border-radius:50%;font-size:18px}
+.shareFormBody{padding-top:18px;display:grid;gap:15px}.shareFormBody>label>span{display:block;font-size:9px;font-weight:900;color:#656e78;margin-bottom:6px}
+.shareFormBody>label>input{width:100%;border:1px solid #d9dde1;border-radius:9px;padding:10px}
+.shareScopeChoices{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.shareScopeChoices button{border:1px solid #d9dde1;background:#fff;border-radius:9px;padding:11px 8px;font-size:8px;font-weight:900}.shareScopeChoices button.active{background:#111318;color:#ffd51f;border-color:#111318}
+.shareAnonymous{display:flex!important;align-items:flex-start;gap:9px;border:1px solid #e0e3e6;background:#fafafa;border-radius:10px;padding:11px}.shareAnonymous>input{width:auto!important;margin-top:2px}.shareAnonymous b,.shareAnonymous small{display:block}.shareAnonymous b{font-size:9px}.shareAnonymous small{font-size:8px;color:#7a838d;margin-top:3px}
+.sharePreview{background:#111318;color:#fff;border-radius:12px;padding:14px}.sharePreview>span{font-size:7px;letter-spacing:.13em;color:#ffd51f;font-weight:950}.sharePreview strong{display:block;font-size:14px;margin-top:4px}.sharePreview p{font-size:9px;color:#aeb5be;margin-bottom:0}
+.shareFormBody>footer{display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #e3e5e8;padding-top:16px}.shareFormBody>footer button{border:1px solid #d8dce0;background:#fff;border-radius:9px;padding:9px 11px;font-weight:900}.shareFormBody>footer .publishShareBtn{background:#ffd51f;border-color:#ffd51f;color:#111318}
+.sharePublished{text-align:center;padding:28px 0 20px}.shareSuccessIcon{width:48px;height:48px;border-radius:50%;background:#ffd51f;display:grid;place-items:center;margin:0 auto 12px;font-size:20px;font-weight:1000}.sharePublished>span{font-size:8px;letter-spacing:.14em;color:#8d7300;font-weight:950}.sharePublished h3{font-size:22px;margin:6px 0 16px}
+.shareLinkBox{display:flex;border:1px solid #d9dde1;border-radius:10px;overflow:hidden}.shareLinkBox input{flex:1;border:0;padding:11px;font-size:9px;background:#f7f8f9}.shareLinkBox button{border:0;background:#111318;color:#ffd51f;padding:0 14px;font-size:8px;font-weight:950}.sharePublished>p{font-size:9px;color:#747d87}.sharePublishedActions{display:flex;justify-content:center;gap:8px;margin-top:15px}.sharePublishedActions a,.sharePublishedActions button{border:1px solid #d9dde1;border-radius:9px;padding:9px 11px;text-decoration:none;color:#111318;background:#fff;font-size:8px;font-weight:900}
+.existingShares{border-top:1px solid #e3e5e8;padding-top:16px}.existingShares>span{font-size:8px;letter-spacing:.13em;font-weight:950;color:#8d7300}.existingShares article{display:grid;grid-template-columns:1fr auto auto;gap:7px;align-items:center;border:1px solid #e0e3e6;border-radius:9px;padding:9px;margin-top:7px}.existingShares b,.existingShares small{display:block}.existingShares b{font-size:9px}.existingShares small{font-size:7px;color:#7e8791}.existingShares button{border:1px solid #d8dce0;background:#fff;border-radius:7px;padding:7px 8px;font-size:7px;font-weight:900}.existingShares .disableShareBtn{color:#8a3131}
+
+.publicFormPage{min-height:100vh;background:#eff1f3;color:#111318;padding-bottom:60px}.publicFormTop{height:68px;background:#111318;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 max(20px,calc((100vw - 860px)/2))}.publicFormBrand{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff}.publicFormBrand>span{width:34px;height:34px;border-radius:9px;background:#ffd51f;color:#111318;display:grid;place-items:center;font-size:10px;font-weight:1000}.publicFormBrand b{font-size:15px}.publicFormTop>small{font-size:8px;color:#aab2bb;text-transform:uppercase;letter-spacing:.12em}
+.publicFormCard{width:min(820px,calc(100% - 36px));margin:45px auto 0;background:#fff;border:1px solid #dfe2e6;border-radius:20px;overflow:hidden}.publicFormHeading{background:#111318;color:#fff;padding:34px}.publicFormEyebrow{font-size:8px;letter-spacing:.16em;color:#ffd51f;font-weight:950}.publicFormHeading h1{font-size:36px;letter-spacing:-.035em;margin:8px 0 10px}.publicFormHeading p{font-size:12px;line-height:1.6;color:#aeb5be;max-width:650px}.publicFormAudience{display:inline-flex;margin-top:11px;background:#2a2e35;border-radius:99px;padding:7px 9px;font-size:8px;color:#f0f2f4;font-weight:900}
+.publicFormCard form{padding:30px}.respondentBlock{background:#fff9d7;border:1px solid #ebd76d;border-radius:13px;padding:17px;margin-bottom:24px}.respondentBlock h2{font-size:14px;margin:0 0 12px}.respondentGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.respondentGrid label span{display:block;font-size:8px;font-weight:900;margin-bottom:5px}.respondentGrid input{width:100%;border:1px solid #d9cf97;border-radius:8px;padding:9px;background:#fff}
+.publicNativeFields{display:grid;gap:19px}.publicFormSection{border-top:3px solid #ffd51f;background:#111318;color:#fff;border-radius:10px;padding:14px}.publicFormSection h2{margin:0;font-size:16px}.publicNativeField>span{display:block;font-size:10px;font-weight:900;margin-bottom:6px}.publicNativeField>span b{color:#b12626;margin-left:3px}.publicNativeField>small{display:block;font-size:8px;color:#78818b;margin:-3px 0 7px}.publicNativeField>input,.publicNativeField>textarea,.publicNativeField>select{width:100%;border:1px solid #d9dde1;border-radius:9px;padding:11px}.publicNativeField>textarea{min-height:100px}
+.publicChoices{display:grid;gap:7px}.publicChoices.horizontal{grid-template-columns:1fr 1fr}.publicChoices label,.publicAck{display:flex!important;align-items:center;gap:8px;border:1px solid #e0e3e6;border-radius:9px;padding:10px}.publicChoices label span,.publicAck span{margin:0!important;font-size:9px!important}.publicScale{display:flex;gap:7px;flex-wrap:wrap}.publicScale button{width:40px;height:40px;border:1px solid #d9dde1;background:#fff;border-radius:9px;font-weight:900}.publicScale button.active{background:#111318;color:#ffd51f;border-color:#111318}
+.publicFormFooter{border-top:1px solid #e1e4e7;margin-top:28px;padding-top:18px;display:flex;align-items:center;justify-content:space-between;gap:20px}.publicFormFooter p{font-size:8px;color:#878f98}.publicFormFooter button{border:0;background:#ffd51f;color:#111318;border-radius:10px;padding:12px 16px;font-size:9px;font-weight:1000}
+.publicFormLoading{padding:100px;text-align:center}.emptyPublicForm,.publicFormThanks{text-align:center;padding:55px}.publicFormLogo{width:48px;height:48px;border-radius:12px;background:#ffd51f;display:grid;place-items:center;margin:0 auto 20px;font-weight:1000}.emptyPublicForm h1,.publicFormThanks h1{font-size:28px}.emptyPublicForm p,.publicFormThanks p{font-size:11px;color:#737c86}.emptyPublicForm a,.publicFormThanks a{display:inline-block;margin-top:15px;color:#111318;font-weight:900;font-size:9px}.publicFormCheck{width:55px;height:55px;border-radius:50%;background:#eaf7ee;color:#23814c;display:grid;place-items:center;font-size:24px;font-weight:1000;margin:20px auto}
+
+@media(max-width:800px){
+  .directorDashboard{grid-template-columns:1fr 1fr}
+  .shareScopeChoices{grid-template-columns:1fr}
+  .respondentGrid{grid-template-columns:1fr}
+  .publicFormCard form{padding:20px}.publicFormHeading{padding:26px 20px}
+}

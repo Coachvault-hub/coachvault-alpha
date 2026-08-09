@@ -173,3 +173,57 @@ create policy "members manage own completion"
 on public.roadmap_completions for all
 using (user_id = auth.uid())
 with check (user_id = auth.uid());
+
+
+-- CoachVault 3.10.0 shareable forms
+
+create table if not exists public.form_shares (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  form_id uuid not null references public.forms(id) on delete cascade,
+  created_by uuid references public.profiles(id) on delete set null,
+  token text not null unique,
+  scope text not null check (scope in ('team','club','public')),
+  team_id uuid references public.teams(id) on delete set null,
+  team_name text,
+  label text,
+  allow_anonymous boolean not null default true,
+  active boolean not null default true,
+  expires_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table public.form_submissions
+  add column if not exists form_share_id uuid references public.form_shares(id) on delete set null,
+  add column if not exists respondent_name text,
+  add column if not exists respondent_email text,
+  add column if not exists respondent_team text;
+
+alter table public.form_shares enable row level security;
+
+create policy "organization members read form shares"
+on public.form_shares for select
+using (organization_id = public.current_org_id());
+
+create policy "directors manage all form shares"
+on public.form_shares for all
+using (
+  organization_id = public.current_org_id()
+  and exists(select 1 from public.profiles p where p.id=auth.uid() and p.role in ('director','admin'))
+)
+with check (
+  organization_id = public.current_org_id()
+  and exists(select 1 from public.profiles p where p.id=auth.uid() and p.role in ('director','admin'))
+);
+
+create policy "coaches create team form shares"
+on public.form_shares for insert
+with check (
+  organization_id = public.current_org_id()
+  and scope = 'team'
+  and created_by = auth.uid()
+);
+
+-- Production anonymous public form reads/submissions should be mediated through a
+-- server API using SUPABASE_SERVICE_ROLE_KEY rather than exposing broad anonymous
+-- table SELECT/INSERT policies.

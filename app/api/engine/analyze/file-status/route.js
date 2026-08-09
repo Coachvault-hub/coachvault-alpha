@@ -111,7 +111,7 @@ export async function POST(request) {
     };
 
     const diagnostics = {
-      engineVersion:analysis.engineVersion || '3.8.0-cpc',
+      engineVersion:analysis.engineVersion || '3.10.0-cpc',
       generatedAt:new Date().toISOString(),
       model:data.model || 'gpt-5.6',
       transcriptSource:'Private PDF — background Responses API file_url',
