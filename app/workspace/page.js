@@ -2,6 +2,7 @@
 
 import { CVIL } from '../cvil';
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 
 
 const skillFolderMap = {
@@ -168,7 +169,7 @@ function friendlyEngineError(error) {
   const message = readableError(error);
 
   if (/Failed to retrieve the client token|client token/i.test(message)) {
-    return 'CoachVault encountered the legacy Vercel client-token upload path. Engine 3.6.5 no longer uses that method for large documents; redeploy this version and retry the file.';
+    return 'CoachVault encountered the legacy Vercel client-token upload path. Engine 3.7.0 no longer uses that method for large documents; redeploy this version and retry the file.';
   }
 
   if (/BLOB_READ_WRITE_TOKEN|blob.*token|token.*blob/i.test(message)) {
@@ -176,7 +177,7 @@ function friendlyEngineError(error) {
   }
 
   if (/SIGNED_PRIVATE_READ_FAILED|signed private read|temporary private read link/i.test(message)) {
-    return 'Engine 3.6.5 no longer downloads the large private PDF through the Vercel Function. The model now reads the PDF directly from a short-lived signed private URL.';
+    return 'Engine 3.7.0 no longer downloads the large private PDF through the Vercel Function. The model now reads the PDF directly from a short-lived signed private URL.';
   }
 
   if (/SIGNED_PRIVATE_URL_FAILED|temporary private analysis link/i.test(message)) {
@@ -184,7 +185,7 @@ function friendlyEngineError(error) {
   }
 
   if (/PRIVATE_BLOB_RETRIEVAL_FAILED|could not retrieve the private file|could not open the private file/i.test(message)) {
-    return 'CoachVault stored the document privately, but the Engine could not reopen it for analysis. Engine 3.6.5 uses a signed private read instead of the previous direct read path.';
+    return 'CoachVault stored the document privately, but the Engine could not reopen it for analysis. Engine 3.7.0 uses a signed private read instead of the previous direct read path.';
   }
 
   if (/rate.limit|429|too many requests/i.test(message)) {
@@ -509,6 +510,9 @@ export default function Home() {
       try {
         data = JSON.parse(responseText);
       } catch (_) {
+        if (response.status >= 500) {
+          throw new Error(`CoachVault received a non-JSON server error (${response.status}). The upload may have succeeded, but the analysis route ended before returning diagnostics. Check the Vercel Function log for /api/engine/analyze; Engine 3.7.0 now labels large-PDF failures by stage.`);
+        }
         throw new Error(
           response.status === 413
             ? 'The upload exceeded the server request limit before CoachVault could process it.'
@@ -719,12 +723,19 @@ export default function Home() {
   return (
     <main className="appShell">
       <header className="globalHeader">
-        <div className="brandLockup branded">
-          <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.6.5</small>
-        </div>
+        <Link href="/" className="workspaceBrandHome" aria-label="CoachVault home">
+          <div className="brandLockup branded">
+            <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
+            <small className="engineVersion">Engine 3.7.0</small>
+          </div>
+        </Link>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">
+          <nav className="globalProductNav" aria-label="CoachVault navigation">
+            <Link href="/">Home</Link>
+            <Link href="/workspace" className="active">Workspace</Link>
+            <Link href="/roadmap">Season Roadmap</Link>
+          </nav>
           <label className="modeToggle"><input type="checkbox" checked={internalMode} onChange={(e) => setInternalMode(e.target.checked)} /><span>Internal tools</span></label>
           <span className="avatar">J</span>
         </div>
@@ -738,6 +749,9 @@ export default function Home() {
 
       <div className="workspaceShell">
         <aside className="iconRail">
+          <Link href="/" className="railLink"><span>⌂</span><small>Home</small></Link>
+          <Link href="/roadmap" className="railLink"><span>◇</span><small>Roadmap</small></Link>
+          <div className="railDivider" />
           <button className={active === 'Atlas' ? 'active' : ''} onClick={() => setActive('Atlas')}><span>⚙</span><small>Engine</small></button>
           <button className={active === 'Database' ? 'active' : ''} onClick={() => setActive('Database')}><span>▣</span><small>Vault</small></button>
           <button className={active === 'Practices' ? 'active' : ''} onClick={() => setActive('Practices')}><span>≡</span><small>Practices</small></button>

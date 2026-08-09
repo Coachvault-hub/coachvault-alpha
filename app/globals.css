@@ -1233,3 +1233,144 @@ body{background:linear-gradient(180deg,#f5f8fd 0%,#eef3f9 100%)}
   .cardMeta{grid-template-columns:1fr}.finalCta{padding:36px 28px}.finalCta h2{font-size:35px}
   .marketingFooter{flex-direction:column;align-items:flex-start}
 }
+
+
+/* Engine 3.7.0 — unified CoachVault black / yellow / gray system */
+:root{
+  --cv-navy:#111318;
+  --cv-blue:#d7ad00;
+  --cv-bg:#f3f4f6;
+  --cv-panel:#ffffff;
+  --cv-line:#dfe2e6;
+  --cv-text:#16191f;
+  --cv-muted:#68717d;
+  --cv-soft:#eceef1;
+  --cv-green:#238b53;
+  --cv-yellow:#ffd51f;
+  --cv-yellow-soft:#fff6bd;
+}
+body{background:var(--cv-bg);color:var(--cv-text)}
+.globalHeader{background:#111318;border-bottom:1px solid #272b32}
+.workspaceBrandHome{color:inherit;text-decoration:none;min-width:0}
+.globalSearch{background:#1b1f26;border-color:#343942;color:#aeb5bf}
+.globalProductNav{display:flex;align-items:center;gap:5px}
+.globalProductNav a{
+  color:#c5cbd3;text-decoration:none;font-size:11px;font-weight:850;
+  padding:8px 10px;border-radius:8px;white-space:nowrap
+}
+.globalProductNav a:hover,.globalProductNav a.active{background:#2a2e35;color:#ffd51f}
+.avatar{background:#ffd51f;color:#111318}
+.sectionNav button.active{color:#111318}
+.sectionNav button.active:after{background:#ffd51f}
+.iconRail button.active{color:#111318;background:#fff4a8;border-right:3px solid #ffd51f}
+.railLink{display:block;text-align:center;text-decoration:none;color:#68717d;padding:10px 4px}
+.railLink span,.railLink small{display:block}.railLink span{font-size:20px}.railLink small{font-size:10px;margin-top:4px}
+.railLink:hover{background:#f5f0cc;color:#111318}
+.railDivider{height:1px;background:#e3e5e8;margin:4px 12px 8px}
+.welcomeStrip span,.sectionSummary span,.cvilSidebar>div>small,.standardPage>header>span{color:#9a7a00}
+.welcomeStrip button,.vaultToolbar button,.inputBody button,.approve,.primaryPlanBtn{background:#111318!important;color:#fff!important}
+.welcomeStrip button:hover,.vaultToolbar button:hover,.inputBody button:hover,.approve:hover,.primaryPlanBtn:hover{background:#ffd51f!important;color:#111318!important}
+.simplifiedPanel .tabs button.active{color:#111318;box-shadow:inset 0 -3px 0 #ffd51f}
+.engineProgress{background:#111318}
+.progressTrack span,.progressSteps span.current,.enginePulse span{background:#ffd51f}
+.progressSteps span.current{box-shadow:0 0 0 5px rgba(255,213,31,.16)}
+.primaryTag,.snapshotScore,.componentStack summary>span{background:#fff4a8;color:#3d3200}
+.skillList button.active{background:#fff4a8;border-color:#ead35b;color:#302800}
+.standardPrinciple{background:#111318}
+.card:hover{border-color:#c9b644;box-shadow:0 5px 18px rgba(31,29,18,.07)}
+.card header span{color:#6b5a00}
+.calendarReservationBanner{border-color:#e1c933!important;background:#fff9d7!important}
+.homeNavActions{display:flex;gap:8px;align-items:center}
+.homeSecondaryCta{
+  color:#111318;text-decoration:none;border:1px solid #d7dbe0;background:#fff;
+  padding:11px 14px;border-radius:11px;font-size:11px;font-weight:900
+}
+
+/* Season Roadmap */
+.roadmapPage{min-height:100vh;background:#f3f4f6;color:#16191f}
+.roadmapTopbar{
+  height:76px;background:#111318;color:#fff;padding:0 max(24px,calc((100vw - 1320px)/2));
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px;position:sticky;top:0;z-index:30
+}
+.roadmapBrand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;justify-self:start}
+.roadmapLogo{width:38px;height:38px;border-radius:11px;background:#ffd51f;color:#111318;display:grid;place-items:center;font-size:12px;font-weight:1000}
+.roadmapBrand strong,.roadmapBrand small{display:block}.roadmapBrand strong{font-size:17px}.roadmapBrand small{color:#9fa7b1;font-size:9px;margin-top:2px}
+.roadmapTopbar nav{display:flex;gap:5px}
+.roadmapTopbar nav a{color:#bbc2cb;text-decoration:none;font-size:11px;font-weight:850;padding:9px 11px;border-radius:8px}
+.roadmapTopbar nav a:hover,.roadmapTopbar nav a.active{background:#292d34;color:#ffd51f}
+.roadmapWorkspaceBtn{justify-self:end;background:#ffd51f;color:#111318;text-decoration:none;padding:11px 14px;border-radius:10px;font-size:11px;font-weight:950}
+
+.roadmapHero{max-width:1320px;margin:0 auto;padding:66px 28px 40px;display:grid;grid-template-columns:1fr 260px;gap:50px;align-items:end}
+.roadmapEyebrow{font-size:10px;letter-spacing:.16em;font-weight:950;color:#8d7300}
+.roadmapHero h1{font-size:clamp(42px,5vw,66px);letter-spacing:-.05em;line-height:1;margin:13px 0 18px;max-width:900px}
+.roadmapHero>div>p{font-size:17px;line-height:1.6;color:#66707b;max-width:840px}
+.roadmapViewToggle{display:inline-flex;margin-top:20px;background:#e4e6e9;padding:4px;border-radius:11px}
+.roadmapViewToggle button{border:0;background:transparent;padding:9px 13px;border-radius:8px;font-size:11px;font-weight:900;color:#6b737e}
+.roadmapViewToggle button.active{background:#111318;color:#ffd51f}
+.roadmapProgressCard{background:#111318;color:#fff;border-radius:18px;padding:22px}
+.roadmapProgressCard>span{font-size:9px;letter-spacing:.13em;color:#aeb5bf;font-weight:900}
+.roadmapProgressCard>strong{display:block;font-size:38px;margin:8px 0}
+.roadmapProgressTrack{height:8px;border-radius:99px;background:#343941;overflow:hidden}.roadmapProgressTrack i{display:block;height:100%;background:#ffd51f;border-radius:inherit}
+.roadmapProgressCard p{font-size:10px;color:#aeb5bf;margin:8px 0 0}
+
+.roadmapToolbar{max-width:1320px;margin:0 auto;padding:0 28px 20px;display:flex;justify-content:space-between;gap:18px;align-items:center}
+.phaseTabs{display:flex;gap:7px;flex-wrap:wrap}
+.phaseTabs button{border:1px solid #d9dde2;background:#fff;border-radius:999px;padding:8px 11px;font-size:10px;font-weight:850;color:#626b76}
+.phaseTabs button.active{background:#111318;color:#ffd51f;border-color:#111318}
+.addRoadmapBtn{border:0;background:#ffd51f;color:#111318;border-radius:10px;padding:11px 14px;font-weight:950;white-space:nowrap}
+
+.roadmapIntroStrip{max-width:1264px;margin:0 auto 32px;background:#fff;border:1px solid #dfe2e6;border-radius:16px;display:grid;grid-template-columns:repeat(4,1fr)}
+.roadmapIntroStrip div{padding:18px 22px;border-right:1px solid #e4e6e9}.roadmapIntroStrip div:last-child{border-right:0}
+.roadmapIntroStrip b,.roadmapIntroStrip span{display:block}.roadmapIntroStrip b{font-size:25px}.roadmapIntroStrip span{font-size:10px;color:#7a828d;margin-top:2px}
+
+.roadmapTimeline{max-width:1320px;margin:0 auto;padding:8px 28px 70px}
+.roadmapPhase{display:grid;grid-template-columns:64px 1fr;gap:22px}
+.phaseMarker{position:relative;display:flex;justify-content:center}.phaseMarker span{width:38px;height:38px;background:#ffd51f;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:950;z-index:2}
+.phaseMarker i{position:absolute;width:2px;background:#d6d9dd;top:38px;bottom:0}
+.roadmapPhase:last-child .phaseMarker i{display:none}
+.phaseContent{padding-bottom:42px}
+.phaseContent>header{display:flex;justify-content:space-between;align-items:end;margin-bottom:16px}
+.phaseContent>header small{font-size:8px;letter-spacing:.14em;color:#989fa8;font-weight:900}
+.phaseContent>header h2{margin:4px 0 0;font-size:27px}.phaseContent>header>span{font-size:10px;color:#8a929c}
+.roadmapCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.roadmapResource{background:#fff;border:1px solid #dfe2e6;border-radius:16px;padding:20px;transition:.15s}
+.roadmapResource.done{opacity:.7;background:#f7f8f8}.roadmapResource.done h3{text-decoration:line-through;text-decoration-color:#aaa}
+.resourceTop{display:flex;gap:7px;align-items:center}.resourceType,.requiredTag{font-size:8px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;border-radius:999px;padding:6px 8px}
+.resourceType{background:#eceef1;color:#525b66}.type-form{background:#fff3a3;color:#544500}.type-document{background:#e6e8ea}.type-meeting{background:#e4efe9;color:#315e46}
+.requiredTag{background:#111318;color:#fff}.resourceDelete{margin-left:auto;border:0;background:#f0f1f3;color:#6c747e;width:27px;height:27px;border-radius:50%;font-size:17px}
+.roadmapResource h3{font-size:20px;margin:16px 0 7px}.roadmapResource>p{font-size:12px;line-height:1.55;color:#6c7580;min-height:56px}
+.resourceMeta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:17px 0}.resourceMeta div{background:#f5f6f7;border-radius:9px;padding:10px}
+.resourceMeta small,.resourceMeta b{display:block}.resourceMeta small{font-size:7px;letter-spacing:.12em;color:#9299a2;font-weight:900}.resourceMeta b{font-size:10px;margin-top:4px}
+.roadmapResource footer{border-top:1px solid #e6e8eb;padding-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.completeBtn{border:1px solid #d6dae0;background:#fff;border-radius:9px;padding:8px 10px;font-size:9px;font-weight:900}.completeBtn.done{background:#111318;color:#ffd51f;border-color:#111318}
+.roadmapResource footer a{font-size:9px;font-weight:950;color:#111318;text-decoration:none}.linkPending{font-size:9px;color:#9ba2aa}
+
+.roadmapFooterCta{max-width:1264px;margin:0 auto 70px;background:#ffd51f;border-radius:22px;padding:34px 40px;display:flex;align-items:center;justify-content:space-between;gap:35px}
+.roadmapFooterCta span{font-size:9px;letter-spacing:.13em;font-weight:950}.roadmapFooterCta h2{font-size:31px;margin:8px 0}.roadmapFooterCta p{font-size:12px;margin:0;color:#554b14}
+.roadmapFooterCta a{background:#111318;color:#fff;text-decoration:none;border-radius:11px;padding:13px 16px;font-size:10px;font-weight:950;white-space:nowrap}
+
+.roadmapModal{position:fixed;inset:0;background:rgba(11,13,16,.68);z-index:60;display:grid;place-items:center;padding:20px}
+.roadmapModal form{background:#fff;border-radius:20px;width:min(760px,100%);max-height:90vh;overflow:auto;padding:24px}
+.roadmapModal form>header{display:flex;justify-content:space-between;align-items:start}.roadmapModal header small{font-size:8px;letter-spacing:.14em;color:#8d7300;font-weight:950}.roadmapModal h2{margin:5px 0 20px}
+.roadmapModal header button{border:0;background:#eff0f2;width:32px;height:32px;border-radius:50%;font-size:20px}
+.roadmapFormGrid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.roadmapFormGrid label span{display:block;font-size:9px;font-weight:900;color:#646d78;margin-bottom:5px}
+.roadmapFormGrid input,.roadmapFormGrid select,.roadmapFormGrid textarea{width:100%;border:1px solid #dce0e4;border-radius:9px;padding:10px;background:#fff}.roadmapFormGrid textarea{min-height:95px}
+.roadmapFormGrid .full{grid-column:1/-1}.requiredCheck{display:flex!important;align-items:center;gap:8px}.requiredCheck input{width:auto}.requiredCheck span{margin:0!important}
+.roadmapModal form>footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}.roadmapModal footer button{border:1px solid #d9dde2;background:#fff;border-radius:9px;padding:10px 13px;font-weight:900}.roadmapModal footer .saveResourceBtn{background:#111318;color:#fff;border-color:#111318}
+
+@media(max-width:1100px){
+  .globalProductNav{display:none}
+  .roadmapTopbar{grid-template-columns:1fr auto}.roadmapTopbar nav{display:none}.roadmapHero{grid-template-columns:1fr}
+  .roadmapProgressCard{max-width:360px}.roadmapCards{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .homeNavActions .homeSecondaryCta{display:none}
+  .roadmapTopbar{padding:0 18px}.roadmapWorkspaceBtn{display:none}
+  .roadmapHero{padding:42px 18px 28px}.roadmapHero h1{font-size:42px}
+  .roadmapToolbar{padding:0 18px 18px;align-items:flex-start;flex-direction:column}
+  .roadmapIntroStrip{margin-left:18px;margin-right:18px;grid-template-columns:1fr 1fr}.roadmapIntroStrip div:nth-child(2){border-right:0}
+  .roadmapTimeline{padding:5px 18px 55px}.roadmapPhase{grid-template-columns:42px 1fr;gap:12px}
+  .phaseMarker span{width:32px;height:32px}.phaseMarker i{top:32px}
+  .roadmapFooterCta{margin-left:18px;margin-right:18px;padding:28px;flex-direction:column;align-items:flex-start}
+  .roadmapFormGrid{grid-template-columns:1fr}.roadmapFormGrid .full{grid-column:auto}
+}

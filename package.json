@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-365-workspace-import-fix",
-  "version": "3.6.5",
+  "name": "coachvault-engine-370-unified-site-roadmap-pdf",
+  "version": "3.7.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

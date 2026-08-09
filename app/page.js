@@ -61,9 +61,13 @@ export default function HomePage() {
           <a href="#system">How It Works</a>
           <a href="#why">Why CoachVault</a>
           <a href="#paths">Who It&apos;s For</a>
+          <Link href="/roadmap">Season Roadmap</Link>
         </div>
 
-        <Link href="/workspace" className="navCta">Open CoachVault</Link>
+        <div className="homeNavActions">
+          <Link href="/roadmap" className="homeSecondaryCta">Director Roadmap</Link>
+          <Link href="/workspace" className="navCta">Open CoachVault</Link>
+        </div>
       </nav>
 
       <section className="heroSection">
@@ -246,7 +250,7 @@ export default function HomePage() {
               <span className="pathNum">0{index + 1}</span>
               <h3>{path.title}</h3>
               <p>{path.text}</p>
-              <Link href={index === 0 ? '/workspace' : '#system'}>{path.cta} →</Link>
+              <Link href={index === 0 ? '/workspace' : index === 1 ? '/roadmap' : '#system'}>{path.cta} →</Link>
             </article>
           ))}
         </div>

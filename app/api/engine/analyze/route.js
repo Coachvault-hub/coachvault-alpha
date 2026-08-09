@@ -705,7 +705,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.6.5 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.7.0 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -734,7 +734,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.6.5-cpc",
+  "engineVersion":"3.7.0-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -1010,6 +1010,7 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
 
     const hasSocialThumbnail = mode === 'link' && ['TikTok','Instagram'].includes(sourceMeta?.platform) && /^https?:\/\//.test(sourceMeta?.thumbnail || '');
     const model = (isPdfFile || hasSocialThumbnail) ? 'gpt-4.1' : 'gpt-4.1-mini';
+    const largePdfModel = 'gpt-5.6';
 
     let raw;
     let analysisText = '';
@@ -1024,7 +1025,7 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
           'Content-Type':'application/json'
         },
         body:JSON.stringify({
-          model,
+          model:largePdfModel,
           background:true,
           store:true,
           instructions:'Return valid JSON only. Match exact CVIL vocabulary. Produce a concise, field-ready Coach Practice Card. For PDFs, inspect both document text and page diagrams. For multi-drill PDFs, identify distinct drill candidates and use source evidence. Do not invent unsupported setup details.',
@@ -1050,15 +1051,30 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
         })
       });
 
-      raw = await response.json();
+      const openAiRawText = await response.text();
+      try {
+        raw = openAiRawText ? JSON.parse(openAiRawText) : {};
+      } catch (_) {
+        return NextResponse.json({
+          error:`Large-PDF startup returned a non-JSON response from OpenAI (${response.status}).`,
+          detail:openAiRawText?.slice(0,500) || 'Empty response body',
+          stage:'openai-background-start',
+          model:largePdfModel
+        }, { status:502 });
+      }
 
       if (!response.ok) {
         const message =
           raw?.error?.message ||
           raw?.error?.details ||
           raw?.message ||
-          'OpenAI large-PDF analysis failed.';
-        return NextResponse.json({ error:message }, { status:response.status });
+          `OpenAI large-PDF analysis failed (${response.status}).`;
+        return NextResponse.json({
+          error:message,
+          stage:'openai-background-start',
+          model:largePdfModel,
+          upstreamStatus:response.status
+        }, { status:response.status >= 500 ? 502 : response.status });
       }
 
       if (raw.status === 'queued' || raw.status === 'in_progress') {
@@ -1068,7 +1084,8 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
           pendingFileJob:{
             responseId:raw.id,
             fileMeta:uploadedFileMeta,
-            sourceMeta
+            sourceMeta,
+            model:largePdfModel
           }
         }, { status:202 });
       }

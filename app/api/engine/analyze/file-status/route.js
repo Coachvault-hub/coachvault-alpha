@@ -111,9 +111,9 @@ export async function POST(request) {
     };
 
     const diagnostics = {
-      engineVersion:analysis.engineVersion || '3.6.3-cpc',
+      engineVersion:analysis.engineVersion || '3.7.0-cpc',
       generatedAt:new Date().toISOString(),
-      model:data.model || 'gpt-4.1',
+      model:data.model || 'gpt-5.6',
       transcriptSource:'Private PDF — background Responses API file_url',
       uploadedFile:fileMeta || null,
       fileAnalysisMode:'Large PDF via signed private file_url + OpenAI background mode',
@@ -124,6 +124,9 @@ export async function POST(request) {
 
     return NextResponse.json({ analysis, sourceMeta, diagnostics });
   } catch (error) {
-    return NextResponse.json({ error:error?.message || 'Unexpected large-document polling error.' }, { status:500 });
+    return NextResponse.json({
+      error:error?.message || 'Unexpected large-document polling error.',
+      stage:'openai-background-poll'
+    }, { status:500 });
   }
 }
