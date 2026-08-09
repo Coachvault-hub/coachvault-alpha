@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-3103-openai-file-transfer",
-  "version": "3.10.3",
+  "name": "coachvault-engine-3104-private-blob-status-read",
+  "version": "3.10.4",
   "private": true,
   "scripts": {
     "dev": "next dev",

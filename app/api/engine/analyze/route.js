@@ -529,26 +529,57 @@ export async function POST(request) {
         // Large private PDFs are read server-side with Vercel's authenticated
         // private-Blob SDK, then uploaded once to OpenAI's Files API.
         // OpenAI no longer needs to download anything from Vercel.
-        const blobResult = await get(blobPathname, {
+        let blobResult = await get(blobPathname, {
           access:'private',
           useCache:false
         });
 
-        if (!blobResult?.stream) {
+        // Vercel's get() returns a structured status. A missing stream is not
+        // enough information by itself (for example 304 responses have
+        // stream:null), so inspect statusCode before deciding what failed.
+        if (blobResult?.statusCode === 304 || (!blobResult?.stream && blobResult?.statusCode === 200)) {
+          // Retry once as an uncached fresh read.
+          blobResult = await get(blobPathname, {
+            access:'private',
+            useCache:false
+          });
+        }
+
+        if (blobResult?.statusCode !== 200 || !blobResult?.stream) {
           return NextResponse.json({
-            error:`CoachVault securely stored ${uploadedFileMeta.name}, but Vercel returned no readable stream for the private file.`,
-            code:'PRIVATE_BLOB_STREAM_MISSING',
-            stage:'private-blob-read'
+            error:`CoachVault securely stored ${uploadedFileMeta.name}, but Vercel could not reopen the private file (Blob status ${blobResult?.statusCode ?? 'unknown'}).`,
+            code:'PRIVATE_BLOB_READ_STATUS',
+            stage:'private-blob-read',
+            blobStatus:blobResult?.statusCode ?? null,
+            blobPathname,
+            hasStream:Boolean(blobResult?.stream)
           }, { status:502 });
         }
 
         const chunks = [];
-        const reader = blobResult.stream.getReader();
+        const stream = blobResult.stream;
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          if (value) chunks.push(Buffer.from(value));
+        // @vercel/blob can surface a Web ReadableStream in Vercel runtimes.
+        if (typeof stream.getReader === 'function') {
+          const reader = stream.getReader();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (value) chunks.push(Buffer.from(value));
+          }
+        // Be defensive for Node Readable/async-iterable implementations.
+        } else if (stream && typeof stream[Symbol.asyncIterator] === 'function') {
+          for await (const chunk of stream) {
+            if (chunk) chunks.push(Buffer.from(chunk));
+          }
+        } else {
+          return NextResponse.json({
+            error:`CoachVault reopened ${uploadedFileMeta.name}, but the returned Blob stream type was not readable by this runtime.`,
+            code:'PRIVATE_BLOB_STREAM_TYPE',
+            stage:'private-blob-read',
+            blobStatus:blobResult?.statusCode ?? null,
+            streamType:stream?.constructor?.name || typeof stream
+          }, { status:502 });
         }
 
         const fileBytes = Buffer.concat(chunks);
@@ -623,6 +654,7 @@ export async function POST(request) {
         }, { status:502 });
       }
 
+      body.blobPathname = blobPathname;
       body.openAiFileId = openAiFileId;
       body.uploadedBinary = null;
     }
@@ -777,7 +809,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.10.3 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.10.4 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -806,7 +838,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.10.3-cpc",
+  "engineVersion":"3.10.4-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -1157,7 +1189,8 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
             fileMeta:uploadedFileMeta,
             sourceMeta,
             model:largePdfModel,
-            openAiFileId:body.openAiFileId
+            openAiFileId:body.openAiFileId,
+            blobPathname:mode === 'blob-file' ? body.blobPathname || uploadedFileMeta?.blobPathname || null : null
           }
         }, { status:202 });
       }
