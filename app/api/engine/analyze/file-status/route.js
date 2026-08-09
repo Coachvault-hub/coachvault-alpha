@@ -111,13 +111,13 @@ export async function POST(request) {
     };
 
     const diagnostics = {
-      engineVersion:analysis.engineVersion || '3.10.2-cpc',
+      engineVersion:analysis.engineVersion || '3.10.3-cpc',
       generatedAt:new Date().toISOString(),
       model:data.model || 'gpt-5.6',
-      transcriptSource:'Private PDF — background Responses API file_url',
+      transcriptSource:'Private PDF — OpenAI Files API + background Responses API',
       uploadedFile:fileMeta || null,
-      fileAnalysisMode:'Large PDF via signed private file_url + OpenAI background mode',
-      fileTransport:'Vercel Private Blob signed PUT + temporary signed file_url',
+      fileAnalysisMode:'Large PDF via authenticated private Blob read + OpenAI Files API + background mode',
+      fileTransport:'Vercel Private Blob signed PUT + authenticated get() + OpenAI Files API',
       responseId,
       responseStatus:data.status
     };

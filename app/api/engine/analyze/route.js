@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { issueSignedToken, presignUrl } from '@vercel/blob';
+import { get, issueSignedToken, presignUrl } from '@vercel/blob';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -523,26 +523,92 @@ export async function POST(request) {
         }, { status:413 });
       }
 
-      let signedPrivateFileUrl = null;
+      let openAiFileId = null;
+
       try {
-        // Do not pull the large private PDF back through the Vercel Function.
-        // Mint a short-lived GET URL and pass it directly to the model's file_url input.
-        const readValidUntil = Date.now() + 10 * 60 * 1000;
-
-        const readToken = await issueSignedToken({
-          pathname: blobPathname,
-          operations:['get'],
-          validUntil: readValidUntil
-        });
-
-        const { presignedUrl } = await presignUrl(readToken, {
-          pathname: blobPathname,
-          operation:'get',
-          validUntil: readValidUntil,
+        // Large private PDFs are read server-side with Vercel's authenticated
+        // private-Blob SDK, then uploaded once to OpenAI's Files API.
+        // OpenAI no longer needs to download anything from Vercel.
+        const blobResult = await get(blobPathname, {
+          access:'private',
           useCache:false
         });
 
-        signedPrivateFileUrl = presignedUrl;
+        if (!blobResult?.stream) {
+          return NextResponse.json({
+            error:`CoachVault securely stored ${uploadedFileMeta.name}, but Vercel returned no readable stream for the private file.`,
+            code:'PRIVATE_BLOB_STREAM_MISSING',
+            stage:'private-blob-read'
+          }, { status:502 });
+        }
+
+        const chunks = [];
+        const reader = blobResult.stream.getReader();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) chunks.push(Buffer.from(value));
+        }
+
+        const fileBytes = Buffer.concat(chunks);
+
+        if (!fileBytes.length) {
+          return NextResponse.json({
+            error:`CoachVault securely stored ${uploadedFileMeta.name}, but the private PDF was empty when reopened.`,
+            code:'PRIVATE_BLOB_EMPTY',
+            stage:'private-blob-read'
+          }, { status:502 });
+        }
+
+        if (fileBytes.length > 10 * 1024 * 1024) {
+          return NextResponse.json({
+            error:'CoachVault currently supports large documents up to 10 MB.',
+            stage:'private-blob-read'
+          }, { status:413 });
+        }
+
+        const uploadForm = new FormData();
+        uploadForm.append(
+          'file',
+          new Blob([fileBytes], { type:uploadedFileMeta.type || 'application/pdf' }),
+          uploadedFileMeta.name
+        );
+        uploadForm.append('purpose', 'user_data');
+
+        const openAiFileResponse = await fetch('https://api.openai.com/v1/files', {
+          method:'POST',
+          headers:{
+            'Authorization':`Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body:uploadForm
+        });
+
+        const openAiFileRawText = await openAiFileResponse.text();
+        let openAiFileData = {};
+
+        try {
+          openAiFileData = openAiFileRawText ? JSON.parse(openAiFileRawText) : {};
+        } catch (_) {
+          return NextResponse.json({
+            error:`OpenAI file upload returned a non-JSON response (${openAiFileResponse.status}).`,
+            detail:openAiFileRawText?.slice(0,500) || 'Empty response body',
+            stage:'openai-file-upload'
+          }, { status:502 });
+        }
+
+        if (!openAiFileResponse.ok || !openAiFileData?.id) {
+          return NextResponse.json({
+            error:
+              openAiFileData?.error?.message ||
+              openAiFileData?.error?.details ||
+              `OpenAI file upload failed (${openAiFileResponse.status}).`,
+            stage:'openai-file-upload',
+            upstreamStatus:openAiFileResponse.status
+          }, { status:openAiFileResponse.status >= 500 ? 502 : openAiFileResponse.status });
+        }
+
+        openAiFileId = openAiFileData.id;
       } catch (error) {
         const detail =
           error?.message ||
@@ -551,19 +617,13 @@ export async function POST(request) {
           String(error || '');
 
         return NextResponse.json({
-          error:`CoachVault securely stored ${uploadedFileMeta.name}, but could not create the temporary private analysis link. ${detail}`.trim(),
-          code:'SIGNED_PRIVATE_URL_FAILED',
-          stage:'private-url'
+          error:`CoachVault securely stored ${uploadedFileMeta.name}, but could not transfer the private PDF into the analysis service. ${detail}`.trim(),
+          code:'PRIVATE_PDF_TRANSFER_FAILED',
+          stage:'private-blob-read'
         }, { status:502 });
       }
 
-      body.signedPrivateFileUrl = signedPrivateFileUrl;
-
-      // IMPORTANT:
-      // Blob-backed files are not downloaded into this Vercel Function.
-      // There is intentionally no `bytes` variable here. The large PDF stays
-      // in private Blob storage and OpenAI receives only the short-lived
-      // signed file URL.
+      body.openAiFileId = openAiFileId;
       body.uploadedBinary = null;
     }
   }
@@ -584,7 +644,7 @@ export async function POST(request) {
     } : null;
     let transcriptSource = text ? 'Pasted text' : transcript ? 'Pasted fallback transcript' : uploadedFileMeta ? 'Uploaded file' : 'Unknown';
     const hasDirectBinaryFile = mode === 'file' && uploadedFileMeta && body.uploadedBinary;
-    const hasSignedBlobFile = mode === 'blob-file' && uploadedFileMeta && body.signedPrivateFileUrl;
+    const hasSignedBlobFile = mode === 'blob-file' && uploadedFileMeta && body.openAiFileId;
     const hasBinaryFile = Boolean(hasDirectBinaryFile || hasSignedBlobFile);
     const isPdfFile = hasBinaryFile && (
       uploadedFileMeta.type === 'application/pdf' ||
@@ -717,7 +777,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.10.2 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.10.3 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -746,7 +806,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.10.2-cpc",
+  "engineVersion":"3.10.3-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -1027,9 +1087,9 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
     let raw;
     let analysisText = '';
 
-    if (isPdfFile && mode === 'blob-file' && body.signedPrivateFileUrl) {
-      // Large PDF: use OpenAI Responses API file_url input.
-      // This avoids downloading the private PDF into the Vercel Function.
+    if (isPdfFile && mode === 'blob-file' && body.openAiFileId) {
+      // Large PDF: use OpenAI Responses API with a Files API file_id.
+      // The PDF was already transferred from private Blob into OpenAI.
       const response = await fetch('https://api.openai.com/v1/responses', {
         method:'POST',
         headers:{
@@ -1047,8 +1107,7 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
               content:[
                 {
                   type:'input_file',
-                  file_url:body.signedPrivateFileUrl,
-                  detail:'high'
+                  file_id:body.openAiFileId
                 },
                 {
                   type:'input_text',
@@ -1097,7 +1156,8 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
             responseId:raw.id,
             fileMeta:uploadedFileMeta,
             sourceMeta,
-            model:largePdfModel
+            model:largePdfModel,
+            openAiFileId:body.openAiFileId
           }
         }, { status:202 });
       }
@@ -1175,9 +1235,9 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
     if (uploadedFileMeta) {
       diagnostics.uploadedFile = uploadedFileMeta;
       diagnostics.fileAnalysisMode = isPdfFile
-        ? (mode === 'blob-file' ? 'Large PDF via signed private PUT + OpenAI file_url multimodal input' : 'PDF multimodal file input')
+        ? (mode === 'blob-file' ? 'Large PDF via private Blob read + OpenAI Files API + background multimodal input' : 'PDF multimodal file input')
         : (mode === 'blob-file' ? 'Large file via signed private PUT + signed private GET' : 'Text extraction');
-      diagnostics.fileTransport = mode === 'blob-file' ? 'Vercel Private Blob signed PUT + temporary signed file_url' : 'Direct request upload';
+      diagnostics.fileTransport = mode === 'blob-file' ? 'Vercel Private Blob signed PUT + authenticated get() + OpenAI Files API' : 'Direct request upload';
       diagnostics.filePrivacy = mode === 'blob-file' ? 'Private storage' : 'Request-scoped upload';
     }
     if (mode === 'link' && sourceMeta) {
