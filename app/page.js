@@ -65,7 +65,7 @@ export default function HomePage() {
         </div>
 
         <div className="homeNavActions">
-          <Link href="/roadmap" className="homeSecondaryCta">Director Roadmap</Link>
+          <Link href="/login" className="homeSecondaryCta">Sign In</Link>
           <Link href="/workspace" className="navCta">Open CoachVault</Link>
         </div>
       </nav>

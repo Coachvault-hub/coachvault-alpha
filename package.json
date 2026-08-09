@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-370-unified-site-roadmap-pdf",
-  "version": "3.7.0",
+  "name": "coachvault-engine-380-accounts-orgs-native-forms",
+  "version": "3.8.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,6 +11,7 @@
     "next": "14.2.31",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "@vercel/blob": "^2.6.1"
+    "@vercel/blob": "^2.6.1",
+    "@supabase/supabase-js": "^2.57.4"
   }
 }
