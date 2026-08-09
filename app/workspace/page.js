@@ -1,6 +1,6 @@
 'use client';
 
-import { CVIL } from './cvil';
+import { CVIL } from '../cvil';
 import { useEffect, useMemo, useState } from 'react';
 
 
@@ -168,7 +168,7 @@ function friendlyEngineError(error) {
   const message = readableError(error);
 
   if (/Failed to retrieve the client token|client token/i.test(message)) {
-    return 'CoachVault encountered the legacy Vercel client-token upload path. Engine 3.6.4 no longer uses that method for large documents; redeploy this version and retry the file.';
+    return 'CoachVault encountered the legacy Vercel client-token upload path. Engine 3.6.5 no longer uses that method for large documents; redeploy this version and retry the file.';
   }
 
   if (/BLOB_READ_WRITE_TOKEN|blob.*token|token.*blob/i.test(message)) {
@@ -176,7 +176,7 @@ function friendlyEngineError(error) {
   }
 
   if (/SIGNED_PRIVATE_READ_FAILED|signed private read|temporary private read link/i.test(message)) {
-    return 'Engine 3.6.4 no longer downloads the large private PDF through the Vercel Function. The model now reads the PDF directly from a short-lived signed private URL.';
+    return 'Engine 3.6.5 no longer downloads the large private PDF through the Vercel Function. The model now reads the PDF directly from a short-lived signed private URL.';
   }
 
   if (/SIGNED_PRIVATE_URL_FAILED|temporary private analysis link/i.test(message)) {
@@ -184,7 +184,7 @@ function friendlyEngineError(error) {
   }
 
   if (/PRIVATE_BLOB_RETRIEVAL_FAILED|could not retrieve the private file|could not open the private file/i.test(message)) {
-    return 'CoachVault stored the document privately, but the Engine could not reopen it for analysis. Engine 3.6.4 uses a signed private read instead of the previous direct read path.';
+    return 'CoachVault stored the document privately, but the Engine could not reopen it for analysis. Engine 3.6.5 uses a signed private read instead of the previous direct read path.';
   }
 
   if (/rate.limit|429|too many requests/i.test(message)) {
@@ -721,7 +721,7 @@ export default function Home() {
       <header className="globalHeader">
         <div className="brandLockup branded">
           <img src="/coachvault-logo.png" alt="CoachVault" className="coachVaultLogo" />
-          <small className="engineVersion">Engine 3.6.4</small>
+          <small className="engineVersion">Engine 3.6.5</small>
         </div>
         <div className="globalSearch">Search drills, skills, and sources</div>
         <div className="headerActions">

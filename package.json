@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-364-public-homepage",
-  "version": "3.6.4",
+  "name": "coachvault-engine-365-workspace-import-fix",
+  "version": "3.6.5",
   "private": true,
   "scripts": {
     "dev": "next dev",
