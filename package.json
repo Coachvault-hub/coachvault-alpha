@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-361-signed-private-read",
-  "version": "3.6.1",
+  "name": "coachvault-engine-362-private-file-url-analysis",
+  "version": "3.6.2",
   "private": true,
   "scripts": {
     "dev": "next dev",

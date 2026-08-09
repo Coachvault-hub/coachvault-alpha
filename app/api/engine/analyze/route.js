@@ -490,11 +490,9 @@ export async function POST(request) {
       const bytes = Buffer.from(await uploadedFile.arrayBuffer());
       const filename = uploadedFileMeta.name.toLowerCase();
 
-      if (uploadedFileMeta.type.startsWith('text/') || filename.endsWith('.txt')) {
-        body.text = bytes.toString('utf8');
-      } else {
-        body.uploadedBinary = bytes.toString('base64');
-      }
+      // Large Blob-backed files stay in private storage. The model receives
+      // a short-lived signed file URL instead of base64 data.
+      body.uploadedBinary = null;
     }
   } else {
     body = await request.json();
@@ -513,12 +511,11 @@ export async function POST(request) {
         }, { status:413 });
       }
 
-      let bytes;
+      let signedPrivateFileUrl = null;
       try {
-        // Use the same signed-URL architecture for the private read that we use
-        // for the successful browser upload. This avoids relying on a direct
-        // private `get()` call immediately after the write.
-        const readValidUntil = Date.now() + 5 * 60 * 1000;
+        // Do not pull the large private PDF back through the Vercel Function.
+        // Mint a short-lived GET URL and pass it directly to the model's file_url input.
+        const readValidUntil = Date.now() + 10 * 60 * 1000;
 
         const readToken = await issueSignedToken({
           pathname: blobPathname,
@@ -526,36 +523,14 @@ export async function POST(request) {
           validUntil: readValidUntil
         });
 
-        const { presignedUrl: signedReadUrl } = await presignUrl(readToken, {
+        const { presignedUrl } = await presignUrl(readToken, {
           pathname: blobPathname,
           operation:'get',
           validUntil: readValidUntil,
           useCache:false
         });
 
-        const blobResponse = await fetch(signedReadUrl, {
-          method:'GET',
-          cache:'no-store'
-        });
-
-        if (!blobResponse.ok) {
-          const responseText = await blobResponse.text().catch(() => '');
-          return NextResponse.json({
-            error:`CoachVault securely stored ${uploadedFileMeta.name}, but the signed private read returned ${blobResponse.status}${responseText ? `: ${responseText.slice(0,300)}` : ''}.`,
-            code:'SIGNED_PRIVATE_READ_FAILED',
-            stage:'private-read'
-          }, { status:502 });
-        }
-
-        bytes = Buffer.from(await blobResponse.arrayBuffer());
-
-        if (!bytes.length) {
-          return NextResponse.json({
-            error:`CoachVault securely stored ${uploadedFileMeta.name}, but the private file was empty when the Engine opened it.`,
-            code:'SIGNED_PRIVATE_READ_EMPTY',
-            stage:'private-read'
-          }, { status:502 });
-        }
+        signedPrivateFileUrl = presignedUrl;
       } catch (error) {
         const detail =
           error?.message ||
@@ -564,11 +539,13 @@ export async function POST(request) {
           String(error || '');
 
         return NextResponse.json({
-          error:`CoachVault securely stored ${uploadedFileMeta.name}, but could not create or use the temporary private read link. ${detail}`.trim(),
-          code:'SIGNED_PRIVATE_READ_FAILED',
-          stage:'private-read'
+          error:`CoachVault securely stored ${uploadedFileMeta.name}, but could not create the temporary private analysis link. ${detail}`.trim(),
+          code:'SIGNED_PRIVATE_URL_FAILED',
+          stage:'private-url'
         }, { status:502 });
       }
+
+      body.signedPrivateFileUrl = signedPrivateFileUrl;
       const filename = uploadedFileMeta.name.toLowerCase();
 
       if (uploadedFileMeta.type.startsWith('text/') || filename.endsWith('.txt')) {
@@ -594,7 +571,9 @@ export async function POST(request) {
       size: uploadedFileMeta.size
     } : null;
     let transcriptSource = text ? 'Pasted text' : transcript ? 'Pasted fallback transcript' : uploadedFileMeta ? 'Uploaded file' : 'Unknown';
-    const hasBinaryFile = ['file','blob-file'].includes(mode) && uploadedFileMeta && body.uploadedBinary;
+    const hasDirectBinaryFile = mode === 'file' && uploadedFileMeta && body.uploadedBinary;
+    const hasSignedBlobFile = mode === 'blob-file' && uploadedFileMeta && body.signedPrivateFileUrl;
+    const hasBinaryFile = Boolean(hasDirectBinaryFile || hasSignedBlobFile);
     const isPdfFile = hasBinaryFile && (
       uploadedFileMeta.type === 'application/pdf' ||
       uploadedFileMeta.name.toLowerCase().endsWith('.pdf')
@@ -726,7 +705,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.6.1 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.6.2 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -755,7 +734,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.6.1-cpc",
+  "engineVersion":"3.6.2-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -1032,50 +1011,114 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
     const hasSocialThumbnail = mode === 'link' && ['TikTok','Instagram'].includes(sourceMeta?.platform) && /^https?:\/\//.test(sourceMeta?.thumbnail || '');
     const model = (isPdfFile || hasSocialThumbnail) ? 'gpt-4.1' : 'gpt-4.1-mini';
 
-    const userContent = isPdfFile
-      ? [
-          {
-            type: 'file',
-            file: {
-              filename: uploadedFileMeta.name,
-              file_data: `data:application/pdf;base64,${body.uploadedBinary}`
+    let raw;
+    let analysisText = '';
+
+    if (isPdfFile && mode === 'blob-file' && body.signedPrivateFileUrl) {
+      // Large PDF: use OpenAI Responses API file_url input.
+      // This avoids downloading the private PDF into the Vercel Function.
+      const response = await fetch('https://api.openai.com/v1/responses', {
+        method:'POST',
+        headers:{
+          'Authorization':`Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({
+          model,
+          instructions:'Return valid JSON only. Match exact CVIL vocabulary. Produce a concise, field-ready Coach Practice Card. For PDFs, inspect both document text and page diagrams. For multi-drill PDFs, identify the resource shown by the strongest complete base setup and do not invent unsupported setup details.',
+          input:[
+            {
+              role:'user',
+              content:[
+                {
+                  type:'input_file',
+                  file_url:body.signedPrivateFileUrl,
+                  filename:uploadedFileMeta.name
+                },
+                {
+                  type:'input_text',
+                  text:prompt
+                }
+              ]
             }
-          },
-          {
-            type: 'text',
-            text: prompt
+          ],
+          text:{
+            format:{ type:'json_object' }
           }
-        ]
-      : hasSocialThumbnail
+        })
+      });
+
+      raw = await response.json();
+
+      if (!response.ok) {
+        const message =
+          raw?.error?.message ||
+          raw?.error?.details ||
+          raw?.message ||
+          'OpenAI large-PDF analysis failed.';
+        return NextResponse.json({ error:message }, { status:response.status });
+      }
+
+      analysisText = (raw.output || [])
+        .flatMap(item => item?.content || [])
+        .filter(item => item?.type === 'output_text' && item?.text)
+        .map(item => item.text)
+        .join('\n')
+        .trim();
+
+      if (!analysisText) {
+        return NextResponse.json({
+          error:'OpenAI received the private PDF but returned no structured analysis.'
+        }, { status:502 });
+      }
+    } else {
+      const userContent = isPdfFile
         ? [
-            { type:'text', text:prompt },
-            { type:'image_url', image_url:{ url:sourceMeta.thumbnail, detail:'high' } }
+            {
+              type: 'file',
+              file: {
+                filename: uploadedFileMeta.name,
+                file_data: `data:application/pdf;base64,${body.uploadedBinary}`
+              }
+            },
+            {
+              type: 'text',
+              text: prompt
+            }
           ]
-        : prompt;
+        : hasSocialThumbnail
+          ? [
+              { type:'text', text:prompt },
+              { type:'image_url', image_url:{ url:sourceMeta.thumbnail, detail:'high' } }
+            ]
+          : prompt;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method:'POST',
-      headers:{
-        'Authorization':`Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({
-        model,
-        temperature:0.05,
-        response_format:{ type:'json_object' },
-        messages:[
-          { role:'system', content:'Return valid JSON only. Match exact CVIL vocabulary. Produce a concise, field-ready Coach Practice Card. Mark inferred setup fields as Estimated. For PDFs, inspect both document text and page diagrams. For social video sources, prioritize explicit on-screen text, full-video visual evidence, and repeated demonstrated actions over metadata. Never invent generic setup instructions when the evidence does not support them. Field Setup must come from the earliest complete stable setup frame; later frames describe progression unless the source indicates otherwise.' },
-          { role:'user', content:userContent }
-        ]
-      })
-    });
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method:'POST',
+        headers:{
+          'Authorization':`Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({
+          model,
+          temperature:0.05,
+          response_format:{ type:'json_object' },
+          messages:[
+            { role:'system', content:'Return valid JSON only. Match exact CVIL vocabulary. Produce a concise, field-ready Coach Practice Card. Mark inferred setup fields as Estimated. For PDFs, inspect both document text and page diagrams. For social video sources, prioritize explicit on-screen text, full-video visual evidence, and repeated demonstrated actions over metadata. Never invent generic setup instructions when the evidence does not support them. Field Setup must come from the earliest complete stable setup frame; later frames describe progression unless the source indicates otherwise.' },
+            { role:'user', content:userContent }
+          ]
+        })
+      });
 
-    const raw = await response.json();
-    if (!response.ok) {
-      return NextResponse.json({ error:raw?.error?.message || 'OpenAI analysis failed.' }, { status:response.status });
+      raw = await response.json();
+      if (!response.ok) {
+        return NextResponse.json({ error:raw?.error?.message || 'OpenAI analysis failed.' }, { status:response.status });
+      }
+
+      analysisText = raw.choices?.[0]?.message?.content || '';
     }
 
-    let analysis = JSON.parse(raw.choices?.[0]?.message?.content);
+    let analysis = JSON.parse(analysisText);
     analysis = reconcileAgainstCVIL(analysis, standards);
 
     const diagnosticSourceText = sourceText || (isPdfFile ? `[PDF analyzed directly: ${uploadedFileMeta.name}]` : '');
@@ -1089,9 +1132,9 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
     if (uploadedFileMeta) {
       diagnostics.uploadedFile = uploadedFileMeta;
       diagnostics.fileAnalysisMode = isPdfFile
-        ? (mode === 'blob-file' ? 'Large PDF via signed private PUT + signed private GET + multimodal file input' : 'PDF multimodal file input')
+        ? (mode === 'blob-file' ? 'Large PDF via signed private PUT + OpenAI file_url multimodal input' : 'PDF multimodal file input')
         : (mode === 'blob-file' ? 'Large file via signed private PUT + signed private GET' : 'Text extraction');
-      diagnostics.fileTransport = mode === 'blob-file' ? 'Vercel Private Blob signed PUT + signed GET' : 'Direct request upload';
+      diagnostics.fileTransport = mode === 'blob-file' ? 'Vercel Private Blob signed PUT + temporary signed file_url' : 'Direct request upload';
       diagnostics.filePrivacy = mode === 'blob-file' ? 'Private storage' : 'Request-scoped upload';
     }
     if (mode === 'link' && sourceMeta) {
