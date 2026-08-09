@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-3105-blob-discovery-recovery",
-  "version": "3.10.5",
+  "name": "coachvault-engine-3106-deployment-verification",
+  "version": "3.10.6",
   "private": true,
   "scripts": {
     "dev": "next dev",

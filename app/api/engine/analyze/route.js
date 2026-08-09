@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { get, issueSignedToken, presignUrl } from '@vercel/blob';
+import { get, list, issueSignedToken, presignUrl } from '@vercel/blob';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -529,30 +529,98 @@ export async function POST(request) {
         // Large private PDFs are read server-side with Vercel's authenticated
         // private-Blob SDK, then uploaded once to OpenAI's Files API.
         // OpenAI no longer needs to download anything from Vercel.
-        let blobResult = await get(blobPathname, {
-          access:'private',
-          useCache:false
-        });
+        let resolvedBlobIdentifier = blobPathname;
+        let blobResult = null;
 
-        // Vercel's get() returns a structured status. A missing stream is not
-        // enough information by itself (for example 304 responses have
-        // stream:null), so inspect statusCode before deciding what failed.
+        // A signed browser PUT can complete just before the object becomes
+        // visible to the subsequent Function invocation. Retry the exact
+        // pathname briefly before treating null as a real miss.
+        for (let attempt = 0; attempt < 4; attempt += 1) {
+          blobResult = await get(resolvedBlobIdentifier, {
+            access:'private',
+            useCache:false
+          });
+
+          if (blobResult?.statusCode === 200 && blobResult?.stream) break;
+
+          if (blobResult?.statusCode === 304) {
+            blobResult = await get(resolvedBlobIdentifier, {
+              access:'private',
+              useCache:false
+            });
+            if (blobResult?.statusCode === 200 && blobResult?.stream) break;
+          }
+
+          if (attempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+          }
+        }
+
+        // Per Vercel's SDK, get() returns null when the blob is not found.
+        // If that happens, inspect the private ingestion prefix and recover
+        // using Vercel's actual stored blob metadata instead of assuming the
+        // requested pathname is the final identifier.
+        let blobDiscovery = null;
+
+        if (!blobResult) {
+          try {
+            const listed = await list({
+              prefix:'coachvault-ingestion/',
+              limit:100,
+              access:'private'
+            });
+
+            const candidates = Array.isArray(listed?.blobs) ? listed.blobs : [];
+            const wantedName = String(uploadedFileMeta.name || '').toLowerCase();
+            const wantedPath = String(blobPathname || '').toLowerCase();
+
+            const exact =
+              candidates.find(blob => String(blob.pathname || '').toLowerCase() === wantedPath) ||
+              candidates.find(blob => wantedName && String(blob.pathname || '').toLowerCase().endsWith(wantedName)) ||
+              candidates.find(blob => wantedName && String(blob.url || '').toLowerCase().includes(encodeURIComponent(wantedName).toLowerCase()));
+
+            blobDiscovery = {
+              requestedPathname:blobPathname,
+              listedCount:candidates.length,
+              matchedPathname:exact?.pathname || null,
+              matchedUrl:exact?.url || null
+            };
+
+            if (exact) {
+              resolvedBlobIdentifier = exact.pathname || exact.url;
+              blobResult = await get(exact.url || exact.pathname, {
+                access:'private',
+                useCache:false
+              });
+            }
+          } catch (listError) {
+            blobDiscovery = {
+              requestedPathname:blobPathname,
+              listError:listError?.message || String(listError || '')
+            };
+          }
+        }
+
         if (blobResult?.statusCode === 304 || (!blobResult?.stream && blobResult?.statusCode === 200)) {
-          // Retry once as an uncached fresh read.
-          blobResult = await get(blobPathname, {
+          blobResult = await get(resolvedBlobIdentifier, {
             access:'private',
             useCache:false
           });
         }
 
         if (blobResult?.statusCode !== 200 || !blobResult?.stream) {
+          const notFound = !blobResult;
           return NextResponse.json({
-            error:`CoachVault securely stored ${uploadedFileMeta.name}, but Vercel could not reopen the private file (Blob status ${blobResult?.statusCode ?? 'unknown'}).`,
-            code:'PRIVATE_BLOB_READ_STATUS',
+            error:notFound
+              ? `CoachVault securely uploaded ${uploadedFileMeta.name}, but the analysis Function could not find that object in the connected private Blob store.`
+              : `CoachVault found ${uploadedFileMeta.name}, but Vercel could not return a readable private-file response (Blob status ${blobResult?.statusCode ?? 'unknown'}).`,
+            code:notFound ? 'PRIVATE_BLOB_NOT_FOUND' : 'PRIVATE_BLOB_READ_STATUS',
             stage:'private-blob-read',
             blobStatus:blobResult?.statusCode ?? null,
-            blobPathname,
-            hasStream:Boolean(blobResult?.stream)
+            requestedBlobPathname:blobPathname,
+            resolvedBlobIdentifier,
+            hasStream:Boolean(blobResult?.stream),
+            blobDiscovery
           }, { status:502 });
         }
 
@@ -655,6 +723,7 @@ export async function POST(request) {
       }
 
       body.blobPathname = blobPathname;
+      body.resolvedBlobIdentifier = resolvedBlobIdentifier;
       body.openAiFileId = openAiFileId;
       body.uploadedBinary = null;
     }
@@ -809,7 +878,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.10.4 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.10.6 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -838,7 +907,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.10.4-cpc",
+  "engineVersion":"3.10.6-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -1190,7 +1259,8 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
             sourceMeta,
             model:largePdfModel,
             openAiFileId:body.openAiFileId,
-            blobPathname:mode === 'blob-file' ? body.blobPathname || uploadedFileMeta?.blobPathname || null : null
+            blobPathname:mode === 'blob-file' ? body.blobPathname || uploadedFileMeta?.blobPathname || null : null,
+            resolvedBlobIdentifier:mode === 'blob-file' ? body.resolvedBlobIdentifier || null : null
           }
         }, { status:202 });
       }
