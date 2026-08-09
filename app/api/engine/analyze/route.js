@@ -490,12 +490,24 @@ export async function POST(request) {
       const bytes = Buffer.from(await uploadedFile.arrayBuffer());
       const filename = uploadedFileMeta.name.toLowerCase();
 
-      // Large Blob-backed files stay in private storage. The model receives
-      // a short-lived signed file URL instead of base64 data.
-      body.uploadedBinary = null;
+      // Direct uploads are only used for smaller files that fit safely inside
+      // the Vercel request limit. Preserve their bytes for text/PDF analysis.
+      if (uploadedFileMeta.type.startsWith('text/') || filename.endsWith('.txt')) {
+        body.text = bytes.toString('utf8');
+      } else {
+        body.uploadedBinary = bytes.toString('base64');
+      }
     }
   } else {
-    body = await request.json();
+    try {
+      body = await request.json();
+    } catch (error) {
+      return NextResponse.json({
+        error:'CoachVault could not read the analysis request.',
+        detail:error?.message || String(error || ''),
+        stage:'request-parse'
+      }, { status:400 });
+    }
 
     if (body.mode === 'blob-file' && body.blobPathname && body.fileMeta) {
       blobPathname = body.blobPathname;
@@ -546,13 +558,13 @@ export async function POST(request) {
       }
 
       body.signedPrivateFileUrl = signedPrivateFileUrl;
-      const filename = uploadedFileMeta.name.toLowerCase();
 
-      if (uploadedFileMeta.type.startsWith('text/') || filename.endsWith('.txt')) {
-        body.text = bytes.toString('utf8');
-      } else {
-        body.uploadedBinary = bytes.toString('base64');
-      }
+      // IMPORTANT:
+      // Blob-backed files are not downloaded into this Vercel Function.
+      // There is intentionally no `bytes` variable here. The large PDF stays
+      // in private Blob storage and OpenAI receives only the short-lived
+      // signed file URL.
+      body.uploadedBinary = null;
     }
   }
 
@@ -705,7 +717,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.10.1 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.10.2 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -734,7 +746,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.10.1-cpc",
+  "engineVersion":"3.10.2-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
