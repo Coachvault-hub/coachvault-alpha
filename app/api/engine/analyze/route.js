@@ -705,7 +705,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.6.2 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.6.4 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -734,7 +734,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.6.2-cpc",
+  "engineVersion":"3.6.4-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
@@ -1025,7 +1025,9 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
         },
         body:JSON.stringify({
           model,
-          instructions:'Return valid JSON only. Match exact CVIL vocabulary. Produce a concise, field-ready Coach Practice Card. For PDFs, inspect both document text and page diagrams. For multi-drill PDFs, identify the resource shown by the strongest complete base setup and do not invent unsupported setup details.',
+          background:true,
+          store:true,
+          instructions:'Return valid JSON only. Match exact CVIL vocabulary. Produce a concise, field-ready Coach Practice Card. For PDFs, inspect both document text and page diagrams. For multi-drill PDFs, identify distinct drill candidates and use source evidence. Do not invent unsupported setup details.',
           input:[
             {
               role:'user',
@@ -1033,7 +1035,7 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
                 {
                   type:'input_file',
                   file_url:body.signedPrivateFileUrl,
-                  filename:uploadedFileMeta.name
+                  detail:'high'
                 },
                 {
                   type:'input_text',
@@ -1057,6 +1059,18 @@ ${sourceText ? sourceText.slice(0, 50000) : `[Uploaded PDF: ${uploadedFileMeta?.
           raw?.message ||
           'OpenAI large-PDF analysis failed.';
         return NextResponse.json({ error:message }, { status:response.status });
+      }
+
+      if (raw.status === 'queued' || raw.status === 'in_progress') {
+        return NextResponse.json({
+          status:'processing',
+          message:'CoachVault securely uploaded the PDF and started background document analysis.',
+          pendingFileJob:{
+            responseId:raw.id,
+            fileMeta:uploadedFileMeta,
+            sourceMeta
+          }
+        }, { status:202 });
       }
 
       analysisText = (raw.output || [])

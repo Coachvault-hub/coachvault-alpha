@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-362-private-file-url-analysis",
-  "version": "3.6.2",
+  "name": "coachvault-engine-364-public-homepage",
+  "version": "3.6.4",
   "private": true,
   "scripts": {
     "dev": "next dev",
