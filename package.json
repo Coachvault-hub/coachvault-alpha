@@ -1,6 +1,6 @@
 {
-  "name": "coachvault-engine-3100-form-sharing",
-  "version": "3.10.0",
+  "name": "coachvault-engine-3101-form-sharing-build-fix",
+  "version": "3.10.1",
   "private": true,
   "scripts": {
     "dev": "next dev",

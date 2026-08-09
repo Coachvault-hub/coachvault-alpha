@@ -522,11 +522,8 @@ export default function SeasonRoadmapPage() {
                       )}
                     </div>
                   </article>
-                ))})} placeholder="Options separated by commas"/>
-                      )}
-                    </div>
-                  </article>
                 ))}
+                
               </div>
               <button type="button" className="addFieldBtn" onClick={addField}>+ Add Question or Section</button>
               <footer><button type="button" onClick={()=>setFormBuilderOpen(false)}>Cancel</button><button className="saveFormBtn" type="submit">Save CoachVault Form</button></footer>

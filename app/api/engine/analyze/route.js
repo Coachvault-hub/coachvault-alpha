@@ -705,7 +705,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.10.0 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.10.1 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -734,7 +734,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.10.0-cpc",
+  "engineVersion":"3.10.1-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",
