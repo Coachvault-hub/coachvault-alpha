@@ -1,15 +1,7 @@
-CoachVault Engine 3.10.6
-Build ID: 3106-A
+CoachVault Engine 3.10.7
+Build ID: 3107-BLOB
 
-DEPLOYMENT CHECK:
-1. Workspace top-left must show:
-   Engine 3.10.6 · BUILD 3106-A
-
-2. Open:
-   /api/build
-
-Expected JSON:
-engineVersion: 3.10.6
-build: 3106-A
-
-Do not test the large PDF until BOTH checks show 3.10.6 / 3106-A.
+VERIFY:
+- /workspace => Engine 3.10.7 · BUILD 3107-BLOB
+- /api/build => 3.10.7 / 3107-BLOB
+- /api/blob-status => token/store diagnostics

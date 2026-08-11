@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { get, list, issueSignedToken, presignUrl } from '@vercel/blob';
+import { assertCoachVaultBlobToken, blobTokenFingerprint, blobTokenSource } from '../../../lib/blobServer';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -470,6 +471,18 @@ async function getSourceMeta(url) {
 }
 
 export async function POST(request) {
+  let coachVaultBlobToken;
+  try {
+    coachVaultBlobToken = assertCoachVaultBlobToken();
+  } catch (error) {
+    return NextResponse.json({
+      error:error?.message || 'CoachVault Blob token is missing.',
+      code:error?.code || 'BLOB_TOKEN_MISSING',
+      stage:'blob-auth'
+    }, { status:500 });
+  }
+  const blobTokenId = blobTokenFingerprint(coachVaultBlobToken);
+  const blobTokenEnv = blobTokenSource();
   const contentType = request.headers.get('content-type') || '';
   let uploadedFile = null;
   let uploadedFileMeta = null;
@@ -537,6 +550,7 @@ export async function POST(request) {
         // pathname briefly before treating null as a real miss.
         for (let attempt = 0; attempt < 4; attempt += 1) {
           blobResult = await get(resolvedBlobIdentifier, {
+            token:coachVaultBlobToken,
             access:'private',
             useCache:false
           });
@@ -545,6 +559,7 @@ export async function POST(request) {
 
           if (blobResult?.statusCode === 304) {
             blobResult = await get(resolvedBlobIdentifier, {
+              token:coachVaultBlobToken,
               access:'private',
               useCache:false
             });
@@ -565,6 +580,7 @@ export async function POST(request) {
         if (!blobResult) {
           try {
             const listed = await list({
+              token:coachVaultBlobToken,
               prefix:'coachvault-ingestion/',
               limit:100,
               access:'private'
@@ -589,6 +605,7 @@ export async function POST(request) {
             if (exact) {
               resolvedBlobIdentifier = exact.pathname || exact.url;
               blobResult = await get(exact.url || exact.pathname, {
+                token:coachVaultBlobToken,
                 access:'private',
                 useCache:false
               });
@@ -603,6 +620,7 @@ export async function POST(request) {
 
         if (blobResult?.statusCode === 304 || (!blobResult?.stream && blobResult?.statusCode === 200)) {
           blobResult = await get(resolvedBlobIdentifier, {
+            token:coachVaultBlobToken,
             access:'private',
             useCache:false
           });
@@ -620,7 +638,9 @@ export async function POST(request) {
             requestedBlobPathname:blobPathname,
             resolvedBlobIdentifier,
             hasStream:Boolean(blobResult?.stream),
-            blobDiscovery
+            blobDiscovery,
+            blobTokenId,
+            blobTokenEnv
           }, { status:502 });
         }
 
@@ -878,7 +898,7 @@ export async function POST(request) {
 
     const library = standards.map(compactStandard);
 
-    const prompt = `You are CoachVault Engine 3.10.6 powered by CVIL.
+    const prompt = `You are CoachVault Engine 3.10.7 powered by CVIL.
 
 Your job is to convert coaching content into standardized coaching knowledge.
 
@@ -907,7 +927,7 @@ ${JSON.stringify(library)}
 
 Return strict JSON:
 {
-  "engineVersion":"3.10.6-cpc",
+  "engineVersion":"3.10.7-cpc",
   "title":"",
   "resourceType":"Drill",
   "summary":"",

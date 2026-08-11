@@ -1,5 +1,6 @@
 import { issueSignedToken, presignUrl } from '@vercel/blob';
 import { NextResponse } from 'next/server';
+import { assertCoachVaultBlobToken, blobTokenFingerprint, blobTokenSource } from '../../../lib/blobServer';
 
 export const runtime = 'nodejs';
 
@@ -26,6 +27,9 @@ function safeFilename(name='upload') {
 }
 
 export async function POST(request) {
+  const blobToken = assertCoachVaultBlobToken();
+  const tokenFingerprint = blobTokenFingerprint(blobToken);
+  const tokenSource = blobTokenSource();
   try {
     const { filename, contentType, size } = await request.json();
     const numericSize = Number(size || 0);
@@ -51,6 +55,7 @@ export async function POST(request) {
     const validUntil = Date.now() + 15 * 60 * 1000;
 
     const token = await issueSignedToken({
+      token:blobToken,
       pathname,
       operations:['put'],
       allowedContentTypes:[normalizedType],

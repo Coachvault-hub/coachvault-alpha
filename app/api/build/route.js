@@ -5,10 +5,10 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   return NextResponse.json({
     product:'CoachVault',
-    engineVersion:'3.10.6',
-    build:'3106-A',
-    blobRecovery:'retry + private list() discovery + OpenAI Files API',
-    expectedWorkspaceLabel:'Engine 3.10.6 · BUILD 3106-A'
+    engineVersion:'3.10.7',
+    build:'3107-BLOB',
+    blobRecovery:'explicit shared Blob token + store diagnostics + OpenAI Files API',
+    expectedWorkspaceLabel:'Engine 3.10.7 · BUILD 3107-BLOB'
   }, {
     headers:{
       'Cache-Control':'no-store, no-cache, must-revalidate'
