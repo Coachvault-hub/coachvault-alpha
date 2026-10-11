@@ -1126,6 +1126,21 @@ function PracticePlanCard({ plan, replaceIndex, setReplaceIndex, replacementOpti
             <div className="whyChosen"><b>Why this fits</b><span>{segment.drill.primarySkill?.name || 'Vault match'} supports this practice focus and sequence.</span></div>
             <button className="viewDrillBtn" onClick={()=>setPreviewIndex(previewIndex===index?null:index)}>ⓘ {previewIndex===index?'Hide drill':'View drill'}</button>
           </div>}
+
+          {segment.drill && <div className="planPrintDetails">
+            <div className="planPrintPurpose">
+              <b>Purpose</b>
+              <span>{practiceCardFor(segment.drill)?.purpose || segment.drill.summary || 'Purpose not yet documented.'}</span>
+            </div>
+            {(practiceCardFor(segment.drill)?.runTheDrill || []).length > 0 && <div className="planPrintSection">
+              <b>How to run it</b>
+              <ol>{practiceCardFor(segment.drill).runTheDrill.slice(0,5).map((step,i)=><li key={i}>{step}</li>)}</ol>
+            </div>}
+            {(practiceCardFor(segment.drill)?.coachFocus || []).length > 0 && <div className="planPrintSection">
+              <b>Coaching points</b>
+              <ul>{practiceCardFor(segment.drill).coachFocus.slice(0,4).map((cue,i)=><li key={i}>{cue}</li>)}</ul>
+            </div>}
+          </div>}
         </div>
 
         {segment.drill ? <div className="planApproval">
