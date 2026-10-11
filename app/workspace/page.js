@@ -309,7 +309,7 @@ export default function Home() {
   const [practicePrompt, setPracticePrompt] = useState('');
   const [practiceDuration, setPracticeDuration] = useState(90);
   const [practicePlayers, setPracticePlayers] = useState(18);
-  const [teamType, setTeamType] = useState('Select / Club');
+  const [teamType, setTeamType] = useState('Club');
   const [playerLevel, setPlayerLevel] = useState('Advanced');
   const [ageGroup, setAgeGroup] = useState('Juniors');
   const [practiceStyle, setPracticeStyle] = useState('Competitive / Game Speed');
@@ -393,7 +393,7 @@ export default function Home() {
     localStorage.setItem('coachvault-team-profile-alpha', JSON.stringify({
       teamType,
       playerLevel,
-      ageGroup,
+      ageGroup: teamType === 'Recreation' ? ageGroup : null,
       practiceStyle
     }));
   }, [teamType, playerLevel, ageGroup, practiceStyle]);
@@ -736,7 +736,7 @@ export default function Home() {
       duration:total,
       players:practicePlayers,
       focus:practicePrompt || 'Coach-selected practice focus',
-      teamProfile:{ teamType, playerLevel, ageGroup, practiceStyle },
+      teamProfile:{ teamType, playerLevel, ageGroup: teamType === 'Recreation' ? ageGroup : null, practiceStyle },
       segments: segments.map(segment => ({...segment, status:'review', locked:false}))
     });
     setReplaceIndex(null);
@@ -1004,9 +1004,9 @@ export default function Home() {
               </div>
               <div className="practiceBuilderGrid">
                 <label className="builderPrompt"><span>Practice focus</span><textarea value={practicePrompt} onChange={(e)=>setPracticePrompt(e.target.value)} placeholder="Example: 90 minute practice for 18 players. We need confidence passing under pressure, quicker decisions, and a competitive finish." /></label>
-                <label><span>Team type</span><select value={teamType} onChange={(e)=>setTeamType(e.target.value)}><option>Recreation</option><option>Select / Club</option><option>School</option><option>Elite</option></select></label>
+                <label><span>Team type</span><select value={teamType} onChange={(e)=>setTeamType(e.target.value)}><option>Recreation</option><option>Club</option></select></label>
                 <label><span>Player level</span><select value={playerLevel} onChange={(e)=>setPlayerLevel(e.target.value)}>{PLAYER_LEVELS.map(level=><option key={level}>{level}</option>)}</select></label>
-                <label><span>Age group</span><select value={ageGroup} onChange={(e)=>setAgeGroup(e.target.value)}><option>Pockets</option><option>Tykers</option><option>Lightning</option><option>Middies</option><option>Juniors</option><option>High School</option></select></label>
+                {teamType === 'Recreation' && <label><span>Age group</span><select value={ageGroup} onChange={(e)=>setAgeGroup(e.target.value)}><option>Pockets</option><option>Tykers</option><option>Lightning</option><option>Middies</option><option>Juniors</option><option>High School</option></select></label>}
                 <label><span>Practice style</span><select value={practiceStyle} onChange={(e)=>setPracticeStyle(e.target.value)}><option>Teaching / Controlled</option><option>Balanced</option><option>Competitive / Game Speed</option></select></label>
                 <label><span>Minutes</span><input type="number" min="30" max="180" value={practiceDuration} onChange={(e)=>setPracticeDuration(e.target.value)} /></label>
                 <label><span>Players</span><input type="number" min="4" max="60" value={practicePlayers} onChange={(e)=>setPracticePlayers(e.target.value)} /></label>
