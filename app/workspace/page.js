@@ -1,6 +1,7 @@
 'use client';
 
 import { CVIL } from '../cvil';
+import { CURATED_SEED_DRILLS } from '../data/curatedSeedDrills';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 
@@ -73,7 +74,7 @@ function provenanceLabel(value) {
   return value;
 }
 
-const seedDrills = [
+const foundationSeedDrills = [
   {
     id: 1,
     title: 'Ground Ball Advantage Drill',
@@ -133,6 +134,8 @@ const seedDrills = [
     updated: 'Foundation'
   }
 ];
+
+const seedDrills = [...foundationSeedDrills, ...CURATED_SEED_DRILLS];
 
 const skillFramework = {
   name: 'Ground Balls',
@@ -251,7 +254,23 @@ export default function Home() {
           folder: suggestedFolderFor(item),
           coachPracticeCard: item.coachPracticeCard || makeLegacyPracticeCard(item)
         }));
-        setDrills(migrated);
+        const existingKeys = new Set(
+          migrated.map((item) => String(item.drillId || item.title || '').trim().toLowerCase())
+        );
+        const missingSeeds = seedDrills
+          .filter((item) => !existingKeys.has(String(item.drillId || item.title || '').trim().toLowerCase()))
+          .map((item) => ({
+            ...item,
+            folder: suggestedFolderFor(item),
+            coachPracticeCard: item.coachPracticeCard || makeLegacyPracticeCard(item)
+          }));
+        setDrills([...migrated, ...missingSeeds]);
+      } else {
+        setDrills(seedDrills.map((item) => ({
+          ...item,
+          folder: suggestedFolderFor(item),
+          coachPracticeCard: item.coachPracticeCard || makeLegacyPracticeCard(item)
+        })));
       }
     } catch (_) {}
   }, []);
