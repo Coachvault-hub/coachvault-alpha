@@ -1080,6 +1080,16 @@ export default function Home() {
 
 function PracticePlanCard({ plan, replaceIndex, setReplaceIndex, replacementOptions, updatePlanSegment, replacePracticeDrill, savePracticePlan, schedulePractice, onClose }) {
   const approvedCount = plan.segments.filter(s => !s.drill || s.status === 'approved' || s.locked).length;
+  const [previewIndex, setPreviewIndex] = useState(null);
+
+  function printPracticePlan() {
+    document.body.classList.add('printing-practice-plan');
+    window.setTimeout(() => {
+      window.print();
+      window.setTimeout(() => document.body.classList.remove('printing-practice-plan'), 250);
+    }, 40);
+  }
+
   return <section className="practicePlanCard">
     <header className="planHero">
       <div>
@@ -1112,7 +1122,10 @@ function PracticePlanCard({ plan, replaceIndex, setReplaceIndex, replacementOpti
           <h3>{segment.drill?.title || 'Coach-led review'}</h3>
           <p>{segment.drill?.summary || 'Recap the day, reinforce one coaching point, and finish with a clear takeaway.'}</p>
           {segment.drill?.primarySkill?.name && <span className="planSkill">{segment.drill.primarySkill.name}</span>}
-          {segment.drill && <div className="whyChosen"><b>Why this fits</b><span>{segment.drill.primarySkill?.name || 'Vault match'} supports this practice focus and sequence.</span></div>}
+          {segment.drill && <div className="planInfoRow">
+            <div className="whyChosen"><b>Why this fits</b><span>{segment.drill.primarySkill?.name || 'Vault match'} supports this practice focus and sequence.</span></div>
+            <button className="viewDrillBtn" onClick={()=>setPreviewIndex(previewIndex===index?null:index)}>ⓘ {previewIndex===index?'Hide drill':'View drill'}</button>
+          </div>}
         </div>
 
         {segment.drill ? <div className="planApproval">
@@ -1120,6 +1133,42 @@ function PracticePlanCard({ plan, replaceIndex, setReplaceIndex, replacementOpti
           <button className="rejectDrill" title="Replace this drill" onClick={()=>setReplaceIndex(replaceIndex===index?null:index)}>×</button>
           <button className={`lockDrill ${segment.locked?'selected':''}`} title="Lock this drill" onClick={()=>updatePlanSegment(index,{locked:!segment.locked,status:segment.locked?'review':'approved'})}>{segment.locked?'🔒':'🔓'}</button>
         </div> : <div className="planApproval"><button className="approveDrill selected">✓</button></div>}
+
+        {previewIndex===index && segment.drill && <div className="planDrillPreview">
+          <header>
+            <div>
+              <small>DRILL SNAPSHOT</small>
+              <h4>{segment.drill.title}</h4>
+            </div>
+            <button onClick={()=>setPreviewIndex(null)}>×</button>
+          </header>
+          <div className="planDrillPreviewGrid">
+            <section>
+              <small>PURPOSE</small>
+              <p>{practiceCardFor(segment.drill)?.purpose || segment.drill.summary || 'Purpose not yet documented.'}</p>
+            </section>
+            <section>
+              <small>LEVEL</small>
+              <p><b>{segment.drill.recommendedSkillLevel || inferDrillLevel(segment.drill).recommendedSkillLevel}</b> recommended<br/>Minimum: {segment.drill.minimumSkillLevel || inferDrillLevel(segment.drill).minimumSkillLevel}</p>
+            </section>
+            <section>
+              <small>FORMAT</small>
+              <p>{segment.drill.participationMode || segment.drill.teachingMethod || 'Not stated'}</p>
+            </section>
+            <section>
+              <small>SOURCE</small>
+              <p>{segment.drill.sourceType || 'CoachVault'}</p>
+            </section>
+          </div>
+          {(practiceCardFor(segment.drill)?.runTheDrill || []).length > 0 && <section className="planDrillHow">
+            <small>HOW IT RUNS</small>
+            <ol>{practiceCardFor(segment.drill).runTheDrill.slice(0,5).map((step,i)=><li key={i}>{step}</li>)}</ol>
+          </section>}
+          {(practiceCardFor(segment.drill)?.coachFocus || []).length > 0 && <section className="planDrillCues">
+            <small>COACHING POINTS</small>
+            <div>{practiceCardFor(segment.drill).coachFocus.slice(0,4).map((cue,i)=><span key={i}>{cue}</span>)}</div>
+          </section>}
+        </div>}
 
         {replaceIndex===index && segment.drill && <div className="replacementDrawer">
           <div><small>REPLACE THIS DRILL</small><h4>Choose another Vault option</h4><p>Only this segment changes. The rest of the practice stays intact.</p></div>
@@ -1135,7 +1184,7 @@ function PracticePlanCard({ plan, replaceIndex, setReplaceIndex, replacementOpti
     <footer className="planFooter">
       <div><small>BUILT FROM</small><b>{plan.segments.filter(x=>x.drill).length} approved Vault drills</b></div>
       <div className="planFooterActions">
-        <button onClick={()=>window.print()}>Print Plan</button>
+        <button onClick={printPracticePlan}>Print Plan</button>
         <button onClick={()=>schedulePractice(plan)}>Add to Calendar</button>
         <button className="primaryPlanBtn" onClick={savePracticePlan}>Save Practice</button>
       </div>
