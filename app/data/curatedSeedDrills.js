@@ -99,6 +99,85 @@ CV-098|Bingo Drill|Uneven Situations|Yorktown Lacrosse / Dave Marr Clinic|Not st
 CV-099|Turn and Drive Shooting|Goalie|Yorktown Lacrosse / Dave Marr Clinic|Not stated|Not stated|Goalie Drill|Locate shooter, step and save
 CV-100|Quick Shot Drill|Goalie|Yorktown Lacrosse / Dave Marr Clinic|Not stated|Not stated|Goalie Drill|Rapid varied-shot goalie work`;
 
+
+const SOURCE_BACKED_OVERRIDES = {
+  'CV-044': {
+    summary: 'Four attackers race to move loose balls from their outside starting cones into a central bucket while three defenders protect the middle.',
+    primarySkill: { name: 'Ground Balls', weight: 94, reason: 'Scooping and securing loose balls begins each scoring attempt.' },
+    supportingSkills: [
+      { name: 'Dodging', weight: 82 },
+      { name: 'Stick Protection', weight: 82 },
+      { name: 'Player Down Defense', weight: 76 },
+      { name: 'Sliding', weight: 72 },
+      { name: 'Recovering', weight: 72 }
+    ],
+    setup: {
+      players: '4 offense vs 3 defense',
+      duration: 7,
+      equipment: ['Balls', 'Cones', 'Bucket or small goal'],
+      space: 'Small grid around a central bucket/goal',
+      age: ['10U','12U','14U','High School']
+    },
+    minimumSkillLevel: 'Competitive',
+    recommendedSkillLevel: 'Advanced',
+    sourceUrl: 'USA Lacrosse Age Appropriate Practice Guide',
+    sourceVerified: true,
+    coachPracticeCard: {
+      purpose: 'Develop contested ground-ball pickups, dodging and stick protection for the offense while the defense works player-down positioning, sliding and recovering.',
+      whenToUse: [
+        'Players need competitive ground-ball work that immediately turns into a decision.',
+        'Defenders need reps protecting a central target while outnumbered.'
+      ],
+      setup: {
+        players: { value: '4 offense vs 3 defense', source: 'Source-supported' },
+        groups: { value: 'Four offensive starting groups around one central bucket/goal; three defenders protect the middle.', source: 'Source-supported' },
+        equipment: { value: ['Balls', 'Cones', 'Bucket or small goal'], source: 'Source-supported' },
+        space: { value: 'Small grid with the bucket/goal in the center and offensive starting cones around the outside.', source: 'Source-supported' },
+        time: { value: '5-7 minutes', source: 'Source-supported' },
+        rotation: { value: 'Rotate players between offense and defense between rounds.', source: 'CoachVault interpretation' }
+      },
+      runTheDrill: [
+        'Place a bucket or small goal in the middle of the playing area. Set four offensive starting cones around the outside with balls at the starting areas.',
+        'Put three defenders between the outside starting points and the central bucket/goal.',
+        'On the coach’s whistle, the four offensive players try to scoop a ball from their starting area and carry it to the middle.',
+        'The only way the offense scores is by successfully dropping a ball into the center bucket/goal.',
+        'The defense uses age-appropriate legal defense to stop the ball carriers. The defense scores when an attacker drops the ball or is forced out of bounds.',
+        'Play for a short round, reset the balls, then rotate roles. For a harder version, remove balls from one or more starting lines so the offense must pass before it can score.'
+      ],
+      coachFocus: [
+        'Offense: scoop through the ball and protect the stick immediately.',
+        'Attack space with a dodge instead of running directly into the defender.',
+        'Defense: communicate, protect the middle, slide to the ball and recover.',
+        'Keep the activity fast and competitive while using only age-appropriate legal contact.'
+      ],
+      watchFor: [
+        'Attackers exposing the stick while approaching the middle.',
+        'Offense running straight into pressure instead of using space.',
+        'Defenders all chasing one ball carrier and leaving the bucket unprotected.'
+      ],
+      makeEasier: [
+        'Use no sticks and carry the balls by hand.',
+        'Reduce the number of defenders.'
+      ],
+      makeHarder: [
+        'Add or subtract players to change the numerical advantage.',
+        'Remove balls from one or more offensive lines and require passing.'
+      ],
+      prerequisites: ['Players can safely scoop a ground ball and understand legal defensive contact for their age level.'],
+      avoidIf: [],
+      successCriteria: [
+        'Offense secures balls cleanly and reaches the central target under pressure.',
+        'Defense protects the middle with communication, slides and recoveries.'
+      ],
+      fieldDiagram: {
+        type: 'text',
+        description: 'Central bucket/goal with three defenders around it. Four offensive starting groups are spaced around the outside, with balls at the outside starting areas.'
+      },
+      notes: 'Source-backed from the USA Lacrosse Age Appropriate Practice Guide.'
+    }
+  }
+};
+
 function ageValues(value) {
   if (!value || value === 'Not stated') return [];
   if (value === '8U-14U') return ['8U','10U','12U','14U'];
@@ -108,7 +187,7 @@ function ageValues(value) {
 export const CURATED_SEED_DRILLS = RAW.trim().split('\n').map((line, index) => {
   const [drillId,title,skillText,sourceType,ageRange,difficulty,participationMode,summary] = line.split('|');
   const skills = skillText.split('/').map(value => value.trim()).filter(Boolean);
-  return {
+  const base = {
     id: 1001 + index,
     drillId,
     title,
@@ -125,6 +204,9 @@ export const CURATED_SEED_DRILLS = RAW.trim().split('\n').map((line, index) => {
     difficulty,
     ageRange,
     sourceUrl: '',
+    sourceVerified: false,
+    libraryShell: true,
     updated: 'CoachVault Library v1'
   };
+  return { ...base, ...(SOURCE_BACKED_OVERRIDES[drillId] || {}) };
 });
