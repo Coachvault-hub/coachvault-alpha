@@ -35,6 +35,7 @@ function suggestedFolderFor(item) {
 
 function makeLegacyPracticeCard(item) {
   const setup = item?.setup || {};
+  const isLibraryShell = Boolean(item?.libraryShell) && !item?.sourceVerified;
   return {
     purpose: item?.summary || 'Use this drill to develop the listed skill and objectives.',
     whenToUse: (item?.commonMistakes || []).slice(0, 4).map((mistake) => `Players ${String(mistake).replace(/^Players\s+/i, '').replace(/[.]$/, '').toLowerCase()}.`),
@@ -46,7 +47,7 @@ function makeLegacyPracticeCard(item) {
       time: { value: setup.duration ? `${setup.duration} minutes` : 'Not stated', source: setup.duration ? 'Detected' : 'Not stated' },
       rotation: { value: 'Not stated', source: 'Not stated' }
     },
-    runTheDrill: [
+    runTheDrill: isLibraryShell ? [] : [
       'Review the original source and identify the starting positions.',
       'Organize players using the saved setup information.',
       'Run the activity through the listed learning objectives and coaching cues.',
@@ -60,8 +61,8 @@ function makeLegacyPracticeCard(item) {
     prerequisites: [],
     avoidIf: [],
     successCriteria: item?.learningObjectives || [],
-    fieldDiagram: { type: 'text', description: 'No diagram description was saved with this legacy item.' },
-    notes: ''
+    fieldDiagram: { type: 'text', description: isLibraryShell ? 'Source-backed diagram data has not been added yet.' : 'No diagram description was saved with this legacy item.' },
+    notes: isLibraryShell ? 'This drill is in the curated library, but its full source-backed instructions have not been added yet.' : ''
   };
 }
 
