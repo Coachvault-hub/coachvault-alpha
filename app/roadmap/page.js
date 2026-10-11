@@ -285,6 +285,7 @@ export default function SeasonRoadmapPage() {
           <Link href="/">Home</Link>
           <Link href="/workspace">Workspace</Link>
           <Link href="/roadmap" className="active">Season Roadmap</Link>
+          {canManage && <Link href="/access">Coach Access</Link>}
         </nav>
         <div className="roadmapUser">
           <div><strong>{session.user.full_name || session.user.email}</strong><small>{session.user.role}{session.user.team_name?` · ${session.user.team_name}`:''}</small></div>
@@ -300,7 +301,7 @@ export default function SeasonRoadmapPage() {
             ? 'Build the season path once. Assign forms, documents, meetings, and tasks so every coach knows what is due and when.'
             : 'Complete required forms, open club resources, and move through the season without hunting through email and old links.'}</p>
           <div className="roadmapRoleNote">
-            <span className={hasSupabaseConfig()?'live':'demo'}>{hasSupabaseConfig()?'Live database mode':'Demo data mode'}</span>
+            <span className="live">Secure email access</span>
             <b>{orgName}</b>
           </div>
         </div>
