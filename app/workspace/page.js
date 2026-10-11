@@ -204,6 +204,84 @@ function formatConfidence(value) {
   return Math.round(n <= 1 ? n * 100 : n);
 }
 
+const PLAYER_LEVELS = ['Foundation', 'Developing', 'Competitive', 'Advanced', 'Elite'];
+const PLAYER_LEVEL_RANK = Object.fromEntries(PLAYER_LEVELS.map((level, index) => [level, index + 1]));
+
+function inferDrillLevel(drill) {
+  if (drill?.minimumSkillLevel && drill?.recommendedSkillLevel) {
+    return {
+      minimumSkillLevel: drill.minimumSkillLevel,
+      recommendedSkillLevel: drill.recommendedSkillLevel
+    };
+  }
+
+  const title = String(drill?.title || '').toLowerCase();
+  const mode = String(drill?.participationMode || drill?.teachingMethod || '').toLowerCase();
+  const skill = String(drill?.primarySkill?.name || '').toLowerCase();
+  const text = [title, mode, skill, drill?.summary || ''].join(' ').toLowerCase();
+
+  const foundationTerms = [
+    'ready position', 'soft toss', 'partner pass', 'wall ball', 'cone gate cradle',
+    'warm-up', 'warm up', 'basic', 'check-in', 'off-hand pairs', 'parent catching',
+    'parent scooping'
+  ];
+  const eliteTerms = [
+    'england drill', 'bingo drill', 'duke scrapping', '5v5 gb to goal',
+    'transition waves', 'continuous', 'full field', 'full-field', '6v5'
+  ];
+  const advancedTerms = [
+    'line bump', 'picking', 'pick defense', '4v3', '5v4', '3v2 west genny',
+    'sideways west genny', 'seawolves', 'slide', 'help and recover', 'clear',
+    'ride', 'transition', 'fast break', 'gretzky', 'plus one', 'team defense'
+  ];
+
+  if (foundationTerms.some(term => text.includes(term))) {
+    return { minimumSkillLevel: 'Foundation', recommendedSkillLevel: 'Foundation' };
+  }
+  if (eliteTerms.some(term => text.includes(term))) {
+    return { minimumSkillLevel: 'Advanced', recommendedSkillLevel: 'Elite' };
+  }
+  if (advancedTerms.some(term => text.includes(term)) || mode.includes('progression')) {
+    return { minimumSkillLevel: 'Competitive', recommendedSkillLevel: 'Advanced' };
+  }
+  if (mode.includes('small-sided') || mode.includes('competitive') || text.includes('1v1') || text.includes('2v2') || text.includes('3v3')) {
+    return { minimumSkillLevel: 'Developing', recommendedSkillLevel: 'Competitive' };
+  }
+  if (mode.includes('shooting') || mode.includes('skill development') || mode.includes('station')) {
+    return { minimumSkillLevel: 'Foundation', recommendedSkillLevel: 'Developing' };
+  }
+  return { minimumSkillLevel: 'Developing', recommendedSkillLevel: 'Competitive' };
+}
+
+function enrichDrillLevel(drill) {
+  return { ...drill, ...inferDrillLevel(drill) };
+}
+
+function promptAllowsFundamentals(prompt='') {
+  return /warm[- ]?up|fundamental|basic|technique|rebuild|mechanic|wall ball|partner pass|catching|passing form/i.test(prompt);
+}
+
+function drillLevelFit(drill, teamLevel, prompt='') {
+  const level = inferDrillLevel(drill);
+  const target = PLAYER_LEVEL_RANK[teamLevel] || 3;
+  const minimum = PLAYER_LEVEL_RANK[level.minimumSkillLevel] || 1;
+  const recommended = PLAYER_LEVEL_RANK[level.recommendedSkillLevel] || 3;
+
+  if (minimum > target + (target >= 4 ? 1 : 0)) return -100;
+  if (target >= 4 && recommended <= 1 && !promptAllowsFundamentals(prompt)) return -100;
+
+  const distance = Math.abs(recommended - target);
+  let score = 0;
+  if (distance === 0) score += 8;
+  else if (distance === 1) score += 4;
+  else if (distance === 2) score += 1;
+  else score -= 4;
+
+  if (target >= 4 && recommended >= 3) score += 3;
+  if (target >= 4 && recommended === 2 && !promptAllowsFundamentals(prompt)) score -= 5;
+  return score;
+}
+
 export default function Home() {
   const [active, setActive] = useState('Atlas');
   const [mode, setMode] = useState('link');
@@ -231,6 +309,10 @@ export default function Home() {
   const [practicePrompt, setPracticePrompt] = useState('');
   const [practiceDuration, setPracticeDuration] = useState(90);
   const [practicePlayers, setPracticePlayers] = useState(18);
+  const [teamType, setTeamType] = useState('Select / Club');
+  const [playerLevel, setPlayerLevel] = useState('Advanced');
+  const [ageGroup, setAgeGroup] = useState('Juniors');
+  const [practiceStyle, setPracticeStyle] = useState('Competitive / Game Speed');
   const [practicePlan, setPracticePlan] = useState(null);
   const [practiceBuilderOpen, setPracticeBuilderOpen] = useState(false);
   const [savedPractices, setSavedPractices] = useState([]);
@@ -252,7 +334,8 @@ export default function Home() {
         const migrated = JSON.parse(stored).map((item) => ({
           ...item,
           folder: suggestedFolderFor(item),
-          coachPracticeCard: item.coachPracticeCard || makeLegacyPracticeCard(item)
+          coachPracticeCard: item.coachPracticeCard || makeLegacyPracticeCard(item),
+          ...inferDrillLevel(item)
         }));
         const existingKeys = new Set(
           migrated.map((item) => String(item.drillId || item.title || '').trim().toLowerCase())
@@ -262,14 +345,16 @@ export default function Home() {
           .map((item) => ({
             ...item,
             folder: suggestedFolderFor(item),
-            coachPracticeCard: item.coachPracticeCard || makeLegacyPracticeCard(item)
+            coachPracticeCard: item.coachPracticeCard || makeLegacyPracticeCard(item),
+          ...inferDrillLevel(item)
           }));
         setDrills([...migrated, ...missingSeeds]);
       } else {
         setDrills(seedDrills.map((item) => ({
           ...item,
           folder: suggestedFolderFor(item),
-          coachPracticeCard: item.coachPracticeCard || makeLegacyPracticeCard(item)
+          coachPracticeCard: item.coachPracticeCard || makeLegacyPracticeCard(item),
+          ...inferDrillLevel(item)
         })));
       }
     } catch (_) {}
@@ -285,6 +370,14 @@ export default function Home() {
       if (stored) setSavedPractices(JSON.parse(stored));
       const scheduled = localStorage.getItem('coachvault-calendar-alpha');
       if (scheduled) setCalendarEvents(JSON.parse(scheduled));
+      const profile = localStorage.getItem('coachvault-team-profile-alpha');
+      if (profile) {
+        const savedProfile = JSON.parse(profile);
+        if (savedProfile.teamType) setTeamType(savedProfile.teamType);
+        if (savedProfile.playerLevel) setPlayerLevel(savedProfile.playerLevel);
+        if (savedProfile.ageGroup) setAgeGroup(savedProfile.ageGroup);
+        if (savedProfile.practiceStyle) setPracticeStyle(savedProfile.practiceStyle);
+      }
     } catch (_) {}
   }, []);
 
@@ -295,6 +388,15 @@ export default function Home() {
   useEffect(() => {
     localStorage.setItem('coachvault-calendar-alpha', JSON.stringify(calendarEvents));
   }, [calendarEvents]);
+
+  useEffect(() => {
+    localStorage.setItem('coachvault-team-profile-alpha', JSON.stringify({
+      teamType,
+      playerLevel,
+      ageGroup,
+      practiceStyle
+    }));
+  }, [teamType, playerLevel, ageGroup, practiceStyle]);
 
   useEffect(() => {
     if (!loading) {
@@ -596,13 +698,23 @@ export default function Home() {
         drill.title,
         drill.summary,
         drill.primarySkill?.name,
-        ...(drill.skillComponents || []).map(x => x.name)
+        drill.participationMode,
+        drill.teachingMethod,
+        ...(drill.skillComponents || []).map(x => x.name),
+        ...(drill.supportingSkills || []).map(x => x.name)
       ].join(' ').toLowerCase();
-      const score = words.reduce((sum, word) => sum + (haystack.includes(word) ? 1 : 0), 0);
-      return { drill, score };
-    }).sort((a,b) => b.score - a.score);
 
-    const selectedDrills = scored.slice(0, Math.min(4, Math.max(1, drills.length))).map(x => x.drill);
+      const focusScore = words.reduce((sum, word) => sum + (haystack.includes(word) ? 2 : 0), 0);
+      const levelScore = drillLevelFit(drill, playerLevel, practicePrompt);
+      const styleScore = practiceStyle === 'Competitive / Game Speed' &&
+        /small-sided|competitive|transition|progression|1v1|2v1|2v2|3v2|3v3|4v3|live/i.test(haystack) ? 4 : 0;
+
+      return { drill: enrichDrillLevel(drill), score: focusScore + levelScore + styleScore };
+    })
+      .filter(item => item.score > -50)
+      .sort((a,b) => b.score - a.score);
+
+    const selectedDrills = scored.slice(0, Math.min(4, Math.max(1, scored.length))).map(x => x.drill);
     const warmup = selectedDrills[0];
     const skill = selectedDrills[1] || selectedDrills[0];
     const competition = selectedDrills[2] || selectedDrills[1] || selectedDrills[0];
@@ -624,6 +736,7 @@ export default function Home() {
       duration:total,
       players:practicePlayers,
       focus:practicePrompt || 'Coach-selected practice focus',
+      teamProfile:{ teamType, playerLevel, ageGroup, practiceStyle },
       segments: segments.map(segment => ({...segment, status:'review', locked:false}))
     });
     setReplaceIndex(null);
@@ -891,6 +1004,10 @@ export default function Home() {
               </div>
               <div className="practiceBuilderGrid">
                 <label className="builderPrompt"><span>Practice focus</span><textarea value={practicePrompt} onChange={(e)=>setPracticePrompt(e.target.value)} placeholder="Example: 90 minute practice for 18 players. We need confidence passing under pressure, quicker decisions, and a competitive finish." /></label>
+                <label><span>Team type</span><select value={teamType} onChange={(e)=>setTeamType(e.target.value)}><option>Recreation</option><option>Select / Club</option><option>School</option><option>Elite</option></select></label>
+                <label><span>Player level</span><select value={playerLevel} onChange={(e)=>setPlayerLevel(e.target.value)}>{PLAYER_LEVELS.map(level=><option key={level}>{level}</option>)}</select></label>
+                <label><span>Age group</span><select value={ageGroup} onChange={(e)=>setAgeGroup(e.target.value)}><option>Pockets</option><option>Tykers</option><option>Lightning</option><option>Middies</option><option>Juniors</option><option>High School</option></select></label>
+                <label><span>Practice style</span><select value={practiceStyle} onChange={(e)=>setPracticeStyle(e.target.value)}><option>Teaching / Controlled</option><option>Balanced</option><option>Competitive / Game Speed</option></select></label>
                 <label><span>Minutes</span><input type="number" min="30" max="180" value={practiceDuration} onChange={(e)=>setPracticeDuration(e.target.value)} /></label>
                 <label><span>Players</span><input type="number" min="4" max="60" value={practicePlayers} onChange={(e)=>setPracticePlayers(e.target.value)} /></label>
                 <button className="buildPracticeBtn" disabled={!drills.length} onClick={buildPracticePlan}>Build Practice Plan</button>
@@ -973,6 +1090,7 @@ function PracticePlanCard({ plan, replaceIndex, setReplaceIndex, replacementOpti
       <div className="planHeroMeta">
         <span><b>{plan.duration}</b> min</span>
         <span><b>{plan.players}</b> players</span>
+        {plan.teamProfile?.playerLevel && <span><b>{plan.teamProfile.playerLevel}</b> level</span>}
         <button onClick={onClose}>×</button>
       </div>
     </header>
