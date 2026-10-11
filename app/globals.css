@@ -1496,3 +1496,76 @@ body{background:var(--cv-bg);color:var(--cv-text)}
   .respondentGrid{grid-template-columns:1fr}
   .publicFormCard form{padding:20px}.publicFormHeading{padding:26px 20px}
 }
+
+
+/* Practice plan drill preview */
+.planInfoRow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}
+.viewDrillBtn{border:1px solid #cfdbe9;background:#fff;color:#2a5fc3;border-radius:9px;padding:6px 9px;font-size:10px;font-weight:800}
+.planDrillPreview{grid-column:1/-1;margin:4px 0 6px 80px;padding:16px;border:1px solid #d9e3ef;border-radius:14px;background:#f9fbfe}
+.planDrillPreview header{display:flex;justify-content:space-between;gap:16px;align-items:start}
+.planDrillPreview header small,.planDrillPreviewGrid small,.planDrillHow small,.planDrillCues small{font-size:9px;font-weight:900;letter-spacing:.09em;color:#6b7d94}
+.planDrillPreview h4{margin:3px 0 0;font-size:17px;color:#172942}
+.planDrillPreview header button{border:0;background:#edf2f8;width:30px;height:30px;border-radius:9px;font-size:18px}
+.planDrillPreviewGrid{display:grid;grid-template-columns:2fr 1fr 1fr 1.4fr;gap:10px;margin-top:12px}
+.planDrillPreviewGrid section{padding:10px;border-radius:10px;background:#fff;border:1px solid #e1e8f1}
+.planDrillPreviewGrid p{margin:5px 0 0;color:#5f7187;font-size:11px;line-height:1.45}
+.planDrillHow,.planDrillCues{margin-top:11px;padding:11px 12px;border-radius:10px;background:#fff;border:1px solid #e1e8f1}
+.planDrillHow ol{margin:7px 0 0;padding-left:18px}
+.planDrillHow li{margin:4px 0;color:#4d5f76;font-size:11px}
+.planDrillCues div{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}
+.planDrillCues span{padding:5px 8px;border-radius:999px;background:#edf3ff;color:#2f62c8;font-size:10px;font-weight:700}
+@media(max-width:900px){
+  .planDrillPreview{margin-left:0}
+  .planDrillPreviewGrid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .planDrillPreviewGrid{grid-template-columns:1fr}
+}
+
+/* Practice plan print mode. Existing print CSS is intentionally scoped to drill cards,
+   so this class switches visibility to the plan instead. */
+@media print{
+  body.printing-practice-plan *{visibility:hidden!important}
+  body.printing-practice-plan .practicePlanCard,
+  body.printing-practice-plan .practicePlanCard *{visibility:visible!important}
+  body.printing-practice-plan .practicePlanCard{
+    position:absolute!important;
+    left:0!important;
+    top:0!important;
+    width:100%!important;
+    margin:0!important;
+    border:0!important;
+    box-shadow:none!important;
+    overflow:visible!important;
+    background:#fff!important;
+  }
+  body.printing-practice-plan .globalHeader,
+  body.printing-practice-plan .sectionNav,
+  body.printing-practice-plan .iconRail,
+  body.printing-practice-plan .planApproval,
+  body.printing-practice-plan .replacementDrawer,
+  body.printing-practice-plan .planFooterActions,
+  body.printing-practice-plan .viewDrillBtn,
+  body.printing-practice-plan .planDrillPreview{display:none!important}
+  body.printing-practice-plan .planHero{padding:12px!important;background:#fff!important;border-bottom:1px solid #cfd8e4!important}
+  body.printing-practice-plan .planHero h2{font-size:20pt!important}
+  body.printing-practice-plan .planHeroMeta{flex-wrap:wrap!important}
+  body.printing-practice-plan .planReviewBar{padding:7px 10px!important;background:#fff!important;color:#111!important;border-bottom:1px solid #d7e0ea!important}
+  body.printing-practice-plan .planReviewBar span,
+  body.printing-practice-plan .planReviewBar p{color:#555!important}
+  body.printing-practice-plan .planArc{padding:8px!important}
+  body.printing-practice-plan .planSegment{
+    grid-template-columns:58px 1fr!important;
+    gap:10px!important;
+    padding:10px!important;
+    break-inside:avoid-page!important;
+    page-break-inside:avoid!important;
+    background:#fff!important;
+  }
+  body.printing-practice-plan .planTime{width:48px!important;height:48px!important;border-radius:10px!important}
+  body.printing-practice-plan .planTime b{font-size:16pt!important}
+  body.printing-practice-plan .planSegmentBody h3{font-size:12pt!important;margin:2px 0 4px!important}
+  body.printing-practice-plan .planSegmentBody p,
+  body.printing-practice-plan .whyChosen{font-size:8.5pt!important}
+  body.printing-practice-plan .planFooter{padding:10px!important;background:#fff!important;border-top:1px solid #d7e0ea!important}
+}
