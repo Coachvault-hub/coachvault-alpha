@@ -2,135 +2,88 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  DEMO_DIRECTOR,
-  DEMO_COACH,
-  getSupabaseClient,
-  hasSupabaseConfig,
-  saveDemoSession,
-  getCurrentCoachVaultSession
-} from '../lib/coachvaultAuth';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { getCurrentCoachVaultSession } from '../lib/coachvaultAuth';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState('signin');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [organizationName, setOrganizationName] = useState('');
-  const [status, setStatus] = useState('');
-  const configured = hasSupabaseConfig();
+  const params = useSearchParams();
+  const [email,setEmail] = useState('');
+  const [status,setStatus] = useState('');
+  const [sending,setSending] = useState(false);
+  const error = params.get('error');
 
-  useEffect(() => {
-    getCurrentCoachVaultSession().then(session => {
-      if (session?.user) router.replace('/roadmap');
+  useEffect(()=>{
+    getCurrentCoachVaultSession().then(session=>{
+      if (session?.user) router.replace('/workspace');
     });
-  }, [router]);
+  },[router]);
 
   async function submit(e) {
     e.preventDefault();
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      setStatus('Supabase is not connected yet. Use one of the demo roles below, or add the two NEXT_PUBLIC_SUPABASE environment variables.');
-      return;
-    }
-
-    setStatus(mode === 'signin' ? 'Signing in…' : 'Creating account…');
-
-    if (mode === 'signin') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return setStatus(error.message);
-      router.push('/roadmap');
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options:{ data:{ full_name:fullName, organization_name:organizationName } }
-    });
-    if (error) return setStatus(error.message);
-
-    if (data.user) {
-      await supabase.from('profiles').upsert({
-        id:data.user.id,
-        email,
-        full_name:fullName,
-        role:'director'
+    setSending(true);
+    setStatus('Sending your secure sign-in link…');
+    try {
+      const res = await fetch('/api/auth/request-link',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email})
       });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatus(data.error || 'CoachVault could not send the sign-in link.');
+        return;
+      }
+      setStatus(data.message || 'Check your email for a sign-in link.');
+    } catch (_) {
+      setStatus('CoachVault could not send the sign-in link.');
+    } finally {
+      setSending(false);
     }
-    setStatus('Account created. If email confirmation is enabled, confirm your email and then sign in.');
-    setMode('signin');
-  }
-
-  function demo(user) {
-    saveDemoSession(user);
-    router.push('/roadmap');
   }
 
   return (
-    <main className="authPage">
+    <main className="authPage cavsAuthPage">
       <section className="authBrandPanel">
         <Link href="/" className="authBrand">
           <span>CV</span>
-          <div><strong>CoachVault</strong><small>Coaching knowledge, organized.</small></div>
+          <div><strong>CoachVault</strong><small>CAVS Lacrosse Club</small></div>
         </Link>
         <div className="authMessage">
-          <span>COACH & CLUB ACCESS</span>
-          <h1>Your season. Your knowledge. One place.</h1>
-          <p>Sign in to access your club roadmap, required forms, coaching resources, Vault, practices, and calendar.</p>
+          <span>CAVS COACH ACCESS</span>
+          <h1>Your coaching hub. One secure link.</h1>
+          <p>Enter the email address approved by CAVS. We’ll send you a private, single-use link to access the coaching tools assigned to you.</p>
           <div className="authFeatureList">
-            <div><b>01</b><span>Complete club forms and season tasks</span></div>
-            <div><b>02</b><span>Access the coaching resources assigned to you</span></div>
-            <div><b>03</b><span>Build practices from your CoachVault knowledge</span></div>
+            <div><b>01</b><span>No password to remember</span></div>
+            <div><b>02</b><span>No ChatGPT account required</span></div>
+            <div><b>03</b><span>You only see the tools CAVS has approved for you</span></div>
           </div>
         </div>
       </section>
 
       <section className="authFormPanel">
         <div className="authFormWrap">
-          <div className="authFormHeader">
-            <Link href="/">← Home</Link>
-            <span className={`authConnection ${configured?'ready':'demo'}`}>
-              {configured ? 'Supabase connected' : 'Demo mode'}
-            </span>
-          </div>
-
-          <div className="authTabs">
-            <button className={mode==='signin'?'active':''} onClick={()=>setMode('signin')}>Sign In</button>
-            <button className={mode==='signup'?'active':''} onClick={()=>setMode('signup')}>Create Club Account</button>
-          </div>
+          <div className="authFormHeader"><Link href="/">← Home</Link><span className="authConnection ready">Email-link access</span></div>
 
           <form className="authForm" onSubmit={submit}>
             <div>
-              <small>{mode==='signin'?'WELCOME BACK':'GET STARTED'}</small>
-              <h2>{mode==='signin'?'Sign in to CoachVault':'Create your club workspace'}</h2>
-              <p>{mode==='signin'?'Access your roadmap and coaching workspace.':'The first account becomes the club director.'}</p>
+              <small>COACH SIGN IN</small>
+              <h2>Send me a sign-in link</h2>
+              <p>Use the same email address your CAVS administrator approved.</p>
             </div>
 
-            {mode==='signup' && (
-              <>
-                <label><span>Your name</span><input value={fullName} onChange={e=>setFullName(e.target.value)} required placeholder="Jordan Bird" /></label>
-                <label><span>Club / program name</span><input value={organizationName} onChange={e=>setOrganizationName(e.target.value)} required placeholder="South Carroll Select" /></label>
-              </>
-            )}
+            <label><span>Email</span><input type="email" value={email} onChange={e=>setEmail(e.target.value)} required placeholder="coach@example.com" autoComplete="email" /></label>
 
-            <label><span>Email</span><input type="email" value={email} onChange={e=>setEmail(e.target.value)} required placeholder="coach@club.org" /></label>
-            <label><span>Password</span><input type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={6} /></label>
+            <button className="authSubmit" type="submit" disabled={sending}>{sending?'Sending…':'Email me a secure link'}</button>
 
-            <button className="authSubmit" type="submit">{mode==='signin'?'Sign In':'Create Account'}</button>
+            {error === 'invalid' && <p className="authStatus error">That sign-in link is expired or has already been used. Request a new one below.</p>}
             {status && <p className="authStatus">{status}</p>}
           </form>
 
-          {!configured && (
-            <div className="demoAccess">
-              <span>DEMO ACCESS</span>
-              <p>Use these while we connect the real club database.</p>
-              <button onClick={()=>demo(DEMO_DIRECTOR)}><b>Director Demo</b><small>Build roadmap + forms + view responses</small></button>
-              <button onClick={()=>demo(DEMO_COACH)}><b>Coach Demo</b><small>Complete assigned roadmap items + forms</small></button>
-            </div>
-          )}
+          <div className="magicLinkNote">
+            <b>How access works</b>
+            <p>CAVS approves your email and permissions first. Your sign-in link expires after 15 minutes and works only once.</p>
+          </div>
         </div>
       </section>
     </main>
