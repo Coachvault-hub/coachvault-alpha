@@ -471,6 +471,339 @@ const SOURCE_BACKED_OVERRIDES = {
       notes:'Source-backed from Busy Sticks.'
     }
   },
+  'CV-011': {
+    summary:'Four-corner passing drill that teaches players to move immediately after the pass and fill open space.',
+    primarySkill:{name:'Passing',weight:90,reason:'Passing accuracy and timing drive the drill.'},
+    supportingSkills:[{name:'Cutting',weight:86},{name:'Off-Ball Movement',weight:82},{name:'Catching',weight:74}],
+    setup:{players:'Groups of 4-5',duration:10,equipment:['Sticks','1 ball per group','4 cones'],space:'12 x 12 yard square',age:['10U','12U','14U']},
+    minimumSkillLevel:'Developing',recommendedSkillLevel:'Developing',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Teach pass-and-move habits by requiring the passer to cut through the middle and fill the open corner after every pass.',
+      whenToUse:['Players stand still after passing.','Players crowd the ball instead of maintaining spacing.'],
+      setup:{
+        players:{value:'Groups of 4-5',source:'Source-supported'},
+        groups:{value:'One player at each corner; extra player at the starting ball corner.',source:'Source-supported'},
+        equipment:{value:['Sticks','1 ball','4 cones'],source:'Source-supported'},
+        space:{value:'12 x 12 yard square',source:'Source-supported'},
+        time:{value:'Two-minute directional rounds',source:'Source-supported'},
+        rotation:{value:'Passer cuts through the middle and fills the open corner.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Place one player at each corner of a 12-yard square, with any extra player waiting at the ball corner.',
+        'The ball starts at one corner and is passed to the next corner to the left.',
+        'Immediately after passing, the passer cuts hard through the middle toward the open corner.',
+        'Continue moving the ball around the square with a cut after every pass.',
+        'After about two minutes, reverse the direction.'
+      ],
+      coachFocus:['Pass, then cut hard.','Catch facing the next pass.','Hold width at the corners until the ball arrives.'],
+      watchFor:['Slow cuts that clog the passing lane.','Players drifting into the middle before their turn.','Catching flat-footed.'],
+      makeEasier:['Pass around the square without cutting.'],
+      makeHarder:['Add one middle defender who can intercept passes but cannot check.'],
+      prerequisites:['Basic passing and catching.'],avoidIf:[],
+      successCriteria:['Players move immediately after passing.','Spacing stays clean.','Ball movement remains continuous.'],
+      fieldDiagram:{type:'text',description:'Four cones form a 12 x 12 yard square. One player at each corner, extra player at the starting corner. Passing moves around the outside; passer cuts through the middle to the open corner.'},
+      notes:'Source-backed from Busy Sticks.'
+    }
+  },
+  'CV-012': {
+    summary:'Weak-hand passing series that develops full hand swaps, mirrored throwing mechanics and confidence on the non-dominant side.',
+    primarySkill:{name:'Passing',weight:90,reason:'All reps are completed on the weaker hand.'},
+    supportingSkills:[{name:'Catching',weight:78},{name:'Off-Hand Development',weight:95},{name:'Ground Balls',weight:52}],
+    setup:{players:'Pairs',duration:10,equipment:['Sticks','1 ball per pair'],space:'6-12 yards per pair',age:['8U','10U','12U','14U']},
+    minimumSkillLevel:'Foundation',recommendedSkillLevel:'Developing',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Build confidence and clean mechanics on the weaker hand through passing, catching, movement and ground-ball reps.',
+      whenToUse:['Players immediately switch back to their strong hand.','Off-hand accuracy is limiting decisions in games.'],
+      setup:{
+        players:{value:'Pairs',source:'Source-supported'},groups:{value:'Pairs face one another.',source:'Source-supported'},
+        equipment:{value:['Sticks','1 ball per pair'],source:'Source-supported'},space:{value:'6-12 yards per pair',source:'Source-supported'},
+        time:{value:'Four short blocks of ten reps',source:'Source-supported'},rotation:{value:'Partners stay paired throughout.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Partners face each other with both players holding the stick on the weaker side.',
+        'Complete ten short stationary passes on the weak hand.',
+        'Complete ten more passes with a step into each throw.',
+        'Complete ten catches while shuffling sideways.',
+        'Finish with ten weak-hand ground-ball pickups followed by a pass.'
+      ],
+      coachFocus:['Swap both hands fully.','Use the same mechanics as the strong hand, just mirrored.','Prioritize clean technique over speed.'],
+      watchFor:['Sneaking back to the strong hand.','Half-switch hand placement.','Rushing and losing mechanics.'],
+      makeEasier:['Hand-toss the ball into the weak-hand stick.'],
+      makeHarder:['Move to 12 yards and require overhand throws only.'],
+      prerequisites:['Basic strong-hand passing and catching.'],avoidIf:[],
+      successCriteria:['Players remain on the off hand for the full sequence.','Accuracy and catches improve without reverting to the strong hand.'],
+      fieldDiagram:{type:'text',description:'Pairs face each other 6-12 yards apart with one ball per pair.'},
+      notes:'Source-backed from Busy Sticks.'
+    }
+  },
+  'CV-013': {
+    summary:'Restart teaching drill that rehearses legal spacing, quick recognition and immediate pass-and-move behavior after whistles.',
+    primarySkill:{name:'Restarts',weight:94,reason:'Every rep begins from a game restart condition.'},
+    supportingSkills:[{name:'Rules Awareness',weight:88},{name:'Passing',weight:60},{name:'Off-Ball Movement',weight:58}],
+    setup:{players:'Groups of 6-8',duration:10,equipment:['Sticks','2 balls','Cones for 5-yard ring'],space:'Half of a small-sided field',age:['8U','10U','12U','14U']},
+    minimumSkillLevel:'Foundation',recommendedSkillLevel:'Developing',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Teach players to organize quickly and legally after a whistle, then turn the restart into immediate ball movement.',
+      whenToUse:['Players crowd the restart.','Teams are slow to organize after whistles.'],
+      setup:{
+        players:{value:'Groups of 6-8',source:'Source-supported'},
+        groups:{value:'One offense and one defense group.',source:'Source-supported'},
+        equipment:{value:['Sticks','2 balls','Cones marking a 5-yard circle'],source:'Source-supported'},
+        space:{value:'Half of a small-sided field',source:'Source-supported'},
+        time:{value:'Repeated 20-second live segments',source:'Source-supported'},
+        rotation:{value:'Coach resets a new restart after each live segment.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Mark a ball spot and a five-yard ring around it with cones.',
+        'Coach whistles play dead, places the ball and announces the restart situation.',
+        'Players move to legal restart positions, with defenders respecting the required spacing for the rules being taught.',
+        'Restart the play using the correct boys or girls procedure, then pass to an open teammate.',
+        'Play live for about 20 seconds, whistle it dead and set a new restart.'
+      ],
+      coachFocus:['Get required spacing quickly.','Find the open teammate before play restarts.','Restart, pass and move immediately.'],
+      watchFor:['Defenders crowding the ball.','Players waiting for the coach after the restart.','Ball carrier restarting without scanning.'],
+      makeEasier:['Walk through positions with no defense.'],
+      makeHarder:['Give players five seconds to organize after the coach calls the restart.'],
+      prerequisites:['Basic passing and understanding of the team’s restart rules.'],avoidIf:[],
+      successCriteria:['Players organize without extra coaching.','Spacing is legal.','First action after restart creates useful movement.'],
+      fieldDiagram:{type:'text',description:'Ball spot inside a cone-marked 5-yard ring. Offense and defense staged around the ring on a small-sided half field.'},
+      notes:'Source-backed from Busy Sticks. Exact restart procedure should match current league rules.'
+    }
+  },
+  'CV-014': {
+    summary:'Competitive two-player ground-ball race that rewards clean possession, protection and an outlet pass.',
+    primarySkill:{name:'Ground Balls',weight:96,reason:'Winning and securing the loose ball is the central action.'},
+    supportingSkills:[{name:'Stick Protection',weight:78},{name:'Passing',weight:62},{name:'Competition',weight:76}],
+    setup:{players:'Groups of 3',duration:10,equipment:['Sticks','1 ball per group','2 cones'],space:'15 x 10 yards',age:['8U','10U','12U','14U']},
+    minimumSkillLevel:'Developing',recommendedSkillLevel:'Competitive',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Train players to attack a loose ball under competition, secure it cleanly and immediately complete the next play.',
+      whenToUse:['Team is losing contested ground balls.','Players swing at loose balls instead of establishing position.'],
+      setup:{
+        players:{value:'Groups of 3: two racers and one roller',source:'Source-supported'},
+        groups:{value:'Racers start side by side; roller starts about 10 yards away.',source:'Source-supported'},
+        equipment:{value:['Sticks','1 ball','2 cones'],source:'Source-supported'},space:{value:'15 x 10 yards per group',source:'Source-supported'},
+        time:{value:'Continuous short races',source:'Source-supported'},rotation:{value:'Rotate roles after every race.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Two racers start side by side at one cone while the roller stands roughly ten yards away.',
+        'The roller sends the ball into the race area.',
+        'Both players compete to get first stick to the ball and secure possession.',
+        'The winner protects the ball, cradles back toward the roller cone and completes a pass.',
+        'Award one point for a clean scoop and pass, then rotate roles.'
+      ],
+      coachFocus:['First step is low and fast.','Keep the ball on the far side from pressure.','Scoop and get the stick protected immediately.'],
+      watchFor:['Both players chopping at the ball.','Unsafe contact.','Winning the scoop but losing possession before the pass.'],
+      makeEasier:['Start racers farther apart so they arrive at different times.'],
+      makeHarder:['Coach calls the required scooping hand.'],
+      prerequisites:['Basic ground-ball technique.'],avoidIf:['Players cannot follow first-stick-wins safety rule.'],
+      successCriteria:['Winner secures possession cleanly.','Ball is protected immediately.','Rep ends with a completed pass.'],
+      fieldDiagram:{type:'text',description:'Two racers start side by side at one cone. Roller starts about 10 yards away near the opposite cone and rolls the ball into the race area.'},
+      notes:'Source-backed from Busy Sticks. No pushing, holding, bumping or checks.'
+    }
+  },
+  'CV-015': {
+    summary:'Ground-ball-to-outlet drill that teaches players to scoop, escape pressure and find a useful next pass.',
+    primarySkill:{name:'Ground Balls',weight:90,reason:'The rep starts with a scoop and emphasizes possession after the pickup.'},
+    supportingSkills:[{name:'Passing',weight:82},{name:'Outlet Recognition',weight:88},{name:'Stick Protection',weight:72}],
+    setup:{players:'Groups of 3',duration:10,equipment:['Sticks','1 ball per group','3 cones'],space:'20 yards per group',age:['8U','10U','12U','14U']},
+    minimumSkillLevel:'Developing',recommendedSkillLevel:'Developing',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Connect the ground-ball pickup to the next decision by forcing the ball carrier to escape pressure and find an outlet.',
+      whenToUse:['Players scoop then immediately turn the ball over.','Outlets are silent or poorly positioned.'],
+      setup:{
+        players:{value:'Groups of 3',source:'Source-supported'},
+        groups:{value:'Roller, scooper and outlet.',source:'Source-supported'},
+        equipment:{value:['Sticks','1 ball','3 cones'],source:'Source-supported'},
+        space:{value:'Roller and scooper 10 yards apart; outlet 10 yards to the side.',source:'Source-supported'},
+        time:{value:'Rotate every three scoops',source:'Source-supported'},
+        rotation:{value:'Players cycle through roller, scooper and outlet roles.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Place three cones for the roller, scooper and outlet positions.',
+        'The roller sends a ground ball toward the scooper.',
+        'The scooper attacks the ball, secures possession and turns away from the roller.',
+        'The outlet calls loudly, presents a target and stays available to the side.',
+        'The scooper takes two escape steps and passes to the outlet, then players rotate after three reps.'
+      ],
+      coachFocus:['Scoop first, then get two steps away from pressure.','Outlet communicates early and shows a target.','Pass to the outlet’s outside shoulder.'],
+      watchFor:['Blind pass back toward pressure.','Outlet standing still without communicating.','Scooper stopping after possession.'],
+      makeEasier:['Remove the turn and go directly from scoop to pass.'],
+      makeHarder:['Let the roller chase after the roll with no contact.'],
+      prerequisites:['Basic ground-ball pickup and passing.'],avoidIf:[],
+      successCriteria:['Scooper exits pressure before passing.','Outlet is visible and vocal.','Pass arrives to safe space.'],
+      fieldDiagram:{type:'text',description:'Three cones form an offset line: roller, scooper 10 yards away, outlet 10 yards to the side of the scooper.'},
+      notes:'Source-backed from Busy Sticks.'
+    }
+  },
+  'CV-016': {
+    summary:'Three-player ground-ball game where the winner must connect with a neutral outlet and keep possession through three passes.',
+    primarySkill:{name:'Ground Balls',weight:88,reason:'The initial contested pickup determines possession.'},
+    supportingSkills:[{name:'Passing',weight:78},{name:'Off-Ball Movement',weight:72},{name:'Possession',weight:80}],
+    setup:{players:'Groups of 3',duration:10,equipment:['Sticks','1 ball','4 cones'],space:'15 x 15 yard square',age:['10U','12U','14U']},
+    minimumSkillLevel:'Developing',recommendedSkillLevel:'Competitive',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Teach players to turn a contested loose ball into possession by scooping, moving to space and using an outlet.',
+      whenToUse:['Players win ground balls but fail to maintain possession.','Players bunch around loose balls with no outlet structure.'],
+      setup:{
+        players:{value:'Groups of 3',source:'Source-supported'},
+        groups:{value:'Two competitors plus one neutral outlet.',source:'Source-supported'},
+        equipment:{value:['Sticks','1 ball','4 cones'],source:'Source-supported'},space:{value:'15 x 15 yard square',source:'Source-supported'},
+        time:{value:'Rotate every two balls',source:'Source-supported'},rotation:{value:'Players rotate between competitor and outlet roles.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Roll a ball into a 15-yard square with two players competing for possession.',
+        'The third player begins as a neutral outlet on a cone.',
+        'The player who wins the ground ball passes to the outlet and immediately moves to a new cone for a return pass.',
+        'The possession player and outlet try to complete three passes to score a point.',
+        'Rotate roles every two ground balls.'
+      ],
+      coachFocus:['Win position before the ball arrives.','Scoop and move immediately to open space.','Outlet moves to help the ball carrier.'],
+      watchFor:['Diving into the ball and colliding.','Winner standing after the scoop.','Outlet staying hidden behind pressure.'],
+      makeEasier:['Roll clearly toward one player.'],
+      makeHarder:['Loser can defend the passing lane after the pickup.'],
+      prerequisites:['Safe contested ground-ball habits.'],avoidIf:['Players cannot compete safely for a loose ball.'],
+      successCriteria:['Winner secures possession safely.','Outlet creates a clear passing lane.','Group completes three controlled passes.'],
+      fieldDiagram:{type:'text',description:'15 x 15 yard square. Two competitors inside, one neutral outlet stationed at a cone on the edge.'},
+      notes:'Source-backed from Busy Sticks.'
+    }
+  },
+  'CV-017': {
+    summary:'Accuracy-focused shooting drill using corner targets, named locations and controlled shot collection.',
+    primarySkill:{name:'Shooting',weight:96,reason:'Shot placement and mechanics are the entire focus.'},
+    supportingSkills:[{name:'Accuracy',weight:92},{name:'Footwork',weight:62}],
+    setup:{players:'Groups of 3-4 per goal',duration:10,equipment:['Sticks','6-10 balls','Goal','4 corner targets or shooting tarp'],space:'Goal area; shooters 8-12 yards out',age:['8U','10U','12U','14U']},
+    minimumSkillLevel:'Foundation',recommendedSkillLevel:'Developing',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Teach shooters to select a target, step toward it and finish the stick through the intended corner.',
+      whenToUse:['Shots consistently hit the center of the goal.','Players focus on power before placement.'],
+      setup:{
+        players:{value:'Groups of 3-4 per goal',source:'Source-supported'},
+        groups:{value:'Shooters rotate among center, left and right cones.',source:'Source-supported'},
+        equipment:{value:['Sticks','6-10 balls','Goal','Corner targets or shooting tarp'],source:'Source-supported'},
+        space:{value:'Shooter cones 8-12 yards from goal',source:'Source-supported'},
+        time:{value:'Two shots per player per round',source:'Source-supported'},
+        rotation:{value:'Rotate shooting cones every round; collect only on coach command.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Place visible targets in the four corners of the goal and shooters at cones 8-12 yards out.',
+        'Coach names a corner before each rep.',
+        'Each shooter takes two controlled shots at the called target.',
+        'Rotate players among center, left and right shooting cones.',
+        'Finish with a short scoring contest where a target hit earns a point.'
+      ],
+      coachFocus:['Choose the corner before starting the shot.','Step the front foot toward the target.','Finish with the stick pointing through the target.'],
+      watchFor:['Shooting down the middle.','Rushing collection while someone is still shooting.','Opening the shoulders away from the target.'],
+      makeEasier:['Move closer and enlarge the target area.'],
+      makeHarder:['Add a catch before the shot or require release within two seconds.'],
+      prerequisites:['Basic safe shooting mechanics.'],avoidIf:['Players cannot follow shooting-lane safety.'],
+      successCriteria:['Shots increasingly reach called corners.','Players maintain balance and directional footwork.'],
+      fieldDiagram:{type:'text',description:'Goal with four corner targets. Shooter cones at center, left and right positions 8-12 yards away. Ball pile beside each group.'},
+      notes:'No player stands beside or behind the goal during shooting.'
+    }
+  },
+  'CV-018': {
+    summary:'Shooting-on-the-run drill that forces players to maintain speed, arrive balanced and shoot across the body to the far corner.',
+    primarySkill:{name:'Shooting on the Move',weight:96,reason:'Players shoot while running rather than from a stationary setup.'},
+    supportingSkills:[{name:'Footwork',weight:78},{name:'Accuracy',weight:82},{name:'Dodging',weight:45}],
+    setup:{players:'Groups of 4 per goal',duration:10,equipment:['Sticks','8 balls per lane','Goal','Cones'],space:'Two 20-yard shooting lanes',age:['10U','12U','14U']},
+    minimumSkillLevel:'Developing',recommendedSkillLevel:'Competitive',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Teach players to preserve running speed into a shot while regaining enough balance to place the ball accurately.',
+      whenToUse:['Players slow to a walk before shooting.','Players lose balance on shots after movement.'],
+      setup:{
+        players:{value:'Groups of 4 per goal',source:'Source-supported'},
+        groups:{value:'Two lanes, one on each side of the goal.',source:'Source-supported'},
+        equipment:{value:['Sticks','8 balls per lane','Goal','Cones'],source:'Source-supported'},
+        space:{value:'Lanes begin 20 yards out; shooting cone about 10 yards from goal',source:'Source-supported'},
+        time:{value:'Rotate ball collection every eight shots',source:'Source-supported'},
+        rotation:{value:'Players alternate sides and hands.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Set one shooting lane on each side of the goal with a start cone roughly 20 yards out.',
+        'Shooter begins with a ball and runs down the lane at about three-quarter speed.',
+        'At the shooting cone near ten yards, the player turns shoulders toward goal and shoots across the body to the far corner.',
+        'Alternate lanes so players shoot from both sides and with both hands.',
+        'Collect balls after each set of eight shots.'
+      ],
+      coachFocus:['Keep speed into the shooting cone.','Turn shoulders to the goal before release.','Finish low to the far corner.'],
+      watchFor:['Slowing to a walk before the shot.','Shooting while off balance.','Drifting across the lane.'],
+      makeEasier:['Begin from a standing start at the shooting cone.'],
+      makeHarder:['Add a defender jogging alongside with no checks.'],
+      prerequisites:['Basic shooting mechanics.'],avoidIf:[],
+      successCriteria:['Shooter maintains speed into the shot.','Release occurs near the designated cone.','Shots are balanced and placed away from the middle.'],
+      fieldDiagram:{type:'text',description:'Two shooting lanes begin 20 yards out on either side of the goal. Each has a shooting cone around 10 yards.'},
+      notes:'Source-backed from Busy Sticks.'
+    }
+  },
+  'CV-019': {
+    summary:'Feed-and-finish drill that teaches cutters to show a target, receive in stride and finish quickly around the crease.',
+    primarySkill:{name:'Finishing',weight:94,reason:'The rep ends with receiving a feed and finishing near goal.'},
+    supportingSkills:[{name:'Cutting',weight:88},{name:'Feeding',weight:82},{name:'Catching',weight:74}],
+    setup:{players:'Groups of 4-6',duration:10,equipment:['Sticks','8-10 balls','Goal'],space:'Goal area; cutter starts 15 yards out',age:['10U','12U','14U']},
+    minimumSkillLevel:'Developing',recommendedSkillLevel:'Competitive',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Train coordinated feeding and cutting so the receiver presents a target and finishes before the defense can recover.',
+      whenToUse:['Cutters fail to show their stick.','Feeds arrive to the body instead of the stick.'],
+      setup:{
+        players:{value:'Groups of 4-6',source:'Source-supported'},
+        groups:{value:'One feeder behind the goal and cutters starting up top.',source:'Source-supported'},
+        equipment:{value:['Sticks','8-10 balls','Goal'],source:'Source-supported'},
+        space:{value:'Feeder behind goal; cutters start about 15 yards out',source:'Source-supported'},
+        time:{value:'Rotate feeder every six feeds',source:'Source-supported'},
+        rotation:{value:'Cutters cycle through; feeder rotates after six passes.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Place a feeder behind the goal slightly to one side with a ball pile.',
+        'Cutters start at the top about 15 yards from goal.',
+        'One cutter attacks toward goal and clearly presents the stick as a target.',
+        'Feeder delivers the pass to the target.',
+        'Cutter catches and shoots in one motion or catches, takes one step and finishes. Rotate the feeder after six reps.'
+      ],
+      coachFocus:['Cutter shows the stick early and away from the body.','Feeder throws to the stick, not the player.','Finish low and away from the goalie.'],
+      watchFor:['Cutter crowding the crease.','Feeder throwing behind the cutter.','Too many cradles before the shot.'],
+      makeEasier:['Move the feeder to the side of the goal.'],
+      makeHarder:['Add a defender playing position only on the cutter.'],
+      prerequisites:['Reliable catching on the move.'],avoidIf:[],
+      successCriteria:['Cutter receives before crowding the crease.','Feed hits the target stick.','Shot follows immediately after the catch.'],
+      fieldDiagram:{type:'text',description:'Feeder starts behind the goal, slightly to one side. Cutter line begins at top center about 15 yards out.'},
+      notes:'Source-backed from Busy Sticks.'
+    }
+  },
+  'CV-020': {
+    summary:'Quick-stick finishing drill that trains one-touch redirection with minimal stick motion and no cradle.',
+    primarySkill:{name:'Finishing',weight:94,reason:'The drill isolates quick-stick finishing close to goal.'},
+    supportingSkills:[{name:'Catching',weight:80},{name:'Quick Release',weight:92},{name:'Feeding',weight:70}],
+    setup:{players:'Groups of 4',duration:10,equipment:['Sticks','10 balls','Goal'],space:'Goal area; shooter about 5 yards out',age:['12U','14U']},
+    minimumSkillLevel:'Competitive',recommendedSkillLevel:'Advanced',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Develop a fast catch-and-release by keeping the stick prepared and redirecting the feed with almost no windup.',
+      whenToUse:['Players cradle unnecessarily on inside feeds.','Shooters wind up and lose timing near the crease.'],
+      setup:{
+        players:{value:'Groups of 4',source:'Source-supported'},
+        groups:{value:'One feeder at the side of goal and shooter at a crease-edge cone.',source:'Source-supported'},
+        equipment:{value:['Sticks','10 balls','Goal'],source:'Source-supported'},
+        space:{value:'Shooter about 5 yards from goal',source:'Source-supported'},
+        time:{value:'Ten reps then rotate',source:'Source-supported'},
+        rotation:{value:'Rotate shooter and feeder roles; switch sides.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Place a feeder at the side of goal with a ball pile and a shooter at a cone about five yards out.',
+        'Shooter presents the stick where the feed should arrive.',
+        'Feeder passes directly to the stick head.',
+        'Shooter redirects the ball to goal without cradling or winding up.',
+        'Complete ten reps, rotate, then switch sides so players work both hands.'
+      ],
+      coachFocus:['Stick head is ready before the feed arrives.','Use a compact wrist motion.','Aim away from the goalie’s stick.'],
+      watchFor:['Big windup.','Catching then cradling.','Stick target moving late.'],
+      makeEasier:['Allow one cradle before the shot.'],
+      makeHarder:['Move the feeder behind the goal.'],
+      prerequisites:['Reliable catching and inside finishing.'],avoidIf:[],
+      successCriteria:['Ball is redirected in one beat.','Stick motion stays compact.','Players finish accurately from both sides.'],
+      fieldDiagram:{type:'text',description:'Feeder stands at the side of the goal. Shooter starts on a crease-edge cone roughly 5 yards out.'},
+      notes:'Source-backed from Busy Sticks.'
+    }
+  },
 'CV-044': {
     summary: 'Four attackers race to move loose balls from their outside starting cones into a central bucket while three defenders protect the middle.',
     primarySkill: { name: 'Ground Balls', weight: 94, reason: 'Scooping and securing loose balls begins each scoring attempt.' },
