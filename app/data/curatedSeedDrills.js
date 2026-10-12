@@ -804,6 +804,176 @@ const SOURCE_BACKED_OVERRIDES = {
       notes:'Source-backed from Busy Sticks.'
     }
   },
+  'CV-021': {
+    summary:'Zigzag dodging course that teaches split, face and roll dodges with an immediate change of direction and acceleration.',
+    primarySkill:{name:'Dodging',weight:96,reason:'Every rep is built around executing a named dodge at each cone.'},
+    supportingSkills:[{name:'Stick Protection',weight:84},{name:'Footwork',weight:82},{name:'Acceleration',weight:78}],
+    setup:{players:'Groups of 4-6',duration:10,equipment:['Sticks','1 ball per player','4-5 cones per course'],space:'20-yard zigzag course',age:['8U','10U','12U','14U']},
+    minimumSkillLevel:'Foundation',recommendedSkillLevel:'Developing',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Teach players to plant, change direction and accelerate while protecting the stick through common dodges.',
+      whenToUse:['Dodges happen too far from the defender.','Players lose the ball during direction changes.'],
+      setup:{
+        players:{value:'Groups of 4-6',source:'Source-supported'},
+        groups:{value:'Two or more courses side by side so players move in waves.',source:'Source-supported'},
+        equipment:{value:['Sticks','1 ball per player','4-5 cones per course'],source:'Source-supported'},
+        space:{value:'20-yard zigzag with cones about 5 yards apart',source:'Source-supported'},
+        time:{value:'One dodge type per pass through the course',source:'Source-supported'},
+        rotation:{value:'Players cycle continuously through the course.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Set four or five cones in a zigzag roughly five yards apart.',
+        'Players enter with a ball and execute the coach-called dodge at each cone.',
+        'Use one full trip for one dodge type: split, face or roll.',
+        'After the dodge, player changes direction and accelerates into the next cone.',
+        'Finish the course with a pass or shot.'
+      ],
+      coachFocus:['Plant before changing direction.','Use the body to protect the stick.','Get eyes up immediately after the dodge.'],
+      watchFor:['Dodging too far from the cone.','Losing speed after the move.','Exposing the stick during the dodge.'],
+      makeEasier:['Walk the course and use split dodges only.'],
+      makeHarder:['Add a shadow defender with no checks.'],
+      prerequisites:['Basic cradle control.'],avoidIf:[],
+      successCriteria:['Player gets close enough to the cone to make the move realistic.','Direction changes are sharp.','Acceleration follows the dodge.'],
+      fieldDiagram:{type:'text',description:'Four to five cones in a 20-yard zigzag. Players queue outside the first cone and move through one at a time or in spaced waves.'},
+      notes:'Source-backed from Busy Sticks.'
+    }
+  },
+  'CV-022': {
+    summary:'Competitive 1v1 gate game that teaches the offense to change speed and direction while the defense wins with feet and position.',
+    primarySkill:{name:'1v1 Offense / Defense',weight:94,reason:'The drill is a live attacker-versus-defender contest.'},
+    supportingSkills:[{name:'Dodging',weight:84},{name:'On-Ball Defense',weight:88},{name:'Footwork',weight:82}],
+    setup:{players:'Pairs',duration:10,equipment:['Sticks','1 ball per pair','4 cones'],space:'10 x 10 yard box with 3-yard gate',age:['8U','10U','12U','14U']},
+    minimumSkillLevel:'Developing',recommendedSkillLevel:'Competitive',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Create a simple live 1v1 that rewards offensive change of speed and defensive footwork without relying on checks.',
+      whenToUse:['Defenders reach instead of moving their feet.','Dodgers do not change speed or direction.'],
+      setup:{
+        players:{value:'Pairs',source:'Source-supported'},
+        groups:{value:'One offense and one defense player per box.',source:'Source-supported'},
+        equipment:{value:['Sticks','1 ball per pair','4 cones'],source:'Source-supported'},
+        space:{value:'10 x 10 yard box with a 3-yard gate at one end',source:'Source-supported'},
+        time:{value:'Eight-second offensive reps',source:'Source-supported'},
+        rotation:{value:'Players switch roles after each rep.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Build a 10-yard box with a three-yard scoring gate at one end.',
+        'Offense starts at the opposite end with a ball and has eight seconds to get through the gate.',
+        'Defense stays in front, keeps roughly one stick length of space and steers the ball carrier toward a side.',
+        'Score one point for an offensive gate and one point for a defensive stop.',
+        'Switch roles after every rep.'
+      ],
+      coachFocus:['Offense changes speed and direction.','Defense uses feet before stick.','Defender keeps chest aligned with the ball carrier’s hands.'],
+      watchFor:['Defenders reaching and getting beat.','Offense running in a straight line.','Unsafe contact.'],
+      makeEasier:['Widen the box and play at half speed.'],
+      makeHarder:['Shrink the gate and reduce the offense to five seconds.'],
+      prerequisites:['Basic dodging and defensive stance.'],avoidIf:['Players cannot follow the no-contact rule.'],
+      successCriteria:['Defense maintains position without reaching.','Offense creates separation using pace or direction changes.'],
+      fieldDiagram:{type:'text',description:'10 x 10 yard box with a 3-yard gate at one end. Offense starts opposite the gate; defender starts between the attacker and gate.'},
+      notes:'No stick checks and no body contact.'
+    }
+  },
+  'CV-023': {
+    summary:'Defensive approach drill that teaches sprint-closeout mechanics, choppy feet, stance and controlled containment.',
+    primarySkill:{name:'On-Ball Defense',weight:94,reason:'The drill centers on approaching and containing a ball carrier.'},
+    supportingSkills:[{name:'Defensive Footwork',weight:92},{name:'Approach',weight:92},{name:'Containment',weight:86}],
+    setup:{players:'Pairs',duration:10,equipment:['Sticks','1 ball per pair','2 cones'],space:'15-yard approach lane',age:['8U','10U','12U','14U']},
+    minimumSkillLevel:'Foundation',recommendedSkillLevel:'Developing',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Teach defenders to close space quickly, decelerate under control and settle into a balanced stance before containing a dodge.',
+      whenToUse:['Defenders overrun the ball carrier.','Defenders stand upright on approach.'],
+      setup:{
+        players:{value:'Pairs',source:'Source-supported'},
+        groups:{value:'One offense and one defender per lane.',source:'Source-supported'},
+        equipment:{value:['Sticks','1 ball per pair','2 cones'],source:'Source-supported'},
+        space:{value:'About 15 yards; defender begins 10 yards away',source:'Source-supported'},
+        time:{value:'Several controlled approaches plus three five-second live reps',source:'Source-supported'},
+        rotation:{value:'Reset and switch roles.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Place the offensive player with a ball at one cone and the defender about ten yards away.',
+        'Defender sprints toward the ball carrier.',
+        'At roughly three yards, defender transitions to short choppy steps and settles a stick length away.',
+        'Offense makes two slow dodges while the defender slides to stay in front.',
+        'Finish with three live five-second rounds, then switch roles.'
+      ],
+      coachFocus:['Sprint first, then shorten the steps.','Stay low with hips square.','Keep the stick up between defender and ball carrier.'],
+      watchFor:['Running past the ball carrier.','Standing upright.','Closing too slowly and giving up space.'],
+      makeEasier:['Offense remains stationary during the approach.'],
+      makeHarder:['Offense can attack either direction after the closeout.'],
+      prerequisites:['Basic defensive stance.'],avoidIf:[],
+      successCriteria:['Defender arrives under control.','Spacing is consistent.','Defender stays square through the first move.'],
+      fieldDiagram:{type:'text',description:'Two cones roughly 10 yards apart. Offense starts with the ball at one cone; defender starts at the opposite cone and closes the distance.'},
+      notes:'Source-backed from Busy Sticks.'
+    }
+  },
+  'CV-024': {
+    summary:'Live alley 1v1 that teaches the offense to beat a defender in a channel and the defense to steer the ball away from the middle.',
+    primarySkill:{name:'1v1 Offense / Defense',weight:94,reason:'The drill is a live 1v1 to goal.'},
+    supportingSkills:[{name:'Dodging',weight:86},{name:'On-Ball Defense',weight:86},{name:'Shooting',weight:68}],
+    setup:{players:'Groups of 4 per goal',duration:12,equipment:['Sticks','Balls','Goal','Cones'],space:'10-yard-wide alley from top of goal area',age:['12U','14U']},
+    minimumSkillLevel:'Competitive',recommendedSkillLevel:'Competitive',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Develop game-like 1v1 offense in an alley while teaching defenders to protect the middle and finish the possession.',
+      whenToUse:['Offense runs straight into defenders.','Defense gives up the middle too easily.'],
+      setup:{
+        players:{value:'Groups of 4 per goal',source:'Source-supported'},
+        groups:{value:'One active attacker and defender; remaining players wait outside the alley.',source:'Source-supported'},
+        equipment:{value:['Sticks','Balls','Goal','Cones'],source:'Source-supported'},
+        space:{value:'10-yard-wide alley; offense starts 20 yards out, defender 5 yards closer to goal',source:'Source-supported'},
+        time:{value:'Rep ends on shot, stop or 10 seconds',source:'Source-supported'},
+        rotation:{value:'Switch sides after four reps.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Mark a 10-yard-wide alley on one side of the goal.',
+        'Attacker starts with a ball about 20 yards from goal; defender starts about five yards in front.',
+        'On the whistle, offense dodges down the alley and attacks the goal.',
+        'Defense works to keep the ball carrier outside and away from the middle.',
+        'End the rep on a shot, defensive stop or after ten seconds. Switch sides after four reps.'
+      ],
+      coachFocus:['Offense attacks the defender’s top foot.','Defense forces away from the middle.','Both players finish the possession.'],
+      watchFor:['Offense running straight into the defender.','Defense opening the middle.','Rep dragging on without purpose.'],
+      makeEasier:['Defense plays at half speed.'],
+      makeHarder:['Add a fully equipped goalie.'],
+      prerequisites:['Basic dodging, defensive stance and safe shooting.'],avoidIf:['Players cannot follow position-only defense rules.'],
+      successCriteria:['Offense creates a real change of direction.','Defense keeps play outside.','Rep resolves with a shot or stop.'],
+      fieldDiagram:{type:'text',description:'A 10-yard-wide alley runs toward one side of the goal. Offense starts 20 yards out; defender starts five yards closer to goal.'},
+      notes:'Defenders play position only: no stick checks and no body checks.'
+    }
+  },
+  'CV-025': {
+    summary:'Basic odd-man 2v1 that teaches the ball carrier to draw the defender and release the ball only after commitment.',
+    primarySkill:{name:'Small-Sided Offense',weight:94,reason:'The drill teaches a 2v1 numerical-advantage read.'},
+    supportingSkills:[{name:'Passing',weight:86},{name:'Decision Making',weight:92},{name:'Finishing',weight:72}],
+    setup:{players:'Groups of 3 per goal',duration:10,equipment:['Sticks','Balls','Goal or cone goal'],space:'Goal area; offense starts 20 yards out',age:['8U','10U','12U','14U']},
+    minimumSkillLevel:'Developing',recommendedSkillLevel:'Competitive',sourceVerified:true,
+    coachPracticeCard:{
+      purpose:'Teach the simplest odd-man decision: attack the goal, force the defender to choose, then move the ball to the open teammate.',
+      whenToUse:['Ball carrier passes before the defender commits.','Off-ball player drifts too close to the ball.'],
+      setup:{
+        players:{value:'Groups of 3 per goal',source:'Source-supported'},
+        groups:{value:'Two offense players and one defender.',source:'Source-supported'},
+        equipment:{value:['Sticks','Balls','Goal or cone goal'],source:'Source-supported'},
+        space:{value:'Two attackers start 20 yards out; defender begins near goal area',source:'Source-supported'},
+        time:{value:'One possession per rep',source:'Source-supported'},
+        rotation:{value:'Rotate positions after every rep.',source:'Source-supported'}
+      },
+      runTheDrill:[
+        'Start two offensive players about 20 yards from goal with one ball and one defender near the goal area.',
+        'Ball carrier attacks directly toward goal to make the defender engage.',
+        'Off-ball player stays wide and keeps the stick ready.',
+        'When the defender commits to the ball carrier, move the ball to the open teammate.',
+        'Play the possession to a shot or turnover, then rotate all three roles.'
+      ],
+      coachFocus:['Ball carrier attacks the goal.','Off-ball player maintains width.','Pass only after the defender commits.'],
+      watchFor:['Passing too early.','Off-ball player crowding the ball.','Ball carrier drifting sideways instead of threatening goal.'],
+      makeEasier:['Keep the defender stationary inside a cone circle.'],
+      makeHarder:['Let the defender move freely and require a score within six seconds.'],
+      prerequisites:['Basic passing and catching on the move.'],avoidIf:[],
+      successCriteria:['Defender is forced to make a choice.','Pass occurs after commitment.','Offense creates a clean shot.'],
+      fieldDiagram:{type:'text',description:'Two offensive players start side by side about 20 yards from goal. One defender starts near the goal area between them and the target.'},
+      notes:'Defender plays position and intercepts passes only. No checks or body contact.'
+    }
+  },
 'CV-044': {
     summary: 'Four attackers race to move loose balls from their outside starting cones into a central bucket while three defenders protect the middle.',
     primarySkill: { name: 'Ground Balls', weight: 94, reason: 'Scooping and securing loose balls begins each scoring attempt.' },
