@@ -338,18 +338,41 @@ export default function Home() {
           coachPracticeCard: item.coachPracticeCard || makeLegacyPracticeCard(item),
           ...inferDrillLevel(item)
         }));
-        const existingKeys = new Set(
-          migrated.map((item) => String(item.drillId || item.title || '').trim().toLowerCase())
+        const seedByKey = new Map(
+          seedDrills.map((item) => [String(item.drillId || item.title || '').trim().toLowerCase(), item])
         );
+
+        const refreshed = migrated.map((item) => {
+          const key = String(item.drillId || item.title || '').trim().toLowerCase();
+          const seed = seedByKey.get(key);
+          if (!seed) return item;
+
+          // Source-backed seed records are authoritative for library content.
+          // Preserve user-specific fields that should survive refreshes.
+          return {
+            ...item,
+            ...seed,
+            id:item.id || seed.id,
+            folder:suggestedFolderFor(seed),
+            coachPracticeCard:seed.coachPracticeCard || item.coachPracticeCard || makeLegacyPracticeCard(seed),
+            ...inferDrillLevel(seed)
+          };
+        });
+
+        const refreshedKeys = new Set(
+          refreshed.map((item) => String(item.drillId || item.title || '').trim().toLowerCase())
+        );
+
         const missingSeeds = seedDrills
-          .filter((item) => !existingKeys.has(String(item.drillId || item.title || '').trim().toLowerCase()))
+          .filter((item) => !refreshedKeys.has(String(item.drillId || item.title || '').trim().toLowerCase()))
           .map((item) => ({
             ...item,
             folder: suggestedFolderFor(item),
             coachPracticeCard: item.coachPracticeCard || makeLegacyPracticeCard(item),
-          ...inferDrillLevel(item)
+            ...inferDrillLevel(item)
           }));
-        setDrills([...migrated, ...missingSeeds]);
+
+        setDrills([...refreshed, ...missingSeeds]);
       } else {
         setDrills(seedDrills.map((item) => ({
           ...item,
@@ -694,7 +717,9 @@ export default function Home() {
 
   function buildPracticePlan() {
     const words = practicePrompt.toLowerCase().split(/\W+/).filter(Boolean);
-    const scored = drills.map((drill) => {
+    const scored = drills
+      .filter((drill) => drill.sourceVerified === true || drill.sourceType === 'CoachVault Foundation')
+      .map((drill) => {
       const haystack = [
         drill.title,
         drill.summary,
