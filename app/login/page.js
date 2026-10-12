@@ -2,18 +2,21 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { getCurrentCoachVaultSession } from '../lib/coachvaultAuth';
 
 export default function LoginPage() {
   const router = useRouter();
-  const params = useSearchParams();
   const [email,setEmail] = useState('');
   const [status,setStatus] = useState('');
   const [sending,setSending] = useState(false);
-  const error = params.get('error');
+  const [error,setError] = useState('');
 
   useEffect(()=>{
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      setError(params.get('error') || '');
+    }
     getCurrentCoachVaultSession().then(session=>{
       if (session?.user) router.replace('/workspace');
     });
